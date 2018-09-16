@@ -66,7 +66,5 @@ dependencies:
   - traitsui=6.0.0=py36_1
   - vtk=8.1.0=py36h969b564_201
   - wheel=0.31.1=py36_0
-  - pip:
-    - mayavi==4.6.2
 prefix: /home/ophiuchus/miniconda3/envs/objdetect
 
