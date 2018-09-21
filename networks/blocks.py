@@ -3,6 +3,34 @@ import torch.nn as nn
 
 # resnet reference: https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
 
+class Bottleneck_3_0(nn.Module):
+	expansion = 4
+
+	def __init__(self, in_channels, out_channels):
+		# using pre-normalization and pre-activation
+		# TODO: switch stride=2 between conv1 and conv2 and check results
+		self.bn1 = nn.BatchNorm2d(in_channels)
+		self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, bias=False)
+
+		self.bn2 = nn.BatchNorm2d(out_channels)
+		self.conv2 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=3, stride=2, padding=1, bias=False)
+
+		self.bn1_skip = nn.BatchNorm2d(in_channels)
+		self.conv1_skip = nn.Conv2d(in_channels, out_channels*self.expansion, kernel_size=1, stride=2, bias=False)
+
+		self.relu = nn.ReLU(inplace=True)
+
+	def forward(self, x):
+		res = self.bn1_skip(x)
+		res = self.conv1_skip(self.relu(res))
+
+		x = self.bn1(x)
+		x = self.conv1(self.relu(x))
+		x = self.bn2(x)
+		x = self.conv2(self.relu(x))
+
+		return x + res
+
 class Bottleneck_4_0(nn.Module):
 	expansion = 4
 
@@ -10,10 +38,10 @@ class Bottleneck_4_0(nn.Module):
 		# using pre-normalization and pre-activation
 		# TODO: switch stride=2 between conv1 and conv2 and check results
 		self.bn1 = nn.BatchNorm2d(in_channels)
-		self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=2, bias=False)
+		self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, bias=False)
 
 		self.bn2 = nn.BatchNorm2d(out_channels)
-		self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False)
+		self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=2, padding=1, bias=False)
 
 		self.bn3 = nn.BatchNorm2d(out_channels)
 		self.conv3 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=1, bias=False)
@@ -43,10 +71,10 @@ class Bottleneck_6_0(nn.Module):
 		# using pre-normalization and pre-activation
 		# TODO: switch stride=2 between conv1 and conv2 and check results
 		self.bn1 = nn.BatchNorm2d(in_channels)
-		self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=2, bias=False)
+		self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, bias=False)
 
 		self.bn2 = nn.BatchNorm2d(out_channels)
-		self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False)
+		self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=2, padding=1, bias=False)
 
 		self.bn3 = nn.BatchNorm2d(out_channels)
 		self.conv3 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False)
@@ -101,6 +129,7 @@ class Upsample(nn.Module):
 		return x + res
 
 # for new variants of bottleneck change names here
+Bottleneck_3 = Bottleneck_3_0
 Bottleneck_4 = Bottleneck_4_0
 Bottleneck_6 = Bottleneck_6_0
 Upsample = Upsample
