@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from blocks import Bottleneck_4, Bottleneck_6, Upsample
+from blocks import Bottleneck_3, Bottleneck_6, Upsample
 
 # resnet reference: https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
 
@@ -17,10 +17,10 @@ class PointCloudDetector(nn.Module):
 
 		self.conv2 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1, bias=False)
 
-		self.res_block1 = Bottleneck_4(in_channels = 32, out_channels=res_block_layers[0])
+		self.res_block1 = Bottleneck_3(in_channels = 32, out_channels=res_block_layers[0])
 		self.res_block2 = Bottleneck_6(in_channels = 4 * res_block_layers[0], out_channels=res_block_layers[1])
-		self.res_block3 = Bottleneck_6(in_channels = 4 * res_block_layers[0], out_channels=res_block_layers[2])
-		self.res_block4 = Bottleneck_4(in_channels = 4 * res_block_layers[0], out_channels=res_block_layers[3])
+		self.res_block3 = Bottleneck_6(in_channels = 4 * res_block_layers[1], out_channels=res_block_layers[2])
+		self.res_block4 = Bottleneck_3(in_channels = 4 * res_block_layers[2], out_channels=res_block_layers[3])
 
 		self.bn3 = nn.BatchNorm2d(res_block_layers[3])
 		
