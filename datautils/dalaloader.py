@@ -10,7 +10,7 @@ import numpy as np
 
 from utils import lidarToBEV
 
-def lidarDatasetLoader(rootDir, batchSize,  gridConfig):
+def lidarDatasetLoader(rootDir, batchSize,  gridConfig, objtype):
 	'''
 	Function to create train, validation, and test loaders
 	Requires: rootDir of train, validation, and test set folders
@@ -19,11 +19,11 @@ def lidarDatasetLoader(rootDir, batchSize,  gridConfig):
 	Returns: train, validation, test Dataloader objects
 	'''
 	trainLoader = DataLoader(
-		LidarLoader(rootDir+'/train', gridConfig),
+		LidarLoader(rootDir+'/train', gridConfig, objtype),
 		batch_size = batchSize, shuffle=True
 	)
 	validationLoader = DataLoader(
-		LidarLoader(rootDir+'/validation', gridConfig),
+		LidarLoader(rootDir+'/validation', gridConfig, objtype),
 		batch_size = batchSize, shuffle=True
 	)
 	testLoader = DataLoader(
@@ -38,7 +38,10 @@ class LidarLoader(Dataset):
 	Requires directory where the LIDAR files are stored
 	Requires grid configuration for lidar to BEV conversion
 	'''
-	def __init__(self, directory, gridConfig, train=True):
+	def __init__(self, directory, gridConfig, objtype=None, train=True):
+		# object tyoe
+		self.objtype = objtype
+		# load train dataset or test dataset
 		self.train = train
 
 		# read all the filenames in the directory
@@ -81,7 +84,10 @@ class LidarLoader(Dataset):
 					data = line.split()
 
 					# object type
-					datalist.append(data[0])
+					if data[0] == self.objtype:
+						datalist.append(np.array([1], astype='float32'))
+					else:
+						datalist.append(np.array([0], astype='float32'))
 
 					# convert string to float
 					data = [float(data[i]) for i in range(1, len(data))]
@@ -94,6 +100,7 @@ class LidarLoader(Dataset):
 						data[9], data[10]], astype='float32'))
 
 					labels.append(datalist)
+					line = f.readline()
 
 		return bev, labels
 
