@@ -27,7 +27,7 @@ def lidarDatasetLoader(rootDir, batchSize,  gridConfig):
 		batch_size = batchSize, shuffle=True
 	)
 	testLoader = DataLoader(
-		LidarLoader(rootDir+'/test', gridConfig),
+		LidarLoader(rootDir+'/test', gridConfig, train=False),
 		batch_size = batchSize, shuffle=True
 	)
 	return trainLoader, validationLoader, testLoader
@@ -38,7 +38,9 @@ class LidarLoader(Dataset):
 	Requires directory where the LIDAR files are stored
 	Requires grid configuration for lidar to BEV conversion
 	'''
-	def __init__(self, directory, gridConfig):
+	def __init__(self, directory, gridConfig, train=True):
+		self.train = train
+
 		# read all the filenames in the directory
 		self.filenames = [f for f in listdir(directory) \
 						  if isfile(join(directory, f))]
@@ -51,7 +53,8 @@ class LidarLoader(Dataset):
 		self.gridConfig = gridConfig
 
 	def __getitem__(self, index):
-		# TODO: read training label
+		# training labels
+		labels = None
 
 		# read binary file
 		lidarData = np.fromfile(self.filenames[index],
@@ -60,7 +63,39 @@ class LidarLoader(Dataset):
 		# convert to BEV
 		bev = lidarToBEV(lidarData, self.gridConfig)
 
-		return bev
+		# read training labels
+		if self.train:
+			# initialize labels to a list
+			labels = []
+
+			# complete path of the label filename
+			i = self.filenames[index].rfind('/')
+			labelFilename = self.filenames[:i] + '/labels' + \
+							self.filenames[i:]
+
+			# read lines and append them to list
+			with f as open(labelFilename):
+				line = f.readline()
+				while line:
+					datalist = []
+					data = line.split()
+
+					# object type
+					datalist.append(data[0])
+
+					# convert string to float
+					data = [float(data[i]) for i in range(1, len(data))]
+
+					# TODO: is w, and l log(w) and log(l)
+					# [cos(O), sin(O), dx, dy, w, l]
+					datalist.append(np.array(
+						[np.cos(data[3]), np.sin(data[3]), \
+						(data[4]+data[6])/2, (data[5]+data[7])/2, \
+						data[9], data[10]], astype='float32'))
+
+					labels.append(datalist)
+
+		return bev, labels
 
 	def __len__(self):
 		return len(self.filenames)
