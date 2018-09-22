@@ -1,4 +1,5 @@
 import torch
+import torch.from_numpy as fnp
 from torch.utils.data import DataLoader
 from torch.utils.data.dataset import Dataset
 from torchvision import transforms
@@ -10,7 +11,7 @@ import numpy as np
 
 from utils import lidarToBEV
 
-def lidarDatasetLoader(rootDir, batchSize,  gridConfig, objtype):
+def lidarDatasetLoader(rootDir, batchSize, gridConfig, objtype):
 	'''
 	Function to create train, validation, and test loaders
 	Requires: rootDir of train, validation, and test set folders
@@ -64,7 +65,7 @@ class LidarLoader(Dataset):
 			dtype=np.float32).reshape(-1, 4)
 
 		# convert to BEV
-		bev = lidarToBEV(lidarData, self.gridConfig)
+		bev = fnp(lidarToBEV(lidarData, self.gridConfig))
 
 		# read training labels
 		if self.train:
@@ -85,19 +86,19 @@ class LidarLoader(Dataset):
 
 					# object type
 					if data[0] == self.objtype:
-						datalist.append(np.array([1], astype='float32'))
+						datalist.append(fnp(np.array([1], astype='float32')))
 					else:
-						datalist.append(np.array([0], astype='float32'))
+						datalist.append(fnp(np.array([0], astype='float32')))
 
 					# convert string to float
 					data = [float(data[i]) for i in range(1, len(data))]
 
-					# TODO: is w, and l log(w) and log(l)
+					# TODO: is w, and l log(w) and log(l)?
 					# [cos(O), sin(O), dx, dy, w, l]
-					datalist.append(np.array(
+					datalist.append(fnp(np.array(
 						[np.cos(data[3]), np.sin(data[3]), \
 						(data[4]+data[6])/2, (data[5]+data[7])/2, \
-						data[9], data[10]], astype='float32'))
+						data[9], data[10]], astype='float32')))
 
 					labels.append(datalist)
 					line = f.readline()
