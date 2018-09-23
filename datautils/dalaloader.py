@@ -97,7 +97,7 @@ class LidarLoader(Dataset):
 					# [cos(O), sin(O), dx, dy, w, l]
 					datalist.append(fnp(np.array(
 						[np.cos(data[3]), np.sin(data[3]), \
-						(data[4]+data[6])/2, (data[5]+data[7])/2, \
+						data[11], data[12], \
 						data[9], data[10]], astype='float32')))
 
 					labels.append(datalist)
