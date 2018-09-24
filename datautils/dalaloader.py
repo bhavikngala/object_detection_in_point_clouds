@@ -86,22 +86,24 @@ class LidarLoader(Dataset):
 
 					# object type
 					if data[0] == self.objtype:
-						datalist.append(fnp(np.array([1], astype='float32')))
+						datalist.append(1)
 					else:
-						datalist.append(fnp(np.array([0], astype='float32')))
+						datalist.append(0)
 
 					# convert string to float
 					data = [float(data[i]) for i in range(1, len(data))]
 
 					# TODO: is w, and l log(w) and log(l)?
 					# [cos(O), sin(O), dx, dy, w, l]
-					datalist.append(fnp(np.array(
+					datalist.extend(
 						[np.cos(data[3]), np.sin(data[3]), \
 						data[11], data[12], \
-						data[9], data[10]], astype='float32')))
+						data[9], data[10]])
 
 					labels.append(datalist)
 					line = f.readline()
+
+			labels = fnp(np.array(labels, astype='float32'))
 
 		return bev, labels
 
