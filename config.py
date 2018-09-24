@@ -19,3 +19,6 @@ up_sample_layers = [(196, 256), (128, 192)]
 # training parameters
 learningRate = 1e-4
 epochs = 100
+
+# gamma for focal loss
+gamma = 2
