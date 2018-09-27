@@ -46,7 +46,7 @@ class LidarLoader(Dataset):
 		self.train = train
 
 		# read all the filenames in the directory
-		self.filenames = [f for f in listdir(directory) \
+		self.filenames = [join(directory, f) for f in listdir(directory) \
 						  if isfile(join(directory, f))]
 
 		# shuffle filenames
@@ -78,7 +78,7 @@ class LidarLoader(Dataset):
 							self.filenames[i:]
 
 			# read lines and append them to list
-			with f as open(labelFilename):
+			with open(labelFilename) as f:
 				line = f.readline()
 				while line:
 					datalist = []
