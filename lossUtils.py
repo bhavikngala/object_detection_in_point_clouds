@@ -24,7 +24,6 @@ def computeZoomedBox(targets, zoomFactor):
 	'''
 	zooms the target box by zoomFactor
 	'''
-	# TODO: vectorization
 	zoomedTargets = []
 
 	for target in targets:
