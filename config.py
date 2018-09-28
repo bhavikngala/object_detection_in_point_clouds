@@ -25,3 +25,19 @@ gamma = 2
 
 # select gpu device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# filename of saved model
+model_file = './models/hawkEye.pth'
+
+# output directories for train, validation, and test outputs
+trainOutputDir = './output/train'
+valiOutputDir = './output/vali'
+testOutputDir = './output/test'
+
+# train, validation, test loss log file
+trainLog = './loss/train.txt'
+valilog = './loss/vali.txt'
+testlog = './loss/test.txt'
+
+# string for log
+logString = 'epoch: {%05d} | cla loss: {%.4f} | loc loss: {%.4f} | total loss: {%.4f}'
