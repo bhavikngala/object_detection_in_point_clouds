@@ -47,7 +47,6 @@ def train(epoch):
 		misc.writeToFile(cnf.trainlog, cnf.logString.format(epoch, claLoss, locLoss, trainLoss))
 
 def validation(epoch):
-	# TODO: validation set
 	hawkEye.eval()
 
 	for batchId, (data, target, filenames) in enumerate(vali_loader):
@@ -61,7 +60,7 @@ def validation(epoch):
 		valiLoss = claLoss + locLoss
 
 		# TODO mAP
-		
+
 		# save the results, loss in a file
 		misc.savebatchOutput(cla, loc, filenames, cnf.valiOutputDir, epoch)
 		misc.writeToFile(cnf.valilog, cnf.logString.format(epoch, claLoss, locLoss, valiLoss))
