@@ -1,5 +1,5 @@
 import torch
-import torch.from_numpy as fnp
+from torch import from_numpy as fnp
 from torch.utils.data import DataLoader
 from torch.utils.data.dataset import Dataset
 from torchvision import transforms
@@ -20,7 +20,7 @@ def lidarDatasetLoader(rootDir, batchSize, gridConfig, objtype):
 	Returns: train, validation, test Dataloader objects
 	'''
 	trainLoader = DataLoader(
-		LidarLoader(rootDir+'/train', gridConfig, objtype),
+		LidarLoader(rootDir, gridConfig, objtype),
 		batch_size = batchSize, shuffle=True
 	)
 	validationLoader = DataLoader(
@@ -57,11 +57,12 @@ class LidarLoader(Dataset):
 		self.gridConfig = gridConfig
 
 	def __getitem__(self, index):
-		# training labels
-		labels = None
+		filename = self.filenames[index]
+		# initialize labels to a list
+		labels = []
 
 		# read binary file
-		lidarData = np.fromfile(self.filenames[index],
+		lidarData = np.fromfile(filename,
 			dtype=np.float32).reshape(-1, 4)
 
 		# convert to BEV
@@ -69,13 +70,10 @@ class LidarLoader(Dataset):
 
 		# read training labels
 		if self.train:
-			# initialize labels to a list
-			labels = []
-
 			# complete path of the label filename
-			i = self.filenames[index].rfind('/')
-			labelFilename = self.filenames[:i] + '/labels' + \
-							self.filenames[i:]
+			i = filename.rfind('/')
+			labelFilename = filename[:i] + '/labels' + \
+							filename[i:]
 
 			# read lines and append them to list
 			with open(labelFilename) as f:
@@ -105,7 +103,7 @@ class LidarLoader(Dataset):
 
 			labels = fnp(np.array(labels, astype='float32'))
 
-		return bev, labels
+		return bev, labels, filename
 
 	def __len__(self):
 		return len(self.filenames)
