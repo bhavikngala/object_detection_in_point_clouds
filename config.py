@@ -18,7 +18,7 @@ up_sample_layers = [(196, 256), (128, 192)]
 
 # training parameters
 learningRate = 1e-4
-epochs = 100
+epochs = 5
 
 # gamma for focal loss
 gamma = 2
@@ -31,7 +31,7 @@ model_file = './models/hawkEye.pth'
 
 # output directories for train, validation, and test outputs
 trainOutputDir = './output/train'
-valiOutputDir = './output/vali'
+valiOutputDir = './output/val'
 testOutputDir = './output/test'
 
 # train, validation, test loss log file
