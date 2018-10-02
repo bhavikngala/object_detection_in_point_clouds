@@ -1,5 +1,6 @@
 name: objdetect
 channels:
+  - pytorch
   - anaconda
   - defaults
 dependencies:
@@ -31,6 +32,7 @@ dependencies:
   - ca-certificates=2018.03.07=0
   - cairo=1.14.12=h7636065_2
   - certifi=2018.8.24=py36_1
+  - cffi=1.11.5=py36he75722e_1
   - configobj=5.0.6=py36_1
   - cython=0.28.5=py36hf484d3e_0
   - dbus=1.13.2=h714fa37_1
@@ -48,11 +50,15 @@ dependencies:
   - libtiff=4.0.9=he85c1e1_2
   - mkl_fft=1.0.4=py36h4414c95_1
   - mkl_random=1.0.1=py36h4414c95_1
+  - ninja=1.8.2=py36h6bb024c_1
   - numpy=1.15.1=py36h1d66e8a_0
   - numpy-base=1.15.1=py36h81de0dd_0
+  - olefile=0.46=py36_0
   - openssl=1.0.2p=h14c3975_0
   - pango=1.41.0=hd475d92_0
+  - pillow=5.1.0=py36h3deb7b8_0
   - pip=10.0.1=py36_0
+  - pycparser=2.19=py36_0
   - pyface=6.0.0=py36_0
   - pygments=2.2.0=py36_0
   - pyqt=5.9.2=py36h751905a_0
@@ -66,5 +72,8 @@ dependencies:
   - traitsui=6.0.0=py36_1
   - vtk=8.1.0=py36h969b564_201
   - wheel=0.31.1=py36_0
+  - cuda92=1.0=0
+  - pytorch=0.4.1=py36_cuda9.2.148_cudnn7.1.4_1
+  - torchvision=0.2.1=py36_1
 prefix: /home/ophiuchus/miniconda3/envs/objdetect
 
