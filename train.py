@@ -1,6 +1,7 @@
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
+import os
 
 from networks.networks import PointCloudDetector as HawkEye
 from datautils.dataloader import *
@@ -14,8 +15,9 @@ torch.manual_seed(0)
 train_loader, vali_loader, test_loader = \
 	lidarDatasetLoader(cnf.rootDir, cnf.batchSize, cnf.gridConfig, cnf.objtype)
 
-# detector object
+# create detector object and intialize weights
 hawkEye = HawkEye(cnf.res_block_layers, cnf.up_sample_layers).to(cnf.device)
+hawkEye.apply(misc.weights_init)
 
 # network optimization method
 optimizer = optim.Adam(hawkEye.parameters(), lr=cnf.learningRate)
@@ -66,7 +68,12 @@ def validation(epoch):
 		misc.writeToFile(cnf.valilog, cnf.logString.format(epoch, claLoss, locLoss, valiLoss))
 
 if __name__ == '__main__':
-	for i in range(epochs):
+	# load model file if present
+	if os.path.isfile(cnf.model_file):
+		hawkEye.load_state_dict(torch.load(cnf.model_file,
+			map_location=lambda storage, loc: storage))
+
+	for i in range(cnf.epochs):
 		train(epoch)
 		validation(epoch)
 
