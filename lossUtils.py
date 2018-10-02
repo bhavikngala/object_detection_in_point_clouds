@@ -9,9 +9,9 @@ def focalLoss(pred, target, gamma=cnf.gamma):
 	'''
 	Focal loss function.
 	ref: https://arxiv.org/pdf/1708.02002.pdf
-	FL = y*(1-p)^gamma*log(p) + (1-y)*p^gamma*lop(1-p)
+	FL = -y*(1-p)^gamma*log(p) - (1-y)*p^gamma*lop(1-p)
 	'''
-	return target*(1-pred)**gamma*torch.log(pred) + \
+	return -target*(1-pred)**gamma*torch.log(pred) - \
 		   (1-target)*pred**gamma*torch.log(1-pred)
 
 def smoothL1(loc, target):
@@ -60,8 +60,8 @@ def computeLoss(cla, loc, targets):
 
 	claSamples = 0
 	locSamples = 0
-	claLoss = torch.Tensor([0.0]).to(device)
-	locLoss = torch.Tensor([0.0]).to(device)
+	claLoss = torch.Tensor([0.0]).to(cnf.device)
+	locLoss = torch.Tensor([0.0]).to(cnf.device)
 
 	# the points that are inside z0.3 or outside z1.2
 	indices = []
