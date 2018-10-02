@@ -9,7 +9,7 @@ from os.path import isfile, join
 import random
 import numpy as np
 
-from utils import lidarToBEV
+from datautils.utils import lidarToBEV
 
 def lidarDatasetLoader(rootDir, batchSize, gridConfig, objtype):
 	'''
@@ -20,15 +20,15 @@ def lidarDatasetLoader(rootDir, batchSize, gridConfig, objtype):
 	Returns: train, validation, test Dataloader objects
 	'''
 	trainLoader = DataLoader(
-		LidarLoader(rootDir, gridConfig, objtype),
+		LidarLoader(join(rootDir, 'train'), gridConfig, objtype),
 		batch_size = batchSize, shuffle=True
 	)
 	validationLoader = DataLoader(
-		LidarLoader(rootDir+'/validation', gridConfig, objtype),
+		LidarLoader(join(rootDir, 'val'), gridConfig, objtype),
 		batch_size = batchSize, shuffle=True
 	)
 	testLoader = DataLoader(
-		LidarLoader(rootDir+'/test', gridConfig, train=False),
+		LidarLoader(join(rootDir, 'test'), gridConfig, train=False),
 		batch_size = batchSize, shuffle=True
 	)
 	return trainLoader, validationLoader, testLoader
@@ -73,7 +73,7 @@ class LidarLoader(Dataset):
 			# complete path of the label filename
 			i = filename.rfind('/')
 			labelFilename = filename[:i] + '/labels' + \
-							filename[i:]
+							filename[i:-4] + '.txt'
 
 			# read lines and append them to list
 			with open(labelFilename) as f:
@@ -101,7 +101,7 @@ class LidarLoader(Dataset):
 					labels.append(datalist)
 					line = f.readline()
 
-			labels = fnp(np.array(labels, astype='float32'))
+			labels = fnp(np.array(labels, dtype='float32'))
 
 		return bev, labels, filename
 

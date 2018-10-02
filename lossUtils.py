@@ -41,7 +41,7 @@ def computeZoomedBox(targets, zoomFactor):
 
 			zoomedBoxes.append(zoomedBox)
 		
-		zoomedTargets.append(fnp(np.array(zoomedBoxes, astype='float32')).to(device))
+		zoomedTargets.append(fnp(np.array(zoomedBoxes, dtype='float32')).to(device))
 
 def computeLoss(cla, loc, targets):
 	'''

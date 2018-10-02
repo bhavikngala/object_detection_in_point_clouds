@@ -1,3 +1,5 @@
+import torch
+
 rootDir = './../data/KITTI_BEV'
 batchSize = 35
 

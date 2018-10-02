@@ -38,9 +38,8 @@ def lidarToBEV(lidar, gridConfig):
             z_index += int(z_r[1]/res)
 
             bev[x_index, y_index, z_index] = 1
-            bev1[x_index, y_index] = r[i]/255.0
-            # if z[i] >= z_r[1]-res:
-            #     bev[x_index, y_index, bev.shape[2]-1] = r[i]      
+            #  normalize the reflectance value
+            bev1[x_index, y_index] = r[i]/255.0    
 
     bev[:, :, bev.shape[2]-1] = bev1
     
