@@ -49,6 +49,9 @@ class LidarLoader(Dataset):
 	Dataset class for LIDAR data.
 	Requires directory where the LIDAR files are stored
 	Requires grid configuration for lidar to BEV conversion
+	Returns: data - bird's eye view of the lidar point cloud, tensor
+			 labels - tuple of label tensors of each file
+			 filenames - tuple of filenames of the lidar files in the batch 
 	'''
 	def __init__(self, directory, gridConfig, objtype=None, train=True):
 		# object tyoe
