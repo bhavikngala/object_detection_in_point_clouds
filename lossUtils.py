@@ -55,6 +55,7 @@ def computeLoss(cla, loc, targets):
 	posLabel = torch.Tensor([1.0]).to(cnf.device)
 	negLabel = torch.Tensor([0.0]).to(cnf.device)
 
+	# zoom in and zoom out the target bounding boxes in the training labels
 	zoomed1_2 = computeZoomedBox(targets, 1.2)
 	zoomed0_3 = computeZoomedBox(targets, 0.3)
 
@@ -63,44 +64,51 @@ def computeLoss(cla, loc, targets):
 	claLoss = torch.Tensor([0.0]).to(cnf.device)
 	locLoss = torch.Tensor([0.0]).to(cnf.device)
 
-	# the points that are inside z0.3 or outside z1.2
-	indices = []
 	for i in range(cla.size(0)):
+		# reshape the output tensors for each training sample 
+		# 200x175x1 -> -1x1 and 200x1175x6 -> -1x6
 		frameCla = cla[i].view(-1, 1)
 		frameLoc = loc[i].view(-1, 6)
+
+		# get training labels and zoomed boxes for each sample
 		frameTargets = targets[i]
 		z1_2 = zoomed1_2[i]
 		z0_3 = zoomed0_3[i]
 
+		# for each box in predicted for a sample
+		# determine whether it is positive or negative sample
+		# and compute loss accordingly
 		for j in range(frameLoc.size(0)):
 			# predicted bounding box
 			# cx, cy
 			cx, cy = frameLoc[j, 2], frameLoc[j, 3]
 
-			considerFlag = False
-			for k in range(z0_3.size(0)):
-				if not (((cy<z1_2[k][0] and cy>z0_3[k][0]) or (cy>z1_2[k][1] and cy<z0_3[k][1])) \
-					and ((cx<z1_2[k][3] and cx>z0_3[k][3]) or (cx>z1_2[k][2] and cx<z0_3[k][2]))):
-					considerFlag = True
+			posSample = False
+			index = -1
+
+			# if the predicted centre falls inside any of the 0.3 zoomed bounding box
+			# then it should be considered as positive sample
+			for k  in range(z0_3.size(0)):
+				if cy<z0_3[k][0] and cy>z0_3[k][1] and cx>z0_3[k][3] and cx<z0_3[k][2]:
+					posSample = True
+					index = k
 					break
 
-			if considerFlag:
-				posSample = False
-				index = -1
+			if posSample:
+				claLoss += focalLoss(frameCla[j], posLabel)
+				locLoss += smoothL1(frameLoc[j], frameTargets[k])
 
-				for k  in range(z0_3.size(0)):
-					if cy<z0_3[k][0] and cy>z0_3[k][1] and cx>z0_3[k][3] and cx<z0_3[k][2]:
-						posSample = True
-						index = k
+				claSamples += 1
+				locSamples += 1
+			else:
+				# if the predicted centre falls inside any of the 1.2 zoomed bounding box
+				# then it should be ignored else it should be considered as negative sample
+				ignoreFlag = False
+				for k  in range(z1_2.size(0)):
+					if cy<z1_2[k][0] and cy>z1_2[k][1] and cx>z1_2[k][3] and cx<z1_2[k][2]:
+						ignoreFlag = True
 						break
-
-				if posSample:
-					claLoss += focalLoss(frameCla[j], posLabel)
-					locLoss += smoothL1(frameLoc[j], frameTargets[k])
-
-					claSamples += 1
-					locSamples += 1
-				else:
+				if not ignoreFlag:
 					claLoss += focalLoss(frameCla[j], negLabel)
 					claSamples += 1
 
