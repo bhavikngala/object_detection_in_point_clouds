@@ -1,11 +1,11 @@
 import torch
 
 rootDir = './../data/KITTI_BEV'
-batchSize = 35
+batchSize = 3
 
 gridConfig = {
-	'x':(0, 20),
-	'y':(-20, 20),
+	'x':(0, 35),
+	'y':(-40, 40),
 	'z':(-2.5, 1),
 	'res':0.1
 }
