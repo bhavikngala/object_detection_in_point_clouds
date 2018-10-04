@@ -6,7 +6,7 @@ import os
 from networks.networks import PointCloudDetector as HawkEye
 from datautils.dataloader import *
 import config as cnf
-from lossutils import computeLoss
+from lossUtils import computeLoss
 import misc
 
 torch.manual_seed(0)

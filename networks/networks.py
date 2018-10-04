@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from blocks import Bottleneck_3, Bottleneck_6, Upsample
+from networks.blocks import Bottleneck_3, Bottleneck_6, Upsample
 
 # resnet reference: https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
 

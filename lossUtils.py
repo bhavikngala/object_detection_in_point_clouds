@@ -1,9 +1,9 @@
 import torch
 import torch.nn.functional as F
-import torch.from_numpy as fnp
+from torch import from_numpy as fnp
 import numpy as np
 
-import cnf as cnf
+import config as cnf
 
 def focalLoss(pred, target, gamma=cnf.gamma):
 	'''
