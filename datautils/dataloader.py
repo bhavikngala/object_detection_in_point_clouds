@@ -21,17 +21,28 @@ def lidarDatasetLoader(rootDir, batchSize, gridConfig, objtype):
 	'''
 	trainLoader = DataLoader(
 		LidarLoader(join(rootDir, 'train'), gridConfig, objtype),
-		batch_size = batchSize, shuffle=True
+		batch_size = batchSize, shuffle=True,
+		collate_fn=collate_fn
 	)
 	validationLoader = DataLoader(
 		LidarLoader(join(rootDir, 'val'), gridConfig, objtype),
-		batch_size = batchSize, shuffle=True
+		batch_size = batchSize, shuffle=True,
+		collate_fn=collate_fn
 	)
 	testLoader = DataLoader(
 		LidarLoader(join(rootDir, 'test'), gridConfig, train=False),
-		batch_size = batchSize, shuffle=True
+		batch_size = batchSize, shuffle=True,
+		collate_fn=collate_fn
 	)
 	return trainLoader, validationLoader, testLoader
+
+def collate_fn(batch):
+	bev, labels, filenames = zip(*batch)
+
+	# Merge bev (from tuple of 3D tensor to 4D tensor).
+	bev = torch.stack(bev, 0)
+
+	return bev, labels, filenames
 
 class LidarLoader(Dataset):
 	'''
