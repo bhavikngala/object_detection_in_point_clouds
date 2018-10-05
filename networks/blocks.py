@@ -104,6 +104,26 @@ class Bottleneck_6_0(nn.Module):
 
 		return x + res
 
+class Upsample(nn.Module):
+	'''
+	Upsamples the input sample by a factor of 2.
+	First the input is upsample by bilinear interpolation.
+	Then, convolution is applied to the interpolated image.
+	Reference: https://distill.pub/2016/deconv-checkerboard/
+	'''
+	def __init__(self, in_channels, out_channels):
+		super(Upsample, self).__init__()
+		self.conv_upsample = nn.Conv2d(in_channels[0], out_channels, kernel_size=3, padding=1, bias=False)
+		self.conv1 = nn.Conv2d(in_channels[1], out_channels, kernel_size=1, bias=False)
+
+	def forward(self, featureMapToUpsample, originalFeatureMap):
+		u = F.interpolate(featureMapToUpsample, scale_factor=2, mode='bilinear')
+		u = self.conv_upsample(u)
+
+		x = self.conv1(originalFeatureMap)
+
+		return x + u
+
 # for new variants of bottleneck change names here
 Bottleneck_3 = Bottleneck_3_0
 Bottleneck_4 = Bottleneck_4_0
