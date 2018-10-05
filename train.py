@@ -2,6 +2,7 @@ import torch
 import torch.nn.functional as F
 import torch.optim as optim
 import os
+import time
 
 from networks.networks import PointCloudDetector as HawkEye
 from datautils.dataloader import *
@@ -28,7 +29,7 @@ def train(epoch):
 	for batchId, (data, target, filenames) in enumerate(train_loader):
 		# move data to GPU
 		data = data.to(cnf.device)
-		target = target.to(cnf.device)
+		target = [t.to(cnf.device) for t in target]
 
 		# empty the gradient buffer
 		optimizer.zero_grad()
@@ -46,36 +47,44 @@ def train(epoch):
 
 		# save the results, loss in a file
 		misc.savebatchOutput(cla, loc, filenames, cnf.trainOutputDir, epoch)
-		misc.writeToFile(cnf.trainlog, cnf.logString.format(epoch, claLoss, locLoss, trainLoss))
+		misc.writeToFile(cnf.trainlog, cnf.logString.format(epoch, claLoss.item(), locLoss.item(), trainLoss.item()))
+		# print('train', cnf.logString.format(epoch, claLoss.item(), locLoss.item(), trainLoss.item()))
 
 def validation(epoch):
 	hawkEye.eval()
 
 	for batchId, (data, target, filenames) in enumerate(vali_loader):
 		# move data to GPU
-		data = data.to(device)
-		target = target.to(device)
+		data = data.to(cnf.device)
+		target = [t.to(cnf.device) for t in target]
 
 		# pass data through network and predict
 		cla, loc = hawkEye(data)
-		claLoss, locLoss = computeLoss(cla, loc, target, gamma)
+		claLoss, locLoss = computeLoss(cla, loc, target)
 		valiLoss = claLoss + locLoss
 
 		# TODO mAP
 
 		# save the results, loss in a file
 		misc.savebatchOutput(cla, loc, filenames, cnf.valiOutputDir, epoch)
-		misc.writeToFile(cnf.valilog, cnf.logString.format(epoch, claLoss, locLoss, valiLoss))
+		misc.writeToFile(cnf.valilog, cnf.logString.format(epoch, claLoss.item(), locLoss.item(), valiLoss.item()))
+		# print('val', cnf.logString.format(epoch, claLoss.item(), locLoss.item(), valiLoss.item()))
 
 if __name__ == '__main__':
+	# current_milli_time = lambda: time.time()*1000
+	# start = current_milli_time()
+
 	# load model file if present
 	if os.path.isfile(cnf.model_file):
 		hawkEye.load_state_dict(torch.load(cnf.model_file,
 			map_location=lambda storage, loc: storage))
 
-	for i in range(cnf.epochs):
+	for epoch in range(cnf.epochs):
 		train(epoch)
 		validation(epoch)
 
 		if (epoch+1)%10 == 0:
 			torch.save(hawkEye.state_dict(), cnf.model_file)
+
+	# end = current_milli_time()
+	# print('time taken:', (end-start)*1000/60)
