@@ -41,7 +41,9 @@ def computeZoomedBox(targets, zoomFactor):
 
 			zoomedBoxes.append(zoomedBox)
 		
-		zoomedTargets.append(fnp(np.array(zoomedBoxes, dtype='float32')).to(device))
+		zoomedTargets.append(fnp(np.array(zoomedBoxes, dtype='float32')).to(cnf.device))
+
+	return zoomedTargets
 
 def computeLoss(cla, loc, targets):
 	'''
@@ -112,7 +114,9 @@ def computeLoss(cla, loc, targets):
 					claLoss += focalLoss(frameCla[j], negLabel)
 					claSamples += 1
 
-	claLoss /= claSamples
-	locLoss /= locSamples
+	if locSamples != 0:
+		locLoss /= locSamples
+	if claSamples != 0:
+		claLoss /= claSamples
 
 	return claLoss, locLoss

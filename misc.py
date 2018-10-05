@@ -11,7 +11,7 @@ def weights_init(m):
 	# m.bias.data.fill_(0)
 
 def savebatchOutput(cla, loc, filenames, outputDir, epoch):
-	for i in range(filenames.shape[0]):
+	for i in range(len(filenames)):
 		filename = filenames[i]
 		frameCla = cla[i].view(-1, 1)
 		frameLoc = loc[i].view(-1, 6)
