@@ -23,7 +23,7 @@ def lidarToBEV(lidar, gridConfig):
     res = gridConfig['res']    
 
     # bev tensor
-    bev = np.zeros((int((y_r[1]-y_r[0])/res), int((x_r[1]-x_r[0])/res), int((z_r[1]-z_r[0])/res + 1)), dtype='float32')
+    bev = np.zeros((int((z_r[1]-z_r[0])/res + 1), int((y_r[1]-y_r[0])/res), int((x_r[1]-x_r[0])/res)), dtype='float32')
     bev1 = np.zeros((int((y_r[1]-y_r[0])/res), int((x_r[1]-x_r[0])/res)), dtype='float32')
 
     for i in range(lidar.shape[0]):
@@ -34,14 +34,13 @@ def lidarToBEV(lidar, gridConfig):
 
             # shifting to new origin
             x_index -= int(y_r[0]/res)
-            # y_index = 
             z_index += int(z_r[1]/res)
 
-            bev[x_index, y_index, z_index] = 1
+            bev[z_index, x_index, y_index] = 1
             #  normalize the reflectance value
             bev1[x_index, y_index] = r[i]/255.0    
 
-    bev[:, :, bev.shape[2]-1] = bev1
+    bev[-1, :, :] = bev1
     
     # plt.imshow(bev[:,:,35])
     # plt.show()
