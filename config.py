@@ -1,10 +1,10 @@
 import torch
 
 rootDir = './../data/KITTI_BEV'
-batchSize = 3
+batchSize = 35
 
 gridConfig = {
-	'x':(0, 35),
+	'x':(0, 70),
 	'y':(-40, 40),
 	'z':(-2.5, 1),
 	'res':0.1
@@ -20,7 +20,7 @@ up_sample_layers = [(196, 256), (128, 192)]
 
 # training parameters
 learningRate = 1e-4
-epochs = 5
+epochs = 1
 
 # gamma for focal loss
 gamma = 2
@@ -37,9 +37,9 @@ valiOutputDir = './output/val'
 testOutputDir = './output/test'
 
 # train, validation, test loss log file
-trainLog = './loss/train.txt'
+trainlog = './loss/train.txt'
 valilog = './loss/vali.txt'
 testlog = './loss/test.txt'
 
 # string for log
-logString = 'epoch: {%05d} | cla loss: {%.4f} | loc loss: {%.4f} | total loss: {%.4f}'
+logString = 'epoch: {:05d} | cla loss: {:.4f} | loc loss: {:.4f} | total loss: {:.4f}\n'
