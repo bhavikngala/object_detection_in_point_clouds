@@ -111,17 +111,21 @@ class Upsample(nn.Module):
 	Then, convolution is applied to the interpolated image.
 	Reference: https://distill.pub/2016/deconv-checkerboard/
 	'''
-	def __init__(self, in_channels, out_channels):
+	def __init__(self, in_channels, out_channels, output_size=None):
 		super(Upsample, self).__init__()
+		if output_size:
+			self.upsample = nn.Upsample(size=output_size, mode='bilinear')
+		else:
+			self.upsample = nn.Upsample(scale_factor=2,  mode='bilinear')
+
 		self.conv_upsample = nn.Conv2d(in_channels[0], out_channels, kernel_size=3, padding=1, bias=False)
 		self.conv1 = nn.Conv2d(in_channels[1], out_channels, kernel_size=1, bias=False)
 
 	def forward(self, featureMapToUpsample, originalFeatureMap):
-		u = F.interpolate(featureMapToUpsample, scale_factor=2, mode='bilinear')
+		u = self.upsample(featureMapToUpsample)
 		u = self.conv_upsample(u)
 
 		x = self.conv1(originalFeatureMap)
-
 		return x + u
 
 # for new variants of bottleneck change names here

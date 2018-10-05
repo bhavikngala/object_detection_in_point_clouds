@@ -15,7 +15,7 @@ class PointCloudDetector(nn.Module):
 		# keep padding in mind since at all convolutions are "SAME"
 		# except for layers where downsampling happens
 
-		self.conv1 = nn.Conv2d(in_channels=38, out_channels=32, kernel_size=3, padding=1, bias=False)
+		self.conv1 = nn.Conv2d(in_channels=36, out_channels=32, kernel_size=3, padding=1, bias=False)
 		self.bn1 = nn.BatchNorm2d(32)
 
 		self.conv2 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1, bias=False)
@@ -39,7 +39,7 @@ class PointCloudDetector(nn.Module):
 		self.upsample1 = Upsample(in_channels = up_sample_layers[0], out_channels = 128)
 		self.bn_upsample1 = nn.BatchNorm2d(128)
 
-		self.upsample2 = Upsample(in_channels = up_sample_layers[1], out_channels = 96)
+		self.upsample2 = Upsample(in_channels = up_sample_layers[1], out_channels = 96, output_size=(200, 175))
 		self.bn_upsample2 = nn.BatchNorm2d(96)
 		
 		self.conv5 = nn.Conv2d(in_channels=96, out_channels=96, kernel_size=3, padding=1, bias=False)
@@ -82,7 +82,7 @@ class PointCloudDetector(nn.Module):
 		res_2 = self.relu(res_2)
 
 		res_3 = self.res_block3(res_2)
-		res_3 = self.bn_res_block2(res_3)
+		res_3 = self.bn_res_block3(res_3)
 		res_3 = self.relu(res_3)
 
 		x = self.res_block4(res_3)
@@ -91,7 +91,7 @@ class PointCloudDetector(nn.Module):
 
 		x = self.conv4(x)
 		x = self.bn4(x)
-		x = relu(x)
+		x = self.relu(x)
 
 		x = self.upsample1(x, res_3)
 		x = self.bn_upsample1(x)
@@ -121,6 +121,7 @@ class PointCloudDetector(nn.Module):
 		cla = self.cla_act(cla)
 
 		loc = self.conv_loc(x)
-		loc = self.loc_act(loc)
-		
+		if self.loc_act:
+			loc = self.loc_act(loc)
+
 		return cla, loc
