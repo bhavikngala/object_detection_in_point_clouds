@@ -9,7 +9,7 @@ from os.path import isfile, join
 import random
 import numpy as np
 
-from datautils.utils import lidarToBEV
+from datautils.utils import lidarToBEV, rotateFrame, scaleFrame, perturbFrame
 
 def lidarDatasetLoader(rootDir, batchSize, gridConfig, objtype):
 	'''
@@ -71,16 +71,36 @@ class LidarLoader(Dataset):
 		self.gridConfig = gridConfig
 
 	def __getitem__(self, index):
+		lidar, labels, filename = self.readData(index)
+
+		# transform if it is train, val set
+		if self.train:
+			# randomly select to augment a frame or not
+			transformation = np.random.randint(low=0, high=4)
+
+			if transformation == 0:
+				# rotate the frame
+				lidar, labels = rotateFrame(lidar, labels)
+			elif transformation == 1:
+				# scale frame
+				lidar, labels = scaleFrame(lidar, labels)
+			elif transformation == 2:
+				# perturb frame
+				lidar, labels = perturbFrame(lidar, labels)
+			# transformation == 3, no augmentation is applied
+
+		# convert lidar to BEV
+		bev = fnp(lidarToBEV(lidar.numpy(), self.gridConfig))
+
+		return bev, labels, filename
+
+	def readData(self, index):
 		filename = self.filenames[index]
 		# initialize labels to a list
 		labels = []
 
 		# read binary file
-		lidarData = np.fromfile(filename,
-			dtype=np.float32).reshape(-1, 4)
-
-		# convert to BEV
-		bev = fnp(lidarToBEV(lidarData, self.gridConfig))
+		lidarData = fnp(np.fromfile(filename, dtype=np.float32).reshape(-1, 4))
 
 		# read training labels
 		if self.train:
@@ -117,7 +137,7 @@ class LidarLoader(Dataset):
 
 			labels = fnp(np.array(labels, dtype='float32'))
 
-		return bev, labels, filename
+		return lidarData, labels, filename
 
 	def __len__(self):
 		return len(self.filenames)
