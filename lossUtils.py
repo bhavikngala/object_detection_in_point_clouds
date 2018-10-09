@@ -31,13 +31,13 @@ def computeZoomedBox(targets, zoomFactor):
 		for i in range(target.size(0)):
 			zoomedBox = [None]*4
 			# left: y - w/2
-			zoomedBox[0] = (target[i, 4] - target[i, 5]/2)*zoomFactor
+			zoomedBox[0] = target[i, 4] - (target[i, 5]*zoomFactor)/2
 			# rightL y + w/2
-			zoomedBox[1] = (target[i, 4] + target[i, 5]/2)*zoomFactor
+			zoomedBox[1] = target[i, 4] + (target[i, 5]*zoomFactor)/2
 			# forward: x + l/2
-			zoomedBox[2] = (target[i, 3] + target[i, 6]/2)*zoomFactor
+			zoomedBox[2] = target[i, 3] + (target[i, 6]*zoomFactor)/2
 			# backward: x - l/2
-			zoomedBox[3] = (target[i, 3] - target[i, 6]/2)*zoomFactor
+			zoomedBox[3] = target[i, 3] - (target[i, 6]*zoomFactor)/2
 
 			zoomedBoxes.append(zoomedBox)
 		
