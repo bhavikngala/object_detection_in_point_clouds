@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import torch
+from torch import from_numpy as fnp
 
 def lidarToBEV(lidar, gridConfig):
     '''
@@ -46,3 +48,59 @@ def lidarToBEV(lidar, gridConfig):
     # plt.show()
 
     return bev
+
+def rotateFrame(lidar, targets):
+    # random rotating angle
+    theta = np.random.uniform(low=-np.pi/4, high=(np.pi/4+np.pi/180))
+    # transformation matrix
+    tmat = fnp(np.array([[np.cos(theta), -np.sin(theta), 0],
+                         [np.sin(theta),  np.cos(theta), 0],
+                         [            0,              0, 1]], dtype='float32'))
+    # transform lidar data
+    lidar[:,:3] = torch.transpose(torch.mm(tmat,
+        torch.transpose(lidar[:,:3], 0, 1)), 0, 1)
+
+    # transform labales
+    for i in range(targets.size(0)):
+        # get centers from the tensor
+        centers = targets[i, 2:5].view(3, 1)
+        # change z to 1 since we dont read z in labels`
+        centers[2, 0] = 1
+        # transform coordinates and angle
+        tcenters = torch.mm(tmat, centers)
+        targets[i, 2:5] = tcenters[:, 0]
+
+        ttheta = torch.atan2(targets[i, 1], targets[i, 2]) - theta
+        targets[i, 0], targets[i, 1] = torch.cos(ttheta), torch.sin(ttheta)
+    
+    return lidar, targets
+
+def scaleFrame(lidar, targets):
+    # random scaling sample
+    scale = np.random.uniform(low=0.95, high=1.06)
+    # transformation matrix
+    tmat = fnp(np.array([[scale,     0,     0],
+                         [    0, scale,     0],
+                         [    0,     0, scale]], dtype='float32'))
+
+    # transform lidar data
+    lidar[:,:3] = torch.transpose(torch.mm(tmat,
+        torch.transpose(lidar[:,:3], 0, 1)), 0, 1)
+
+    # transform labales
+    for i in range(targets.size(0)):
+        # get centers from the tensor
+        centers = targets[i, 2:5].view(3, 1)
+        # change z to 1 since we dont read z in labels`
+        centers[2, 0] = 1
+        # transform coordinates and angle
+        tcenters = torch.mm(tmat, centers)
+        targets[i, 2:5] = tcenters[:, 0]
+
+    return lidar, targets
+
+def perturbFrame(lidar, targets):
+    # apply perturbations to bounding boxes as described in the paper
+    # VoxelNet: End-to-End Learning for Point Cloud Based 3D Object Detection
+    # https://arxiv.org/abs/1711.06396
+    return lidar, targets
