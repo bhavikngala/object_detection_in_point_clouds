@@ -47,6 +47,7 @@ def train(epoch):
 
 		# save the results, loss in a file
 		misc.savebatchOutput(cla, loc, filenames, cnf.trainOutputDir, epoch)
+		misc.savebatchTarget(target, filenames, cnf.trainOutputDir, epoch)
 		misc.writeToFile(cnf.trainlog, cnf.logString.format(epoch, claLoss.item(), locLoss.item(), trainLoss.item()))
 		# print('train', cnf.logString.format(epoch, claLoss.item(), locLoss.item(), trainLoss.item()))
 
@@ -67,6 +68,7 @@ def validation(epoch):
 
 		# save the results, loss in a file
 		misc.savebatchOutput(cla, loc, filenames, cnf.valiOutputDir, epoch)
+		misc.savebatchTarget(target, filenames, cnf.valiOutputDir, epoch)
 		misc.writeToFile(cnf.valilog, cnf.logString.format(epoch, claLoss.item(), locLoss.item(), valiLoss.item()))
 		# print('val', cnf.logString.format(epoch, claLoss.item(), locLoss.item(), valiLoss.item()))
 
