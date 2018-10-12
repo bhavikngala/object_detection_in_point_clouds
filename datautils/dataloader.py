@@ -92,7 +92,22 @@ class LidarLoader(Dataset):
 		# convert lidar to BEV
 		bev = fnp(lidarToBEV(lidar.numpy(), self.gridConfig))
 
-		return bev, labels, filename
+		# enlarge the box by a factor of 1.2 and a factor of 0.3
+		zoom1_2 = torch.zeros(labels.size())
+		zoom0_3 = torch.zeros(labels.size())
+
+		# left: y - w/2, rightL y + w/2, forward: x + l/2, backward: x - l/2
+		zoom1_2[:, 0] = labels[:, 4] - labels[:, 5]*0.6
+		zoom1_2[:, 1] = labels[:, 4] + labels[:, 5]*0.6
+		zoom1_2[:, 2] = labels[:, 3] + labels[:, 6]*0.15
+		zoom1_2[:, 3] = labels[:, 3] - labels[:, 6]*0.15
+
+		zoom0_3[:, 0] = labels[:, 4] - labels[:, 5]*0.6
+		zoom0_3[:, 1] = labels[:, 4] + labels[:, 5]*0.6
+		zoom0_3[:, 2] = labels[:, 3] + labels[:, 6]*0.15
+		zoom0_3[:, 3] = labels[:, 3] - labels[:, 6]*0.15
+
+		return bev, labels, filename, zoom0_3, zoom1_2
 
 	def readData(self, index):
 		filename = self.filenames[index]
@@ -139,22 +154,7 @@ class LidarLoader(Dataset):
 
 			labels = fnp(np.array(labels, dtype='float32'))
 
-			# enlarge the box by a factor of 1.2 and a factor of 0.3
-			zoom1_2 = torch.zeros(labels.size())
-			zoom0_3 = torch.zeros(labels.size())
-
-			# left: y - w/2, rightL y + w/2, forward: x + l/2, backward: x - l/2
-			zoom1_2[:, 0] = labels[:, 4] - labels[:, 5]*0.6
-			zoom1_2[:, 1] = labels[:, 4] + labels[:, 5]*0.6
-			zoom1_2[:, 2] = labels[:, 3] + labels[:, 6]*0.15
-			zoom1_2[:, 3] = labels[:, 3] - labels[:, 6]*0.15
-
-			zoom0_3[:, 0] = labels[:, 4] - labels[:, 5]*0.6
-			zoom0_3[:, 1] = labels[:, 4] + labels[:, 5]*0.6
-			zoom0_3[:, 2] = labels[:, 3] + labels[:, 6]*0.15
-			zoom0_3[:, 3] = labels[:, 3] - labels[:, 6]*0.15
-
-		return lidarData, labels, filename, zoom0_3, zoom1_2
+		return lidarData, labels, filename
 
 	def __len__(self):
 		return len(self.filenames)

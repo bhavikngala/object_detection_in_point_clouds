@@ -27,8 +27,8 @@ gamma = 2
 
 # select gpu device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-posLabel = torch.Tensor([1.0]).to(cnf.device)
-negLabel = torch.Tensor([0.0]).to(cnf.device)
+posLabel = torch.Tensor([1.0]).to(device)
+negLabel = torch.Tensor([0.0]).to(device)
 
 # filename of saved model
 model_file = './models/hawkEye.pth'
