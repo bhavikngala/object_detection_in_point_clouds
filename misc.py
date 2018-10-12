@@ -40,7 +40,7 @@ def savebatchTarget(target, filenames, outputDir, epoch):
 		if not os.path.exists(outputDir+'/'+str(epoch)+'/target'):
 			os.makedirs(outputDir+'/'+str(epoch)+'/target')
 
-		torch.save(frameClaLoc,
+		torch.save(t,
 			outputDir+'/'+str(epoch)+'/target/'+filename+'.pt')
 
 def writeToFile(filename, line):

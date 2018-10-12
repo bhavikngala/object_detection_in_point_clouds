@@ -30,9 +30,9 @@ def train(epoch):
 		data, target, filenames, zoom0_3, zoom1_2 = batch_data
 		# move data to GPU
 		data = data.to(cnf.device)
-		target = [t.to(cnf.device, non_blocking=True) for t in target]
-		zoom1_2 = zoom1_2.to(cnf.device, non_blocking=True)
-		zoom0_3 = zoom0_3.to(cnf.device, non_blocking=True)
+		target = [t.to(cnf.device) for t in target]
+		zoom1_2 = [z1_2.to(cnf.device) for z1_2 in zoom1_2]
+		zoom0_3 = [z0_3.to(cnf.device) for z0_3 in zoom0_3]
 
 		# empty the gradient buffer
 		optimizer.zero_grad()
