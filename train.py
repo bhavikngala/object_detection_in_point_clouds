@@ -26,11 +26,13 @@ optimizer = optim.Adam(hawkEye.parameters(), lr=cnf.learningRate)
 def train(epoch):
 	hawkEye.train()
 
-	for batchId, (data, target, filenames) in enumerate(train_loader):
+	for batchId, batch_data in enumerate(train_loader):
+		data, target, filenames, zoom0_3, zoom1_2 = batch_data
 		# move data to GPU
 		data = data.to(cnf.device)
-		print(data.size())
 		target = [t.to(cnf.device, non_blocking=True) for t in target]
+		zoom1_2 = zoom1_2.to(cnf.device, non_blocking=True)
+		zoom0_3 = zoom0_3.to(cnf.device, non_blocking=True)
 
 		# empty the gradient buffer
 		optimizer.zero_grad()
@@ -40,7 +42,7 @@ def train(epoch):
 		print('epoch:', epoch)
 
 		# compute loss, gradient, and optimize
-		claLoss, locLoss = computeLoss(cla, loc, target)
+		claLoss, locLoss = computeLoss(cla, loc, target, zoom0_3, zoom1_2)
 		trainLoss = claLoss + locLoss
 		trainLoss.backward()
 		optimizer.step()
@@ -56,16 +58,20 @@ def train(epoch):
 def validation(epoch):
 	hawkEye.eval()
 
-	for batchId, (data, target, filenames) in enumerate(vali_loader):
+	for batchId, batch_data in enumerate(vali_loader):
+		data, target, filenames, zoom0_3, zoom1_2 = batch_data
+
 		# move data to GPU
 		data = data.to(cnf.device)
 		target = [t.to(cnf.device, non_blocking=True) for t in target]
+		zoom1_2 = zoom1_2.to(cnf.device, non_blocking=True)
+		zoom0_3 = zoom0_3.to(cnf.device, non_blocking=True)
 
 		# pass data through network and predict
 		cla, loc = hawkEye(data)
 		print('epoch:', epoch)
 
-		claLoss, locLoss = computeLoss(cla, loc, target)
+		claLoss, locLoss = computeLoss(cla, loc, target, zoom0_3, zoom1_2)
 		valiLoss = claLoss + locLoss
 
 		# TODO mAP

@@ -1,7 +1,7 @@
 import torch
 
 rootDir = './../data/KITTI_BEV'
-batchSize = 35
+batchSize = 2
 
 gridConfig = {
 	'x':(0, 70),
@@ -20,13 +20,15 @@ up_sample_layers = [(196, 256), (128, 192)]
 
 # training parameters
 learningRate = 1e-4
-epochs = 1
+epochs = 200
 
 # gamma for focal loss
 gamma = 2
 
 # select gpu device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+posLabel = torch.Tensor([1.0]).to(cnf.device)
+negLabel = torch.Tensor([0.0]).to(cnf.device)
 
 # filename of saved model
 model_file = './models/hawkEye.pth'
@@ -42,4 +44,4 @@ valilog = './loss/vali.txt'
 testlog = './loss/test.txt'
 
 # string for log
-logString = 'epoch: {:05d} | cla loss: {:.4f} | loc loss: {:.4f} | total loss: {:.4f}\n'
+logString = 'epoch: {:05d} | cla loss: {:.4f} | loc loss: {:.4f} | total loss: {:.4f} \n'

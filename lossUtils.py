@@ -20,32 +20,7 @@ def smoothL1(loc, target):
 	'''
 	return F.smooth_l1_loss(loc, target)
 
-def computeZoomedBox(targets, zoomFactor):
-	'''
-	zooms the target box by zoomFactor
-	'''
-	zoomedTargets = []
-
-	for target in targets:
-		zoomedBoxes = []
-		for i in range(target.size(0)):
-			zoomedBox = [None]*4
-			# left: y - w/2
-			zoomedBox[0] = target[i, 4] - (target[i, 5]*zoomFactor)/2
-			# rightL y + w/2
-			zoomedBox[1] = target[i, 4] + (target[i, 5]*zoomFactor)/2
-			# forward: x + l/2
-			zoomedBox[2] = target[i, 3] + (target[i, 6]*zoomFactor)/2
-			# backward: x - l/2
-			zoomedBox[3] = target[i, 3] - (target[i, 6]*zoomFactor)/2
-
-			zoomedBoxes.append(zoomedBox)
-		
-		zoomedTargets.append(fnp(np.array(zoomedBoxes, dtype='float32')).to(cnf.device))
-
-	return zoomedTargets
-
-def computeLoss(cla, loc, targets):
+def computeLoss(cla, loc, targets, zoomed0_3, zoomed1_2):
 	'''
 	Function computes classification and regression loss
 	Requires: classification result of network
@@ -54,13 +29,6 @@ def computeLoss(cla, loc, targets):
 	Requires: hyperparameter required for focal loss
 	returns : total loss, L = FocalLoss + smooth_L1
 	'''
-	posLabel = torch.Tensor([1.0]).to(cnf.device)
-	negLabel = torch.Tensor([0.0]).to(cnf.device)
-
-	# zoom in and zoom out the target bounding boxes in the training labels
-	zoomed1_2 = computeZoomedBox(targets, 1.2)
-	zoomed0_3 = computeZoomedBox(targets, 0.3)
-
 	claSamples = 0
 	locSamples = 0
 	claLoss = torch.Tensor([0.0]).to(cnf.device)
@@ -97,7 +65,7 @@ def computeLoss(cla, loc, targets):
 					break
 
 			if posSample:
-				claLoss += focalLoss(frameCla[j], posLabel)
+				claLoss += focalLoss(frameCla[j], cnf.posLabel)
 				locLoss += smoothL1(frameLoc[j], frameTargets[k])
 
 				claSamples += 1
@@ -111,7 +79,7 @@ def computeLoss(cla, loc, targets):
 						ignoreFlag = True
 						break
 				if not ignoreFlag:
-					claLoss += focalLoss(frameCla[j], negLabel)
+					claLoss += focalLoss(frameCla[j], cnf.negLabel)
 					claSamples += 1
 
 	if locSamples != 0:

@@ -37,12 +37,12 @@ def lidarDatasetLoader(rootDir, batchSize, gridConfig, objtype):
 	return trainLoader, validationLoader, testLoader
 
 def collate_fn(batch):
-	bev, labels, filenames = zip(*batch)
+	bev, labels, filenames, zoom0_3, zoom1_2 = zip(*batch)
 
 	# Merge bev (from tuple of 3D tensor to 4D tensor).
 	bev = torch.stack(bev, 0)
 
-	return bev, labels, filenames
+	return bev, labels, filenames, zoom0_3, zoom1_2
 
 class LidarLoader(Dataset):
 	'''
@@ -98,6 +98,8 @@ class LidarLoader(Dataset):
 		filename = self.filenames[index]
 		# initialize labels to a list
 		labels = []
+		zoom1_2 = None
+		zoom0_3 = None
 
 		# read binary file
 		lidarData = fnp(np.fromfile(filename, dtype=np.float32).reshape(-1, 4))
@@ -137,7 +139,22 @@ class LidarLoader(Dataset):
 
 			labels = fnp(np.array(labels, dtype='float32'))
 
-		return lidarData, labels, filename
+			# enlarge the box by a factor of 1.2 and a factor of 0.3
+			zoom1_2 = torch.zeros(labels.size())
+			zoom0_3 = torch.zeros(labels.size())
+
+			# left: y - w/2, rightL y + w/2, forward: x + l/2, backward: x - l/2
+			zoom1_2[:, 0] = labels[:, 4] - labels[:, 5]*0.6
+			zoom1_2[:, 1] = labels[:, 4] + labels[:, 5]*0.6
+			zoom1_2[:, 2] = labels[:, 3] + labels[:, 6]*0.15
+			zoom1_2[:, 3] = labels[:, 3] - labels[:, 6]*0.15
+
+			zoom0_3[:, 0] = labels[:, 4] - labels[:, 5]*0.6
+			zoom0_3[:, 1] = labels[:, 4] + labels[:, 5]*0.6
+			zoom0_3[:, 2] = labels[:, 3] + labels[:, 6]*0.15
+			zoom0_3[:, 3] = labels[:, 3] - labels[:, 6]*0.15
+
+		return lidarData, labels, filename, zoom0_3, zoom1_2
 
 	def __len__(self):
 		return len(self.filenames)
