@@ -22,7 +22,7 @@ def savebatchOutput(cla, loc, filenames, outputDir, epoch):
 		filename = filename.split('/')[-1][:-4]
 
 		# make directory if it doesnt exists
-		if not os.path.exists(outputDir+'/'+str(epoch)):
+		if not os.path.exists(outputDir+'/'+str(epoch)+'/output'):
 			os.makedirs(outputDir+'/'+str(epoch)+'/output')
 
 		torch.save(frameClaLoc,
@@ -37,7 +37,7 @@ def savebatchTarget(target, filenames, outputDir, epoch):
 		filename = filename.split('/')[-1][:-4]
 
 		# make directory if it doesnt exists
-		if not os.path.exists(outputDir+'/'+str(epoch)):
+		if not os.path.exists(outputDir+'/'+str(epoch)+'/target'):
 			os.makedirs(outputDir+'/'+str(epoch)+'/target')
 
 		torch.save(frameClaLoc,
