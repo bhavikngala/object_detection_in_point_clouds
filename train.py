@@ -29,13 +29,15 @@ def train(epoch):
 	for batchId, (data, target, filenames) in enumerate(train_loader):
 		# move data to GPU
 		data = data.to(cnf.device)
-		target = [t.to(cnf.device) for t in target]
+		print(data.size())
+		target = [t.to(cnf.device, non_blocking=True) for t in target]
 
 		# empty the gradient buffer
 		optimizer.zero_grad()
 
 		# pass data through network and predict
 		cla, loc = hawkEye(data)
+		print('epoch:', epoch)
 
 		# compute loss, gradient, and optimize
 		claLoss, locLoss = computeLoss(cla, loc, target)
@@ -57,10 +59,12 @@ def validation(epoch):
 	for batchId, (data, target, filenames) in enumerate(vali_loader):
 		# move data to GPU
 		data = data.to(cnf.device)
-		target = [t.to(cnf.device) for t in target]
+		target = [t.to(cnf.device, non_blocking=True) for t in target]
 
 		# pass data through network and predict
 		cla, loc = hawkEye(data)
+		print('epoch:', epoch)
+
 		claLoss, locLoss = computeLoss(cla, loc, target)
 		valiLoss = claLoss + locLoss
 
