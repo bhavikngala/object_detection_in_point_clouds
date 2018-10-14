@@ -44,7 +44,7 @@ def collate_fn(batch):
 	bev = torch.stack(bev, 0)
 
 	# zero pad labels, zoom0_3, and zoom1_2 to make a tensor
-	l = [len(labels[i]) for i in range(batchSize)]
+	l = [labels[i].size(0) for i in range(batchSize)]
 	m = max(l)
 	labels1 = torch.zeros((batchSize, m, labels[0].size(1)))
 	zoom0_3_1 = torch.zeros((batchSize, m, zoom0_3[0].size(1)))
@@ -86,6 +86,7 @@ class LidarLoader(Dataset):
 		self.gridConfig = gridConfig
 
 	def __getitem__(self, index):
+		# read data for a frame at index
 		lidar, labels, filename = self.readData(index)
 
 		# transform if it is train, val set
@@ -95,36 +96,28 @@ class LidarLoader(Dataset):
 
 			if transformation == 0:
 				# rotate the frame
-				lidar, labels = rotateFrame(lidar, labels)
+				lidar, labels[:, 1:] = rotateFrame(lidar, labels[:, 1:])
 			elif transformation == 1:
 				# scale frame
-				lidar, labels = scaleFrame(lidar, labels)
+				lidar, labels[:, 1:] = scaleFrame(lidar, labels[:, 1:])
 			elif transformation == 2:
 				# perturb frame
-				lidar, labels = perturbFrame(lidar, labels)
+				lidar, labels[:, 1:] = perturbFrame(lidar, labels:, 1:)
 			# transformation == 3, no augmentation is applied
 
 		# convert lidar to BEV
 		bev = fnp(lidarToBEV(lidar.numpy(), self.gridConfig))
-
-		# enlarge the box by a factor of 1.2 and a factor of 0.3
-		zoom1_2 = torch.zeros(labels.size())
-		zoom0_3 = torch.zeros(labels.size())
-
-		# left: y - w/2, rightL y + w/2, forward: x + l/2, backward: x - l/2
-		zoom1_2[:, 0] = labels[:, 4] - labels[:, 5]*0.6
-		zoom1_2[:, 1] = labels[:, 4] + labels[:, 5]*0.6
-		zoom1_2[:, 2] = labels[:, 3] + labels[:, 6]*0.15
-		zoom1_2[:, 3] = labels[:, 3] - labels[:, 6]*0.15
-
-		zoom0_3[:, 0] = labels[:, 4] - labels[:, 5]*0.6
-		zoom0_3[:, 1] = labels[:, 4] + labels[:, 5]*0.6
-		zoom0_3[:, 2] = labels[:, 3] + labels[:, 6]*0.15
-		zoom0_3[:, 3] = labels[:, 3] - labels[:, 6]*0.15
+		labels = self.convertLabelsToOutputTensor(fnp(labels))
+		zoom0_3, zoom1_2 = self.getZoomedBoxes(labels)
 
 		return bev, labels, filename, zoom0_3, zoom1_2
 
 	def readData(self, index):
+		'''
+		Returns: lidar - numpy array of shape(-1, 4); [x, y, z, reflectance]
+		Returns: labels - numpy array of shape(-1, 8); [class, x, y, z, h, w, l, ry]
+		Returns: filename - string
+		'''
 		filename = self.filenames[index]
 		# initialize labels to a list
 		labels = []
@@ -132,7 +125,7 @@ class LidarLoader(Dataset):
 		zoom0_3 = None
 
 		# read binary file
-		lidarData = fnp(np.fromfile(filename, dtype=np.float32).reshape(-1, 4))
+		lidarData = np.fromfile(filename, dtype=np.float32).reshape(-1, 4)
 
 		# read training labels
 		if self.train:
@@ -158,18 +151,53 @@ class LidarLoader(Dataset):
 					data = [float(data[i]) for i in range(1, len(data))]
 
 					# TODO: is w, and l log(w) and log(l)?
-					# [cos(O), sin(O), dx, dy, w, l]
+					# [x, y, z, h, w, l, r]
 					datalist.extend(
-						[np.cos(data[3]), np.sin(data[3]), \
-						data[11], data[12], \
-						data[9], data[10]])
+						[data[11], data[12], data[13], data[8], \
+						 data[9], data[10], data[14]])
 
 					labels.append(datalist)
 					line = f.readline()
 
-			labels = fnp(np.array(labels, dtype='float32'))
-
+		labels = np.array(labels)
 		return lidarData, labels, filename
+
+	def getZoomedBoxes(self, labels, factor1=0.3, factor2=1.2):
+		factor1 = factor1/2
+		factor2 = factor2/2
+
+		zoom1_2 = torch.zeros((labels.size(0), 4))
+		zoom0_3 = torch.zeros((labels.size(0), 4))
+
+		# left: y - w/2, rightL y + w/2, forward: x + l/2, backward: x - l/2
+		zoom1_2[:, 0] = labels[:, 4] - labels[:, 6]*factor2
+		zoom1_2[:, 1] = labels[:, 4] + labels[:, 6]*factor2
+		zoom1_2[:, 2] = labels[:, 3] + labels[:, 5]*factor2
+		zoom1_2[:, 3] = labels[:, 3] - labels[:, 5]*factor2
+
+		zoom0_3[:, 0] = labels[:, 4] - labels[:, 6]*factor1
+		zoom0_3[:, 1] = labels[:, 4] + labels[:, 6]*factor1
+		zoom0_3[:, 2] = labels[:, 3] + labels[:, 5]*factor1
+		zoom0_3[:, 3] = labels[:, 3] - labels[:, 5]*factor1
+
+		return bev, labels, filename, zoom0_3, zoom1_2
+
+	def convertLabelsToOutputTensor(self, labels):
+		'''
+		Requires: labels - tensor of shape(-1, 8); [class, x, y, z, h, w, l, ry]
+		Returns : tensor of shape(-1, 7); [class, cos(theta), sin(theta), cx, cy, l, w]
+		'''
+		ret = torch.zeros(labels.size(0), 7)
+		
+		# class
+		ret[:, 0] = labels[:, 0]
+		# cos(theta), sin(theta)
+		ret[:, 1], ret[:, 2] = torch.cos(labels[:, 7]), torch.sin(labels[:, 7])
+		# cx, cy, l, w
+		ret[:, 3], ret[:, 4] = labels[:, 1], labels[:, 2]
+		ret[:, 5], ret[:, 6] = labels[:, 6], labels[:, 5]
+
+		return ret
 
 	def __len__(self):
 		return len(self.filenames)
