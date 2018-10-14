@@ -11,8 +11,8 @@ def focalLoss(pred, target, gamma=cnf.gamma):
 	ref: https://arxiv.org/pdf/1708.02002.pdf
 	FL = -y*(1-p)^gamma*log(p) - (1-y)*p^gamma*lop(1-p)
 	'''
-	return -target*(1-pred)**gamma*torch.log(pred) - \
-		   (1-target)*pred**gamma*torch.log(1-pred)
+	return -target*(1-pred).pow(gamma)*torch.log(pred) - \
+		   (1-target)*pred.pow(gamma)*torch.log(1-pred)
 
 def smoothL1(loc, target):
 	'''
@@ -29,8 +29,10 @@ def computeLoss(cla, loc, targets, zoomed0_3, zoomed1_2):
 	Requires: hyperparameter required for focal loss
 	returns : total loss, L = FocalLoss + smooth_L1
 	'''
-	locLoss = []
-	claLoss = []
+	locLoss = torch.tensor([0.0], device=cnf.device)
+	locSamples = 0
+	claLoss = torch.tensor([0.0], device=cnf.device)
+	claSamples  = 0
 
 	for i in range(cnf.batchSize):
 		# reshape the output tensors for each training sample 
@@ -49,25 +51,27 @@ def computeLoss(cla, loc, targets, zoomed0_3, zoomed1_2):
 			# if the predicted centre falls inside any of the 0.3 zoomed bounding box
 			# then it should be considered as positive sample
 			c = ((cy<zoomed0_3[i][:,0]) & (cy>zoomed0_3[i][:,1])) & ((cx>zoomed0_3[i][:,3]) & (cx<zoomed0_3[i][:,2]))
-			matchedBox = targets[i][c]
+			matchedBox = targets[i][c].squeeze()
 			
 			if matchedBox.size(0) != 0:
 				# focal loss
-				claLoss.append(-(1-frameCla[j]).pow(cnf.gamma)*torch.log(frameCla[j]))
-		   		# smooth l1 loss
-				locLoss.append(F.smooth_l1_loss(frameLoc[j], matchedBox))
+				claLoss += -(1-frameCla[j]).pow(cnf.gamma)*torch.log(frameCla[j])
+				claSamples += 1
+				# smooth l1 loss
+				locLoss += F.smooth_l1_loss(frameLoc[j], matchedBox[1:])
+				locSamples += 1
 				continue
 
 			# if the predicted center is not inside any of the zoom1_2 box
 			# then it is a negative sample else ignore
 			c = ((cy<zoomed1_2[i][:,0]) & (cy>zoomed1_2[i][:,1])) & ((cx>zoomed1_2[i][:,3]) & (cx<zoomed1_2[i][:,2]))
-			matchedBox = targets[i][c]
+			matchedBox = targets[i][c].squeeze()
 
-			if if matchedBox.size(0) == 0:
+			if matchedBox.size(0) == 0:
 				# focal loss
-				claLoss.append(-frameCla[j].pow(cnf.gamma)*torch.log(1-frameCla[j]))
+				claLoss += -frameCla[j].pow(cnf.gamma)*torch.log(1-frameCla[j])
 
-	locLoss = torch.cat(locLoss).mean()
-	clasLoss = torch.cat(claLoss).mean()
+	locLoss = locLoss/locSamples if locSamples != 0 else locLoss
+	clasLoss = claLoss/claSamples if claSamples != 0 else claLoss
 
 	return claLoss, locLoss
