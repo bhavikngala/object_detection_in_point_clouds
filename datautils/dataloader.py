@@ -38,11 +38,26 @@ def lidarDatasetLoader(rootDir, batchSize, gridConfig, objtype):
 
 def collate_fn(batch):
 	bev, labels, filenames, zoom0_3, zoom1_2 = zip(*batch)
+	batchSize = len(zoom1_2)
 
 	# Merge bev (from tuple of 3D tensor to 4D tensor).
 	bev = torch.stack(bev, 0)
 
-	return bev, labels, filenames, zoom0_3, zoom1_2
+	# zero pad labels, zoom0_3, and zoom1_2 to make a tensor
+	l = [len(labels[i]) for i in range(batchSize)]
+	m = max(l)
+	labels1 = torch.zeros((batchSize, m, labels[0].size(1)))
+	zoom0_3_1 = torch.zeros((batchSize, m, zoom0_3[0].size(1)))
+	zoom1_2_1 = torch.zeros((batchSize, m, zoom1_2[0].size(1)))
+
+	for i in range(batchSize):
+		r = labels[i].size(0)
+		r1 = zoom0_3[i].size(0)
+		labels1[i, :r, :] = labels[i]
+		zoom0_3_1[i, :r1, :] = zoom0_3[i]
+		zoom1_2_1[i, :r1, :] = zoom1_2[i]
+
+	return bev, labels1, filenames, zoom0_3_1, zoom1_2_1
 
 class LidarLoader(Dataset):
 	'''
