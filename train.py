@@ -1,6 +1,7 @@
 import torch
 import torch.nn.functional as F
-import torch.optim as optim
+from torch.optim import Adam
+from torch.optim.lr_scheduler import MultiStepLR
 import os
 import time
 
@@ -21,7 +22,8 @@ hawkEye = HawkEye(cnf.res_block_layers, cnf.up_sample_layers).to(cnf.device)
 hawkEye.apply(misc.weights_init)
 
 # network optimization method
-optimizer = optim.Adam(hawkEye.parameters(), lr=cnf.learningRate)
+optimizer = Adam(hawkEye.parameters(), lr=cnf.learningRate)
+scheduler = MultiStepLR(optimizer, milestones=[20,30], gamma=0.1)
 
 def train(epoch):
 	hawkEye.train()
@@ -30,16 +32,15 @@ def train(epoch):
 		data, target, filenames, zoom0_3, zoom1_2 = batch_data
 		# move data to GPU
 		data = data.to(cnf.device)
-		target = [t.to(cnf.device) for t in target]
-		zoom1_2 = [z1_2.to(cnf.device) for z1_2 in zoom1_2]
-		zoom0_3 = [z0_3.to(cnf.device) for z0_3 in zoom0_3]
+		target = target.to(cnf.device)
+		zoom1_2 = zoom1_2.to(cnf.device)
+		zoom0_3 = zoom0_3.to(cnf.device)
 
 		# empty the gradient buffer
-		optimizer.zero_grad()
+		hawkEye.zero_grad()
 
 		# pass data through network and predict
 		cla, loc = hawkEye(data)
-		print('epoch:', epoch)
 
 		# compute loss, gradient, and optimize
 		claLoss, locLoss = computeLoss(cla, loc, target, zoom0_3, zoom1_2)
@@ -54,6 +55,7 @@ def train(epoch):
 		misc.savebatchTarget(target, filenames, cnf.trainOutputDir, epoch)
 		misc.writeToFile(cnf.trainlog, cnf.logString.format(epoch, claLoss.item(), locLoss.item(), trainLoss.item()))
 		# print('train', cnf.logString.format(epoch, claLoss.item(), locLoss.item(), trainLoss.item()))
+		print('tra epoch:', epoch)
 
 def validation(epoch):
 	hawkEye.eval()
@@ -63,13 +65,12 @@ def validation(epoch):
 
 		# move data to GPU
 		data = data.to(cnf.device)
-		target = [t.to(cnf.device, non_blocking=True) for t in target]
-		zoom1_2 = zoom1_2.to(cnf.device, non_blocking=True)
-		zoom0_3 = zoom0_3.to(cnf.device, non_blocking=True)
+		target = target.to(cnf.device)
+		zoom1_2 = zoom1_2.to(cnf.device)
+		zoom0_3 = zoom0_3.to(cnf.device)
 
 		# pass data through network and predict
 		cla, loc = hawkEye(data)
-		print('epoch:', epoch)
 
 		claLoss, locLoss = computeLoss(cla, loc, target, zoom0_3, zoom1_2)
 		valiLoss = claLoss + locLoss
@@ -81,6 +82,7 @@ def validation(epoch):
 		misc.savebatchTarget(target, filenames, cnf.valiOutputDir, epoch)
 		misc.writeToFile(cnf.valilog, cnf.logString.format(epoch, claLoss.item(), locLoss.item(), valiLoss.item()))
 		# print('val', cnf.logString.format(epoch, claLoss.item(), locLoss.item(), valiLoss.item()))
+		print('val epoch:', epoch)
 
 if __name__ == '__main__':
 	# current_milli_time = lambda: time.time()*1000
@@ -92,8 +94,13 @@ if __name__ == '__main__':
 			map_location=lambda storage, loc: storage))
 
 	for epoch in range(cnf.epochs):
+		# learning rate decay scheduler
+		scheduler.step()
 		train(epoch)
-		validation(epoch)
+
+		# run validation every 10 epochs
+		if (epoch+1)%10 == 0:
+			validation(epoch)
 
 		if (epoch+1)%10 == 0:
 			torch.save(hawkEye.state_dict(), cnf.model_file)
