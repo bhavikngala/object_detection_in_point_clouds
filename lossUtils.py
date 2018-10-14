@@ -29,21 +29,14 @@ def computeLoss(cla, loc, targets, zoomed0_3, zoomed1_2):
 	Requires: hyperparameter required for focal loss
 	returns : total loss, L = FocalLoss + smooth_L1
 	'''
-	claSamples = 0
-	locSamples = 0
-	claLoss = torch.Tensor([0.0]).to(cnf.device)
-	locLoss = torch.Tensor([0.0]).to(cnf.device)
+	locLoss = []
+	claLoss = []
 
-	for i in range(cla.size(0)):
+	for i in range(cnf.batchSize):
 		# reshape the output tensors for each training sample 
-		# 200x175x1 -> -1x1 and 200x1175x6 -> -1x6
+		# 200x175x1 -> -1x1 and 200x175x6 -> -1x6
 		frameCla = cla[i].view(-1, 1)
 		frameLoc = loc[i].view(-1, 6)
-
-		# get training labels and zoomed boxes for each sample
-		frameTargets = targets[i]
-		z1_2 = zoomed1_2[i]
-		z0_3 = zoomed0_3[i]
 
 		# for each box in predicted for a sample
 		# determine whether it is positive or negative sample
@@ -53,38 +46,28 @@ def computeLoss(cla, loc, targets, zoomed0_3, zoomed1_2):
 			# cx, cy
 			cx, cy = frameLoc[j, 2], frameLoc[j, 3]
 
-			posSample = False
-			index = -1
-
 			# if the predicted centre falls inside any of the 0.3 zoomed bounding box
 			# then it should be considered as positive sample
-			for k  in range(z0_3.size(0)):
-				if cy<z0_3[k][0] and cy>z0_3[k][1] and cx>z0_3[k][3] and cx<z0_3[k][2]:
-					posSample = True
-					index = k
-					break
+			c = ((cy<zoomed0_3[i][:,0]) & (cy>zoomed0_3[i][:,1])) & ((cx>zoomed0_3[i][:,3]) & (cx<zoomed0_3[i][:,2]))
+			matchedBox = targets[i][c]
+			
+			if matchedBox.size(0) != 0:
+				# focal loss
+				claLoss.append(-(1-frameCla[j]).pow(cnf.gamma)*torch.log(frameCla[j]))
+		   		# smooth l1 loss
+				locLoss.append(F.smooth_l1_loss(frameLoc[j], matchedBox))
+				continue
 
-			if posSample:
-				claLoss += focalLoss(frameCla[j], cnf.posLabel)
-				locLoss += smoothL1(frameLoc[j], frameTargets[k])
+			# if the predicted center is not inside any of the zoom1_2 box
+			# then it is a negative sample else ignore
+			c = ((cy<zoomed1_2[i][:,0]) & (cy>zoomed1_2[i][:,1])) & ((cx>zoomed1_2[i][:,3]) & (cx<zoomed1_2[i][:,2]))
+			matchedBox = targets[i][c]
 
-				claSamples += 1
-				locSamples += 1
-			else:
-				# if the predicted centre falls inside any of the 1.2 zoomed bounding box
-				# then it should be ignored else it should be considered as negative sample
-				ignoreFlag = False
-				for k  in range(z1_2.size(0)):
-					if cy<z1_2[k][0] and cy>z1_2[k][1] and cx>z1_2[k][3] and cx<z1_2[k][2]:
-						ignoreFlag = True
-						break
-				if not ignoreFlag:
-					claLoss += focalLoss(frameCla[j], cnf.negLabel)
-					claSamples += 1
+			if if matchedBox.size(0) == 0:
+				# focal loss
+				claLoss.append(-frameCla[j].pow(cnf.gamma)*torch.log(1-frameCla[j]))
 
-	if locSamples != 0:
-		locLoss /= locSamples
-	if claSamples != 0:
-		claLoss /= claSamples
+	locLoss = torch.cat(locLoss).mean()
+	clasLoss = torch.cat(claLoss).mean()
 
 	return claLoss, locLoss
