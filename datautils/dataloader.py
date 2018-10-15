@@ -102,11 +102,11 @@ class LidarLoader(Dataset):
 				lidar, labels[:, 1:] = scaleFrame(lidar, labels[:, 1:])
 			elif transformation == 2:
 				# perturb frame
-				lidar, labels[:, 1:] = perturbFrame(lidar, labels:, 1:)
+				lidar, labels[:, 1:] = perturbFrame(lidar, labels[:, 1:])
 			# transformation == 3, no augmentation is applied
 
 		# convert lidar to BEV
-		bev = fnp(lidarToBEV(lidar.numpy(), self.gridConfig))
+		bev = fnp(lidarToBEV(lidar, self.gridConfig))
 		labels = self.convertLabelsToOutputTensor(fnp(labels))
 		zoom0_3, zoom1_2 = self.getZoomedBoxes(labels)
 
@@ -153,8 +153,8 @@ class LidarLoader(Dataset):
 					# TODO: is w, and l log(w) and log(l)?
 					# [x, y, z, h, w, l, r]
 					datalist.extend(
-						[data[11], data[12], data[13], data[8], \
-						 data[9], data[10], data[14]])
+						[data[10], data[11], data[12], data[7], \
+						 data[8], data[9], data[13]])
 
 					labels.append(datalist)
 					line = f.readline()
@@ -169,23 +169,23 @@ class LidarLoader(Dataset):
 		zoom1_2 = torch.zeros((labels.size(0), 4))
 		zoom0_3 = torch.zeros((labels.size(0), 4))
 
-		# left: y - w/2, rightL y + w/2, forward: x + l/2, backward: x - l/2
-		zoom1_2[:, 0] = labels[:, 4] - labels[:, 6]*factor2
-		zoom1_2[:, 1] = labels[:, 4] + labels[:, 6]*factor2
+		# left: y + w/2, right: y - w/2, forward: x + l/2, backward: x - l/2
+		zoom1_2[:, 0] = labels[:, 4] + labels[:, 6]*factor2
+		zoom1_2[:, 1] = labels[:, 4] - labels[:, 6]*factor2
 		zoom1_2[:, 2] = labels[:, 3] + labels[:, 5]*factor2
 		zoom1_2[:, 3] = labels[:, 3] - labels[:, 5]*factor2
 
-		zoom0_3[:, 0] = labels[:, 4] - labels[:, 6]*factor1
-		zoom0_3[:, 1] = labels[:, 4] + labels[:, 6]*factor1
+		zoom0_3[:, 0] = labels[:, 4] + labels[:, 6]*factor1
+		zoom0_3[:, 1] = labels[:, 4] - labels[:, 6]*factor1
 		zoom0_3[:, 2] = labels[:, 3] + labels[:, 5]*factor1
 		zoom0_3[:, 3] = labels[:, 3] - labels[:, 5]*factor1
 
-		return bev, labels, filename, zoom0_3, zoom1_2
+		return zoom0_3, zoom1_2
 
 	def convertLabelsToOutputTensor(self, labels):
 		'''
 		Requires: labels - tensor of shape(-1, 8); [class, x, y, z, h, w, l, ry]
-		Returns : tensor of shape(-1, 7); [class, cos(theta), sin(theta), cx, cy, l, w]
+		Returns : tensor of shape(-1, 7); [class, cos(theta), sin(theta), x, y, l, w]
 		'''
 		ret = torch.zeros(labels.size(0), 7)
 		
