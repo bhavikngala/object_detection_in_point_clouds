@@ -20,7 +20,7 @@ def smoothL1(loc, target):
 	'''
 	return F.smooth_l1_loss(loc, target)
 
-def computeLoss(cla, loc, targets, zoomed0_3, zoomed1_2):
+def computeLoss1(cla, loc, targets, zoomed0_3, zoomed1_2):
 	'''
 	Function computes classification and regression loss
 	Requires: classification result of network
@@ -75,3 +75,100 @@ def computeLoss(cla, loc, targets, zoomed0_3, zoomed1_2):
 	clasLoss = claLoss/claSamples if claSamples != 0 else claLoss
 
 	return claLoss, locLoss
+
+
+def computeLoss2(cla, loc, targets, zoomed0_3, zoomed1_2):
+	locLoss = torch.tensor([0.0], device=cnf.device)
+	locSamples = 0
+	claLoss = torch.tensor([0.0], device=cnf.device)
+	claSamples  = 0
+
+	for i in range(cnf.batchSize):
+		frameCla = cla[i].view(-1, 1)
+		frameLoc = loc[i].view(-1, 6)
+		target = targets[i]
+
+		z0_3 = zoomed0_3[i]
+		z1_2 = zoomed1_2[i]
+
+		zr, zc = z0_3.size()
+		fr, fc = frameLoc.size()
+
+		# repeat the loc tensor
+		frameLoc = frameLoc.repeat(1, zr)
+		frameLoc = frameLoc.view(-1, 6)
+		frameCla = frameCla.repeat(1, zr)
+		frameCla = frameCla.view(-1, 1)
+
+		# repeat z0_3 and z1_2
+		z0_3 = z0_3.repeat(fr, 1)
+		z1_2 = z1_2.repeat(fr, 1)
+
+		c = ((frameLoc[:,3]<z0_3[:,0]) & (frameLoc[:,3]>z0_3[:,1])) & ((frameLoc[:,2]>z0_3[:,3]) & (frameLoc[:,2]<z0_3[:,2]))
+		matchedBoxes = frameLoc[c]
+
+		if matchedBox.size(0) != 0:
+			# focal loss
+			claLoss += -(1-frameCla[c]).pow(cnf.gamma)*torch.log(frameCla[c])
+			claSamples += 1
+			# smooth l1 loss
+			locLoss += F.smooth_l1_loss(frameLoc[j], matchedBox[1:])
+			locSamples += 1
+
+def computeLoss3(cla, loc, targets, zoomed0_3, zoomed1_2):
+	lm, lc, lh, lw = loc.size()
+
+	# move the channel axis to the last dimension
+	loc = loc.permute(0, 2, 3, 1)
+	cla = cla.permute(0, 2, 3, 1)
+
+	# reshape
+	loc = loc.contiguous().view(-1, 6)
+	cla = cla.contiguous().view(-1, 6)
+
+	zr = zoomed0_3.size(1)
+
+	# repeat the loc tensor
+	loc = loc.repeat(1, zr)
+	loc = loc.view(-1, 6)
+	cla = cla.repeat(1, zr)
+	cla = cla.view(-1, 1)
+
+	# repeat z0_3 and z1_2
+	zoomed0_3 = zoomed0_3.repeat(1, lh*lw, 1)
+	zoomed1_2 = zoomed1_2.repeat(1, lh*lw, 1)
+	zoomed0_3 = zoomed0_3.view(-1, 4)
+	zoomed1_2 = zoomed1_2.view(-1, 4)
+
+	# these are positive predictions
+	posPred = ((loc[:,3]<zoomed0_3[:,0]) & (loc[:,3]>zoomed0_3[:,1])) & ((loc[:,2]>zoomed0_3[:,3]) & (loc[:,2]<zoomed0_3[:,2]))
+	# these should be ignore
+	ignPred = ((loc[:,3]<zoomed1_2[:,0]) & (loc[:,3]>zoomed1_2[:,1])) & ((loc[:,2]>zoomed1_2[:,3]) & (loc[:,2]<zoomed1_2[:,2]))
+	# these are negative predictions
+	negPred = ~ignPred
+
+	numPosSamples = posPred.sum()
+	numNegSamples = negPred.sum()
+	print('numPosSamples:', numPosSamples.item(), 'numNegSamples:', numPosSamples.item())
+
+	if numPosSamples > 0:
+		claLoss = (-(1-cla[posPred]).pow(cnf.gamma)*torch.log(cla[posPred])).sum()
+		locLoss = F.smooth_l1_loss(loc[posPred], targets[posPred][1:])
+		locLoss = locLoss.mean()
+	else:
+		locLoss = None
+
+	if numNegSamples > 0 and numPosSamples > 0:
+		clasLoss += (-cla[posPred].pow(cnf.gamma)*torch.log(1-cla[posPred])).sum()
+	elif numNegSamples > 0:
+		claLoss = (-cla[posPred].pow(cnf.gamma)*torch.log(1-cla[posPred])).sum()
+
+	if numPosSamples > 0 or numNegSamples > 0:
+		# claLoss = claLoss/((numPosSamples+numNegSamples).float())
+		claLoss = claLoss
+	else:
+		claLoss = None
+
+	return claLoss, locLoss
+
+computeLoss = computeLoss3
