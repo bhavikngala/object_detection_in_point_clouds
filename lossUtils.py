@@ -49,14 +49,15 @@ def computeLoss3(cla, loc, targets, zoomed0_3, zoomed1_2):
 
 	# these are positive predictions
 	posPred = ((loc[:,3]<zoomed0_3[:,0]) & (loc[:,3]>zoomed0_3[:,1])) & ((loc[:,2]>zoomed0_3[:,3]) & (loc[:,2]<zoomed0_3[:,2]))
-	# these should be ignore
+	# these should be ignored
 	ignPred = ((loc[:,3]<zoomed1_2[:,0]) & (loc[:,3]>zoomed1_2[:,1])) & ((loc[:,2]>zoomed1_2[:,3]) & (loc[:,2]<zoomed1_2[:,2]))
 	# these are negative predictions
-	negPred = ~ignPred
+	negPred = ((loc[:,3]>zoomed1_2[:,0]) | (loc[:,3]<zoomed1_2[:,1])) | ((loc[:,2]<zoomed1_2[:,3]) | (loc[:,2]>zoomed1_2[:,2]))
 
 	numPosSamples = posPred.sum()
 	numNegSamples = negPred.sum()
-	print('numPosSamples:', numPosSamples.item(), 'numNegSamples:', numNegSamples.item())
+	numIgnSamples = ignPred.sum()
+	print('numPosSamples:', numPosSamples.item(), 'numNegSamples:', numNegSamples.item(), 'numIgnSamples:', numIgnSamples.item())
 
 	if numPosSamples > 0:
 		claLoss = (-(1-cla[posPred]).pow(cnf.gamma)*torch.log(cla[posPred])).sum()
@@ -66,9 +67,9 @@ def computeLoss3(cla, loc, targets, zoomed0_3, zoomed1_2):
 		locLoss = None
 
 	if numNegSamples > 0 and numPosSamples > 0:
-		claLoss += (-cla[posPred].pow(cnf.gamma)*torch.log(1-cla[posPred])).sum()
+		claLoss += (-cla[negPred].pow(cnf.gamma)*torch.log(1-cla[negPred])).sum()
 	elif numNegSamples > 0:
-		claLoss = (-cla[posPred].pow(cnf.gamma)*torch.log(1-cla[posPred])).sum()
+		claLoss = (-cla[negPred].pow(cnf.gamma)*torch.log(1-cla[negPred])).sum()
 
 	if numPosSamples > 0 or numNegSamples > 0:
 		claLoss = claLoss/((numPosSamples+numNegSamples).float())
