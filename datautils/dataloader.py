@@ -21,18 +21,18 @@ def lidarDatasetLoader(rootDir, batchSize, gridConfig, objtype):
 	'''
 	trainLoader = DataLoader(
 		LidarLoader(join(rootDir, 'train'), gridConfig, objtype),
-		batch_size = batchSize, shuffle=True, num_workers=2,
-		collate_fn=collate_fn
+		batch_size = batchSize, shuffle=True,
+		collate_fn=collate_fn, pin_memory=True
 	)
 	validationLoader = DataLoader(
 		LidarLoader(join(rootDir, 'val'), gridConfig, objtype),
-		batch_size = batchSize, shuffle=True, num_workers=2,
-		collate_fn=collate_fn
+		batch_size = batchSize, shuffle=True,
+		collate_fn=collate_fn, pin_memory=True
 	)
 	testLoader = DataLoader(
 		LidarLoader(join(rootDir, 'test'), gridConfig, train=False),
-		batch_size = batchSize, shuffle=True, num_workers=2,
-		collate_fn=collate_fn
+		batch_size = batchSize, shuffle=True,
+		collate_fn=collate_fn, pin_memory=True
 	)
 	return trainLoader, validationLoader, testLoader
 
