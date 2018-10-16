@@ -18,16 +18,16 @@ def angle_in_limit(angle):
 
 def camera_to_lidar(x, y, z):
 	p = np.array([x, y, z, 1])
-	p = np.matmul(np.linalg.inv(np.array(cfg.MATRIX_R_RECT_0)), p)
-	p = np.matmul(np.linalg.inv(np.array(cfg.MATRIX_T_VELO_2_CAM)), p)
+	p = np.matmul(np.linalg.inv(np.array(cnf.MATRIX_R_RECT_0)), p)
+	p = np.matmul(np.linalg.inv(np.array(cnf.MATRIX_T_VELO_2_CAM)), p)
 	p = p[0:3]
 	return tuple(p)
 
 
 def lidar_to_camera(x, y, z):
 	p = np.array([x, y, z, 1])
-	p = np.matmul(np.array(cfg.MATRIX_T_VELO_2_CAM), p)
-	p = np.matmul(np.array(cfg.MATRIX_R_RECT_0), p)
+	p = np.matmul(np.array(cnf.MATRIX_T_VELO_2_CAM), p)
+	p = np.matmul(np.array(cnf.MATRIX_R_RECT_0), p)
 	p = p[0:3]
 	return tuple(p)
 
@@ -37,9 +37,9 @@ def camera_to_lidar_point(points):
 	N = points.shape[0]
 	points = np.hstack([points, np.ones((N, 1))]).T  # (N,4) -> (4,N)
 
-	points = np.matmul(np.linalg.inv(np.array(cfg.MATRIX_R_RECT_0)), points)
+	points = np.matmul(np.linalg.inv(np.array(cnf.MATRIX_R_RECT_0)), points)
 	points = np.matmul(np.linalg.inv(
-		np.array(cfg.MATRIX_T_VELO_2_CAM)), points).T  # (4, N) -> (N, 4)
+		np.array(cnf.MATRIX_T_VELO_2_CAM)), points).T  # (4, N) -> (N, 4)
 	points = points[:, 0:3]
 	return points.reshape(-1, 3)
 
@@ -49,8 +49,8 @@ def lidar_to_camera_point(points):
 	N = points.shape[0]
 	points = np.hstack([points, np.ones((N, 1))]).T
 
-	points = np.matmul(np.array(cfg.MATRIX_T_VELO_2_CAM), points)
-	points = np.matmul(np.array(cfg.MATRIX_R_RECT_0), points).T
+	points = np.matmul(np.array(cnf.MATRIX_T_VELO_2_CAM), points)
+	points = np.matmul(np.array(cnf.MATRIX_R_RECT_0), points).T
 	points = points[:, 0:3]
 	return points.reshape(-1, 3)
 
