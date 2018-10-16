@@ -1,5 +1,7 @@
 import torch
 import os
+from threading import Thread
+from queue import Queue
 
 # custom weights initialization called on network
 def weights_init(m):
@@ -46,3 +48,17 @@ def savebatchTarget(target, filenames, outputDir, epoch):
 def writeToFile(filename, line):
 	with open(filename, 'a') as file:
 		file.write(line)
+
+class FileWriterThread(Thread):
+
+	def __init__(self, queue):
+		Thread.__init__(self)
+		self.queue = queue
+
+	def run(self):
+		while True:
+			filename, string = self.queue.get()
+			try:
+				writeToFile(filename, string)
+			finally:
+				self.queue.task_done()
