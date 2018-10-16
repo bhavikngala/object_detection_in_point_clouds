@@ -20,92 +20,97 @@ def smoothL1(loc, target):
 	'''
 	return F.smooth_l1_loss(loc, target)
 
-def computeLoss3(cla, loc, targets, zoomed0_3, zoomed1_2):
+'''
+TOY EXAMPLE
+
+p = torch.tensor([[4,8],[7,5],[2,2]])
+pr, pc = p.size()
+pr = pr/cnf.batchSize
+z = torch.tensor([[1,3,3,1],[1,3,9,7],[3,5,6,4],[6,8,3,1],[5,7,9,7],[0,0,0,0],[0,0,0,0]])
+zr, zc = z.size()
+zr = zr/cnf.batchSize
+p1 = p.repeat(1, zr)
+p1 = p1.view(-1, zr, pc)
+z1 = z.repeat(1, pr, 1)
+z1 = z1.view(-1, zr, zc)
+zeros = z1==0
+zeros = (zeros.sum(dim=-1)/zeros.size(-1)).byte()
+b = (p[:,:,0]<z1[:,:,0])|(p[:,:,0]>z1[:,:,1])|(p[:,:,1]>z1[:,:,2])|(p[:,:,1]<z1[:,:,3])
+c=b^zeros
+c = c.sum(dim=-1)
+numZeros = zeros.sum(dim=1)
+numPoints = zr - numZeros
+p[c==NumPoints]
+
+p = torch.tensor([[4,8],[7,5],[2,2],[2,2],[6,2],[10,8]])
+p shape = (-1, 6)
+z shape = (m, points, 4)
+
+z = torch.tensor([[[1,3,3,1],[1,3,9,7],[3,5,6,4],[6,8,3,1],[5,7,9,7],[0,0,0,0],[0,0,0,0]],[[3,5,3,1],[7,9,4,2],[5,7,7,5],[1,3,8,6],[0,2,11,9],[4,6,11,9],[9,11,9,7]]])
+
+'''
+
+def computeLoss3_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 	lm, lc, lh, lw = loc.size()
+	_, zr, zc = zoomed0_3.size()
+	_, tr, tc = targets.size()
 
 	# move the channel axis to the last dimension
 	loc1 = loc.permute(0, 2, 3, 1)
-	cla1 = cla.permute(0, 2, 3, 1)
+	cla = cla.permute(0, 2, 3, 1)
 
 	# reshape
 	loc1 = loc1.contiguous().view(-1, 6)
-	cla1 = cla1.contiguous().view(-1, 1)
-
-	zr = zoomed0_3.size(1)
-	zc = zoomed0_3.size(2)
-
-	# repeat the loc tensor
-	loc1 = loc1.repeat(1, zr)
-	loc1 = loc1.view(-1, 6)
-	cla1 = cla1.repeat(1, zr)
-	cla1 = cla1.view(-1, 1)
-
-	# repeat z0_3, z1_2, and targets
-	zoomed0_3_1 = zoomed0_3.repeat(1, lh*lw, 1)
-	targets_1 = targets.repeat(1, lh*lw, 1)
-	zoomed0_3_1 = zoomed0_3_1.view(-1, 4)
-	targets_1 = targets_1.view(-1, 7)
-
-	# find all the zero tensors appended at the end of zoom boxes and targets
-	zeros = zoomed0_3_1==0
-	notZeros = ~((zeros.sum(dim=1)/zeros.size(1)).byte())
-
-	# remove the tensors added as padding
-	loc1 = loc1[notZeros]
-	cla1 = cla1[notZeros]
-	zoomed0_3_1 = zoomed0_3_1[notZeros]
-	targets_1 = targets_1[notZeros]
-	
-	# these are positive predictions
-	posPred = ((loc1[:,3]<zoomed0_3_1[:,0]) & (loc1[:,3]>zoomed0_3_1[:,1])) & ((loc1[:,2]>zoomed0_3_1[:,3]) & (loc1[:,2]<zoomed0_3_1[:,2]))
-
-	numPosSamples = (posPred.sum()).item()
-
-	if numPosSamples > 0:
-		claLoss = (-(1-cla1[posPred]).pow(cnf.gamma)*torch.log(cla1[posPred])).sum()
-		locLoss = F.smooth_l1_loss(loc1[posPred], targets_1[posPred][:, 1:])
-		locLoss = locLoss.mean()
-	else:
-		locLoss = None
-	# Part 1 end ###############################################
-
-	# move the channel axis to the last dimension
-	loc1 = loc.permute(0, 2, 3, 1)
-	cla1 = cla.permute(0, 2, 3, 1)
-
-	# reshape
-	loc1 = loc1.contiguous().view(-1, 6)
-	cla1 = cla1.contiguous().view(-1, 1)
-
+	cla = cla.contiguous().view(-1, 1)
 
 	loc1 = loc1.repeat(1, zr)
 	loc1 = loc1.view(-1, zr, lc)
 
-	zoomed1_2_1 = zoomed1_2.repeat(1, lh*lw, 1)
-	zoomed1_2_1 = zoomed1_2_1.view(-1, zr, zc)
+	zoomed0_3 = zoomed0_3.repeat(1, lh*lw, 1)
+	zoomed0_3 = zoomed0_3.view(-1, zr, zc)	
 
-	zeros = zoomed1_2_1 == 0
-	zeros = (zeros.sum(dim=-1)/zeros.size(-1)).byte()
+	zoomed1_2 = zoomed1_2.repeat(1, lh*lw, 1)
+	zoomed1_2 = zoomed1_2.view(-1, zr, zc)
 
-	b = (loc1[:,:,2]<zoomed1_2_1[:,:,3])|(loc1[:,:,2]>zoomed1_2_1[:,:,2])|(loc1[:,:,3]>zoomed1_2_1[:,:,0])|(loc1[:,:,3]<zoomed1_2_1[:,:,1])
-	c = b^zeros
-	c = c.sum(dim=-1)
-	numZeros = zeros.sum(dim=1)
-	numPoints = zr - numZeros
-	negPred = cla1[c==numPoints]
-	numNegSamples = negPred.size(0)
+	targets = targets.repeat(1, lh*lw, 1)
+	targets = targets.view(-1, tr, tc)
+
+	##############~POSITIVE SAMPLES~#################
+	b = ((loc1[:,:,3]<zoomed0_3[:,:,0]) & (loc1[:,:,3]>zoomed0_3[:,:,1])) & ((loc1[:,:,2]>zoomed0_3[:,:,3]) & (loc1[:,:,2]<zoomed0_3[:,:,2]))
+	numPosSamples = (b.sum()).item()
 
 	if numPosSamples>0:
-		claLoss += (-(negPred).pow(cnf.gamma)*torch.log(1-negPred)).sum()
-	else:
-		claLoss = (-(negPred).pow(cnf.gamma)*torch.log(1-negPred)).sum()
+		pred = cla[b.sum(dim=-1).byte()]+cnf.epsilon
+		claLoss = (-cnf.alpha*(1-pred).pow(cnf.gamma)*torch.log(pred)).sum()
 
-	if numPosSamples > 0 or numNegSamples > 0:
-		claLoss = claLoss/(numPosSamples+numNegSamples)
+		locLoss = F.smooth_l1_loss(loc1[b], targets[b][:,1:])
+	else:
+		locLoss = None
+	##############~POSITIVE SAMPLES~#################
+
+	##############~NEGATIVE SAMPLES~#################
+	zeros = zoomed1_2 == 0
+	zeros = (zeros.sum(dim=-1)/zeros.size(-1)).byte()
+
+	b = (loc1[:,:,2]<zoomed1_2[:,:,3])|(loc1[:,:,2]>zoomed1_2[:,:,2])|(loc1[:,:,3]>zoomed1_2[:,:,0])|(loc1[:,:,3]<zoomed1_2[:,:,1])
+	c = b^zeros
+	c = c.sum(dim=-1)
+
+	numZeros = zeros.sum(dim=1)
+	numPoints = zr - numZeros
+
+	negPred = cla[c==numPoints]+cnf.epsilon
+	numNegSamples = negPred.size(0)
+	
+	if numPosSamples>0 and numNegSamples>0:
+		claLoss += (-cnf.alpha*negPred.pow(cnf.gamma)*torch.log(1-negPred)).sum()
+	elif numNegSamples>0:
+		claLoss = (-cnf.alpha*negPred.pow(cnf.gamma)*torch.log(1-negPred)).sum()
 	else:
 		claLoss = None
 
-	print('numPosSamples:', numPosSamples, 'numNegSamples:', numNegSamples)
+	##############~NEGATIVE SAMPLES~#################
+	# print('numPosSamples:', numPosSamples, 'numNegSamples:', numNegSamples)
 	return claLoss, locLoss
 
-computeLoss = computeLoss3
+computeLoss = computeLoss3_1
