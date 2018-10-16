@@ -10,6 +10,7 @@ from datautils.dataloader import *
 import config as cnf
 from lossUtils import computeLoss
 import misc
+# from string import Template
 
 torch.manual_seed(0)
 
@@ -43,19 +44,32 @@ def train(epoch):
 		cla, loc = hawkEye(data)
 
 		# compute loss, gradient, and optimize
+		st = time.time()
 		claLoss, locLoss = computeLoss(cla, loc, target, zoom0_3, zoom1_2)
-		trainLoss = claLoss + locLoss
-		trainLoss.backward()
-		optimizer.step()
+		ed = time.time()
+		if claLoss is None:
+			trainLoss = None
+			ls = cnf.logString3.format(epoch, batchId)
+		elif locLoss is not None:
+			trainLoss = claLoss + locLoss
+			ls = cnf.logString1.format(epoch, batchId, claLoss.item(), locLoss.item(), trainLoss.item())
+		else:
+			trainLoss = claLoss
+			ls = cnf.logString2.format(epoch, batchId, claLoss.item(), trainLoss.item())
+
+		# trainLoss = claLoss+locLoss
+		if trainLoss is not None:
+			trainLoss.backward()
+			optimizer.step()
 
 		# TODO: mAP
 
 		# save the results, loss in a file
-		misc.savebatchOutput(cla, loc, filenames, cnf.trainOutputDir, epoch)
-		misc.savebatchTarget(target, filenames, cnf.trainOutputDir, epoch)
-		misc.writeToFile(cnf.trainlog, cnf.logString.format(epoch, claLoss.item(), locLoss.item(), trainLoss.item()))
-		# print('train', cnf.logString.format(epoch, claLoss.item(), locLoss.item(), trainLoss.item()))
-		print('tra epoch:', epoch)
+		if (epoch+1)==cnf.epochs:
+			misc.savebatchOutput(cla, loc, filenames, cnf.trainOutputDir, epoch)
+			misc.savebatchTarget(target, filenames, cnf.trainOutputDir, epoch)
+		
+		misc.writeToFile(cnf.trainlog, ls + 'elapsed time: '+str(ed-st)+' secs\n\n')
 
 def validation(epoch):
 	hawkEye.eval()
@@ -73,16 +87,25 @@ def validation(epoch):
 		cla, loc = hawkEye(data)
 
 		claLoss, locLoss = computeLoss(cla, loc, target, zoom0_3, zoom1_2)
-		valiLoss = claLoss + locLoss
+		if claLoss is None:
+			valLoss = None
+			ls = cnf.logString3.format(epoch, batchId)
+		elif locLoss is not None:
+			valLoss = claLoss + locLoss
+			ls = cnf.logString1.format(epoch, batchId, claLoss.item(), locLoss.item(), valLoss.item())
+		else:
+			valLoss = claLoss
+			ls = cnf.logString2.format(epoch, batchId, claLoss.item(), valLoss.item())
+
 
 		# TODO mAP
 
 		# save the results, loss in a file
-		misc.savebatchOutput(cla, loc, filenames, cnf.valiOutputDir, epoch)
-		misc.savebatchTarget(target, filenames, cnf.valiOutputDir, epoch)
-		misc.writeToFile(cnf.valilog, cnf.logString.format(epoch, claLoss.item(), locLoss.item(), valiLoss.item()))
-		# print('val', cnf.logString.format(epoch, claLoss.item(), locLoss.item(), valiLoss.item()))
-		print('val epoch:', epoch)
+		if (epoch+1)==cnf.epochs:
+			misc.savebatchOutput(cla, loc, filenames, cnf.valiOutputDir, epoch)
+			misc.savebatchTarget(target, filenames, cnf.valiOutputDir, epoch)
+		
+		misc.writeToFile(cnf.vallog, ls)
 
 if __name__ == '__main__':
 	# current_milli_time = lambda: time.time()*1000
@@ -96,7 +119,11 @@ if __name__ == '__main__':
 	for epoch in range(cnf.epochs):
 		# learning rate decay scheduler
 		scheduler.step()
+
+		st = time.time()
 		train(epoch)
+		ed = time.time()
+		misc.writeToFile(cnf.trainlog, '\n\n\n~~~~~epoch end time taken: '+str(st-ed)+' secs~~~~\n\n\n')
 
 		# run validation every 10 epochs
 		if (epoch+1)%10 == 0:
