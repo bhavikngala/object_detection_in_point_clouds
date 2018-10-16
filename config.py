@@ -23,8 +23,10 @@ up_sample_layers = [(196, 256), (128, 192)]
 learningRate = 1e-2
 epochs = 200
 
-# gamma for focal loss
+# gamma, alpha, epsilon for focal loss
 gamma = 2
+alpha = 0.25
+epsilon = 1e-5
 
 # select gpu device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
