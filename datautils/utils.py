@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import kittiUtils as ku
+import datautils.kittiUtils as ku
 
 def lidarToBEV(lidar, gridConfig):
     '''
