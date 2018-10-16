@@ -4,13 +4,13 @@ from torch.optim import Adam
 from torch.optim.lr_scheduler import MultiStepLR
 import os
 import time
+from queue import Queue
 
 from networks.networks import PointCloudDetector as HawkEye
 from datautils.dataloader import *
 import config as cnf
 from lossUtils import computeLoss
 import misc
-# from string import Template
 
 torch.manual_seed(0)
 
@@ -26,16 +26,28 @@ hawkEye.apply(misc.weights_init)
 optimizer = Adam(hawkEye.parameters(), lr=cnf.learningRate)
 scheduler = MultiStepLR(optimizer, milestones=[20,30], gamma=0.1)
 
+# status string writier thread and queue
+queue = Queue()
+worker = misc.FileWriterThread(queue)
+worker.daemon = True
+worker.start()
+
 def train(epoch):
 	hawkEye.train()
 
 	for batchId, batch_data in enumerate(train_loader):
+		st1 = time.time()
 		data, target, filenames, zoom0_3, zoom1_2 = batch_data
 		# move data to GPU
-		data = data.to(cnf.device)
-		target = target.to(cnf.device)
-		zoom1_2 = zoom1_2.to(cnf.device)
-		zoom0_3 = zoom0_3.to(cnf.device)
+		# data = data.to(cnf.device)
+		# target = target.to(cnf.device)
+		# zoom1_2 = zoom1_2.to(cnf.device)
+		# zoom0_3 = zoom0_3.to(cnf.device)
+
+		data = data.cuda(device=None, non_blocking=True)
+		target = target.cuda(device=None, non_blocking=True)
+		zoom0_3 = zoom0_3.cuda(device=None, non_blocking=True)
+		zoom1_2 = zoom1_2.cuda(device=None, non_blocking=True)
 
 		# empty the gradient buffer
 		hawkEye.zero_grad()
@@ -69,7 +81,10 @@ def train(epoch):
 			misc.savebatchOutput(cla, loc, filenames, cnf.trainOutputDir, epoch)
 			misc.savebatchTarget(target, filenames, cnf.trainOutputDir, epoch)
 		
-		misc.writeToFile(cnf.trainlog, ls + 'elapsed time: '+str(ed-st)+' secs\n\n')
+		ed1 = time.time()
+		ls = ls + 'elapsed time: '+str(ed-st)+' secs ' + 'batch elapsed time: '+str(ed1-st1)+' secs\n\n'
+		queue.put((cnf.trainlog, ls))
+		# misc.writeToFile(cnf.trainlog, ls + 'elapsed time: '+str(ed-st)+' secs ' + 'batch elapsed time: '+str(ed1-st1)+' secs\n\n')
 
 def validation(epoch):
 	hawkEye.eval()
@@ -105,7 +120,8 @@ def validation(epoch):
 			misc.savebatchOutput(cla, loc, filenames, cnf.valiOutputDir, epoch)
 			misc.savebatchTarget(target, filenames, cnf.valiOutputDir, epoch)
 		
-		misc.writeToFile(cnf.vallog, ls)
+		queue.put((cnf.vallog, ls))
+		# misc.writeToFile(cnf.vallog, ls)
 
 if __name__ == '__main__':
 	# current_milli_time = lambda: time.time()*1000
@@ -132,5 +148,7 @@ if __name__ == '__main__':
 		if (epoch+1)%10 == 0:
 			torch.save(hawkEye.state_dict(), cnf.model_file)
 
+	# finish all tasks
+	queue.join()
 	# end = current_milli_time()
 	# print('time taken:', (end-start)*1000/60)
