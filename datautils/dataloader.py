@@ -10,6 +10,8 @@ import random
 import numpy as np
 
 from datautils.utils import lidarToBEV, rotateFrame, scaleFrame, perturbFrame
+import datautils.kittiUtils as ku
+import config as cnf
 
 def lidarDatasetLoader(rootDir, batchSize, gridConfig, objtype):
 	'''
@@ -20,17 +22,17 @@ def lidarDatasetLoader(rootDir, batchSize, gridConfig, objtype):
 	Returns: train, validation, test Dataloader objects
 	'''
 	trainLoader = DataLoader(
-		LidarLoader(join(rootDir, 'train'), gridConfig, objtype),
+		LidarLoader(join(rootDir, 'train'), cnf.calTrain, gridConfig, objtype),
 		batch_size = batchSize, shuffle=True, num_workers=2,
 		collate_fn=collate_fn, pin_memory=True
 	)
 	validationLoader = DataLoader(
-		LidarLoader(join(rootDir, 'val'), gridConfig, objtype),
+		LidarLoader(join(rootDir, 'val'), cnf.calTrain, gridConfig, objtype),
 		batch_size = batchSize, shuffle=True, num_workers=2,
 		collate_fn=collate_fn, pin_memory=True
 	)
 	testLoader = DataLoader(
-		LidarLoader(join(rootDir, 'test'), gridConfig, train=False),
+		LidarLoader(join(rootDir, 'test'), cnf.calTest, gridConfig, train=False),
 		batch_size = batchSize, shuffle=True, num_workers=2,
 		collate_fn=collate_fn, pin_memory=True
 	)
@@ -68,11 +70,13 @@ class LidarLoader(Dataset):
 			 labels - tuple of label tensors of each file
 			 filenames - tuple of filenames of the lidar files in the batch 
 	'''
-	def __init__(self, directory, gridConfig, objtype=None, train=True):
+	def __init__(self, directory, calDir, gridConfig, objtype=None, train=True):
 		# object tyoe
 		self.objtype = objtype
 		# load train dataset or test dataset
 		self.train = train
+
+		self.calDir = calDir
 
 		# read all the filenames in the directory
 		self.filenames = [join(directory, f) for f in listdir(directory) \
@@ -88,6 +92,10 @@ class LidarLoader(Dataset):
 	def __getitem__(self, index):
 		# read data for a frame at index
 		lidar, labels, filename = self.readData(index)
+
+		# convert the labels from camera cord sys to lidar cord sys
+		labels[:, 1:] = ku.convertCamera0ToLidar(labels[:, 1:], 
+			self.calDir+'/'+filename[-10:-4]+'.txt')
 
 		# transform if it is train, val set
 		if self.train:
@@ -107,7 +115,7 @@ class LidarLoader(Dataset):
 
 		# convert lidar to BEV
 		bev = fnp(lidarToBEV(lidar, self.gridConfig))
-		labels = self.convertLabelsToOutputTensor(fnp(labels))
+		labels = self.convertLabelsToOutputTensor(labels)
 		zoom0_3, zoom1_2 = self.getZoomedBoxes(labels)
 
 		return bev, labels, filename, zoom0_3, zoom1_2
@@ -130,9 +138,8 @@ class LidarLoader(Dataset):
 		# read training labels
 		if self.train:
 			# complete path of the label filename
-			i = filename.rfind('/')
-			labelFilename = filename[:i] + '/labels' + \
-							filename[i:-4] + '.txt'
+			labelFilename = filename[:-10] + 'labels/' + \
+							filename[-10:-4] + '.txt'
 
 			# read lines and append them to list
 			with open(labelFilename) as f:
@@ -187,7 +194,7 @@ class LidarLoader(Dataset):
 		Requires: labels - tensor of shape(-1, 8); [class, x, y, z, h, w, l, ry]
 		Returns : tensor of shape(-1, 7); [class, cos(theta), sin(theta), x, y, l, w]
 		'''
-		ret = torch.zeros(labels.size(0), 7)
+		ret = torch.zeros(labels.shape[0], 7)
 		
 		# class
 		ret[:, 0] = labels[:, 0]
