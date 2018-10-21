@@ -1,77 +1,183 @@
+#!/usr/bin/env python
+# -*- coding:UTF-8 -*-
+
+# File Name : data_aug.py
+# Purpose :
+# Creation Date : 21-12-2017
+# Last Modified : Fri 19 Jan 2018 01:06:35 PM CST
+# Created By : Jeasine Ma [jeasinema[at]gmail[dot]com]
+# Source : https://github.com/jeasinema/VoxelNet-tensorflow/blob/master/utils/data_aug.py 
+
 import numpy as np
-from numpy import random
+import os
+import multiprocessing as mp
+import argparse
+import glob
 
-from os import listdir
-from os.path import isfile, join
+import utils as utils
+from kittiUtils import *
 
-trainDir = './../../data_object_velodyne/training/velodyne'
-labelDir = './../../data/KITTI_BEV/training/label_2'
 
-filenames = [join(trainDir, f) for f in listdir(trainDir) if isfile(join(trainDir, f))]
-labels = [join(labelDir, f) for f in listdir(labelDir) if isfile(join(labelDir, f))]
+def aug_data(tag, object_dir):
+    np.random.seed()
+    
+    lidar = np.fromfile(os.path.join(object_dir, tag + '.bin'), dtype=np.float32).reshape(-1, 4)
+    
+    label = np.array([line for line in open(os.path.join(
+        object_dir, 'labels', tag + '.txt'), 'r').readlines()])  # (N')
+    
+    cls = np.array([line.split()[0] for line in label])  # (N')
+    
+    gt_box3d = label_to_gt_box3d(np.array(label)[np.newaxis, :], cls='', coordinate='camera')[
+        0]  # (N', 7) x, y, z, h, w, l, r
 
-# randomly select a tranformation for each file
-# 0: rotation
-# 1: global scaling
-# 2: reflect around y axis
-transformation = random.randint(low=0, high=3, size=len(filenames))
+    choice = np.random.randint(1, 18)
 
-for (lidarFile, labelFile, t) in zip(filenames, labels, transformation):
-	theta = None
-	tmat = None
+    if choice >= 15:
 
-	print(labelFile)
-	# read lidar file
-	lidar = np.fromfile(lidarFile,
-		dtype=np.float32).reshape(-1, 4)
+        lidar_center_gt_box3d = camera_to_lidar_box(gt_box3d)
+        lidar_corner_gt_box3d = center_to_corner_box3d(
+            lidar_center_gt_box3d, coordinate='lidar')
 
-	labels = []
-	# read labels
-	with open(labelFile) as f:
-		line = f.readline()
-		while(line):
-			labels.append(line)
-			line = f.readline()
+        for idx in range(len(lidar_corner_gt_box3d)):
+            # TODO: precisely gather the point
+            is_collision = True
+            _count = 0
+            while is_collision and _count < 100:
+                t_rz = np.random.uniform(-np.pi / 10, np.pi / 10)
+                t_x = np.random.normal()
+                t_y = np.random.normal()
+                t_z = np.random.normal()
+                # check collision
+                tmp = box_transform(
+                    lidar_center_gt_box3d[[idx]], t_x, t_y, t_z, t_rz, 'lidar')
+                is_collision = False
+                for idy in range(idx):
+                    x1, y1, w1, l1, r1 = tmp[0][[0, 1, 4, 5, 6]]
+                    x2, y2, w2, l2, r2 = lidar_center_gt_box3d[idy][[
+                        0, 1, 4, 5, 6]]
+                    iou = cal_iou2d(np.array([x1, y1, w1, l1, r1], dtype=np.float32),
+                                    np.array([x2, y2, w2, l2, r2], dtype=np.float32))
+                    if iou > 0:
+                        is_collision = True
+                        _count += 1
+                        break
+            if not is_collision:
+                box_corner = lidar_corner_gt_box3d[idx]
+                minx = np.min(box_corner[:, 0])
+                miny = np.min(box_corner[:, 1])
+                minz = np.min(box_corner[:, 2])
+                maxx = np.max(box_corner[:, 0])
+                maxy = np.max(box_corner[:, 1])
+                maxz = np.max(box_corner[:, 2])
+                bound_x = np.logical_and(
+                    lidar[:, 0] >= minx, lidar[:, 0] <= maxx)
+                bound_y = np.logical_and(
+                    lidar[:, 1] >= miny, lidar[:, 1] <= maxy)
+                bound_z = np.logical_and(
+                    lidar[:, 2] >= minz, lidar[:, 2] <= maxz)
+                bound_box = np.logical_and(
+                    np.logical_and(bound_x, bound_y), bound_z)
+                lidar[bound_box, 0:3] = point_transform(
+                    lidar[bound_box, 0:3], t_x, t_y, t_z, rz=t_rz)
+                lidar_center_gt_box3d[idx] = box_transform(
+                    lidar_center_gt_box3d[[idx]], t_x, t_y, t_z, t_rz, 'lidar')
 
-	if t == 0:
-		# rotation
-		theta = random.uniform(low=-np.pi/4, high=(np.pi/4+np.pi/180))
-		tmat = np.array([[np.cos(theta), -np.sin(theta), 0],
-						 [np.sin(theta),  np.cos(theta), 0],
-						 [            0,              0, 1]])
-	elif t == 1:
-		# scaling
-		scale = random.uniform(low=0.95, high=1.06)
-		tmat = np.array([[scale,     0,     0],
-						 [    0, scale,     0],
-						 [    0,     0, scale]])
-	else:
-		# reflect y axis
-		tmat = np.array([[1,  0, 0],
-						 [0, -1, 0],
-						 [0,  0, 1]])
+        gt_box3d = lidar_to_camera_box(lidar_center_gt_box3d)
+        newtag = 'aug_{}_1_{}'.format(
+            tag, np.random.randint(1, 1024))
 
-	# transform lidar data
-	lidar[:,:3] = np.matmul(tmat, lidar[:,:3].T).T
+    elif choice <= 11 and choice >= 14:
+        # global rotation
+        angle = np.random.uniform(-np.pi / 4, np.pi / 4)
+        lidar[:, 0:3] = point_transform(lidar[:, 0:3], 0, 0, 0, rz=angle)
+        lidar_center_gt_box3d = camera_to_lidar_box(gt_box3d)
+        lidar_center_gt_box3d = box_transform(lidar_center_gt_box3d, 0, 0, 0, r=angle, coordinate='lidar')
+        gt_box3d = lidar_to_camera_box(lidar_center_gt_box3d)
+        newtag = 'aug_{}_2_{:.4f}'.format(tag, angle).replace('.', '_')
+    
+    elif choice>=9 and choice <=10:
+        # global scaling
+        factor = np.random.uniform(0.95, 1.05)
+        lidar[:, 0:3] = lidar[:, 0:3] * factor
+        lidar_center_gt_box3d = camera_to_lidar_box(gt_box3d)
+        lidar_center_gt_box3d[:, 0:6] = lidar_center_gt_box3d[:, 0:6] * factor
+        gt_box3d = lidar_to_camera_box(lidar_center_gt_box3d)
+        newtag = 'aug_{}_3_{:.4f}'.format(tag, factor).replace('.', '_')
 
-	tlabels = []
-	for line in labels:
-		data = line.split()
-		xyz = np.array([[float(data[11]), float(data[12]), float(data[13])]])
-		xyz = np.matmul(tmat, xyz.T)
-		data[11] = str(xyz[0][0])
-		data[12] = str(xyz[1][0])
-		data[13] = str(xyz[2][0])
+    else:
+        newtag = tag
+    label = box3d_to_label(gt_box3d[np.newaxis, ...], cls[np.newaxis, ...], coordinate='camera')[0]  # (N')
+    
+    return newtag, lidar, label 
 
-		if theta:
-			data[3] = str(float(data[3]) - theta)
 
-		tlabels.append(' '.join(data))
+def worker(tag):
+    gridConfig = {
+        'x':(0, 70),
+        'y':(-40, 40),
+        'z':(-2.5, 1),
+        'res':0.1
+    }
+    new_tag, lidar, label = aug_data(tag,object_dir)
+    output_path = os.path.join(object_dir, 'training_aug')
 
-	augFileName = lidarFile.split('/')[-1][:-4]
-	np.save(trainDir+'/'+augFileName+'_'+str(t)+'.npy', lidar)
+    bev = utils.lidarToBEV(lidar, gridConfig)
+    
+    np.save(os.path.join(outputDir, 'bev', new_tag+'.npy'), bev)
 
-	augLabelFilename = labelFile.split('/')[-1][:-4]
-	with open(labelDir+'/'+augLabelFilename+'_'+str(t)+'.txt', 'w') as f:
-		for line in tlabels:
-			f.write(line+'\n')
+    lidar.reshape(-1).tofile(os.path.join(outputDir,
+                                          'lidar', new_tag + '.bin'))
+    
+    targets = []
+    for line in label:
+        datalist = []
+        data = line.lower().split()
+
+        if data[0] == 'car':
+            datalist.append(1)
+        elif data[0] != 'dontcare':
+            datalist.append(0)
+        else:
+            continue
+
+        # convert string to float
+        data = [float(data[i]) for i in range(1, len(data))]
+
+        # TODO: is w, and l log(w) and log(l)?
+        # [x, y, z, h, w, l, r]
+        datalist.extend(
+            [np.cos(data[13]), np.sin(data[13]), data[10], data[11], \
+             data[9], data[8]])
+
+        targets.append(datalist)
+
+    np.save(os.path.join(outputDir, 'labels', new_tag+'.txt'), np.array(targets))
+
+    print(new_tag)
+
+'''
+/train
+/train/lidar
+/train/bev
+/train/labels
+'''
+
+object_dir = './../data/KITTI_BEV/train'
+outputDir  = './../data/preprocessed/train'
+
+def main():
+
+    fl = glob.glob(os.path.join(object_dir, '*.bin'))
+    candidates = [f[-10:-4] for f in fl]
+    
+    pool = mp.Pool(args.num_workers)
+    pool.map(worker, candidates)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('-n', '--num-workers', type=int, nargs='?', default=10)
+    args = parser.parse_args()
+
+    main()
