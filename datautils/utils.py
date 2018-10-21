@@ -1,6 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import config as cnf
 
 def lidarToBEV(lidar, gridConfig):
     '''
@@ -32,47 +30,3 @@ def lidarToBEV(lidar, gridConfig):
     bev[-1, -indices[:, 1]-int(y_r[0]/res), indices[:, 0]] = ref
 
     return bev
-
-def rotateFrame(lidar, targets):
-    '''
-    Requires: lidar - numpy array, shape (-1,4); x, y, z, reflectance
-    Requires: targets - numpy array of labels - [x, y, z, h, w, l, ry]
-    Returns : lidar - rotated by random theta
-    Returns : targets - numpy array of shape (-1, 7) [x, y, z, h, w, l, ry]
-    '''
-    # random rotating angle
-    theta = np.random.uniform(low=-np.pi/4, high=(np.pi/4+np.pi/180))
-    # transformation matrix
-    tmat = np.array([[np.cos(theta), -np.sin(theta), 0],
-                     [np.sin(theta),  np.cos(theta), 0],
-                     [      0,              0, 1]], dtype='float32')
-    # transform lidar data
-    lidar[:, :3] = np.matmul(tmat, lidar[:, :3].T).T
-
-    # transfrom the label points
-    targets[:, :3] = np.matmul(tmat, targets[:, :3].T).T
-    targets[:, :6] = targets[:, :6] - theta
-
-    return lidar, targets
-
-def scaleFrame(lidar, targets):
-    # random scaling sample
-    scale = np.random.uniform(low=0.95, high=1.06)
-    # transformation matrix
-    tmat = np.array([[scale,     0,  0],
-                     [  0, scale,  0],
-                     [  0,     0, scale]], dtype='float32')
-
-    # transform lidar data
-    lidar[:,:3] = np.matmul(tmat, lidar[:, :3].T).T
-
-    # transfrom the label points
-    targets[:, :3] = np.matmul(tmat, targets[:, :3].T).T
-
-    return lidar, targets
-
-def perturbFrame(lidar, targets):
-    # apply perturbations to bounding boxes as described in the paper
-    # VoxelNet: End-to-End Learning for Point Cloud Based 3D Object Detection
-    # https://arxiv.org/abs/1711.06396
-    return lidar, targets
