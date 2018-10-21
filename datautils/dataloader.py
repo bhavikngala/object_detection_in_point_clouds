@@ -9,9 +9,9 @@ from os.path import isfile, join
 import random
 import numpy as np
 
-from datautils.utils import lidarToBEV, rotateFrame, scaleFrame, perturbFrame
+from datautils.utils import *
 import datautils.kittiUtils as ku
-from config import calTrain, calTest
+import config as cnf
 
 def lidarDatasetLoader(rootDir, batchSize, gridConfig, objtype):
 	'''
@@ -22,17 +22,17 @@ def lidarDatasetLoader(rootDir, batchSize, gridConfig, objtype):
 	Returns: train, validation, test Dataloader objects
 	'''
 	trainLoader = DataLoader(
-		LidarLoader(join(rootDir, 'train'), calTrain, gridConfig, objtype),
+		LidarLoader(join(rootDir, 'train'), cnf.calTrain, gridConfig, objtype),
 		batch_size = batchSize, shuffle=True, num_workers=1,
 		collate_fn=collate_fn, pin_memory=True
 	)
 	validationLoader = DataLoader(
-		LidarLoader(join(rootDir, 'val'), calTrain, gridConfig, objtype),
+		LidarLoader(join(rootDir, 'val'), cnf.calTrain, gridConfig, objtype),
 		batch_size = batchSize, shuffle=True, num_workers=1,
 		collate_fn=collate_fn, pin_memory=True
 	)
 	testLoader = DataLoader(
-		LidarLoader(join(rootDir, 'test'), calTest, gridConfig, train=False),
+		LidarLoader(join(rootDir, 'test'), cnf.calTest, gridConfig, train=False),
 		batch_size = batchSize, shuffle=True, num_workers=1,
 		collate_fn=collate_fn, pin_memory=True
 	)
@@ -294,10 +294,11 @@ class LidarLoader_2(Dataset):
 	No augmentation is done, direct training on the train data
 	This model might overfit but we get a good point to start at
 	'''
-	def __init__(self, directory, train=True):
+	def __init__(self, directory, objtype, train=True):
 		# load train dataset or test dataset
 		self.train = train
 		self.directory = directory
+		self.objtype = objtype
 
 		# read all the filenames in the directory
 		self.filenames = [join(directory, f) for f in listdir(directory) \
@@ -334,6 +335,8 @@ class LidarLoader_2(Dataset):
 						datalist.append(1)
 					elif data[0] != 'dontcare':
 						datalist.append(0)
+					else:
+						continue
 
 					# convert string to float
 					data = [float(data[i]) for i in range(1, len(data))]
@@ -346,8 +349,9 @@ class LidarLoader_2(Dataset):
 
 					labels.append(datalist)
 
-		labels = ku.camera_to_lidar_box(labels)
-		labels1 = np.zeros(labels.shape[0], 7)
+		labels = np.array(labels)
+		labels[:,1:] = ku.camera_to_lidar_box_1(labels[:,1:])
+		labels1 = np.zeros((labels.shape[0], 7),dtype=np.float32)
 		labels1[:,0] = labels[:,0]
 		labels1[:,1], labels1[:,2] = np.cos(labels[:,7]), np.sin(labels[:,7])
 		labels1[:,3], labels1[:,4] = labels[:,1], labels[:,2]#x,y
