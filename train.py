@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 import os
 import time
 from queue import Queue
+import traceback
 
 from networks.networks import PointCloudDetector as HawkEye
 from datautils.dataloader import *
@@ -48,8 +49,12 @@ def train(epoch):
 		
 		data, target, filenames = batch_data
 
-		data = data.cuda(device=None, non_blocking=True)
-		target = target.cuda(device=None, non_blocking=True)
+		data = data.cuda(non_blocking=True)
+
+		# pass data through network and predict
+		cla, loc = hawkEye(data)
+		
+		target = target.cuda(non_blocking=True)
 		m, tr, tc = target.size()
 		# create zoom boxes
 		zoom0_3 = target.new_full([m, tr, 4], fill_value=0)
@@ -66,12 +71,10 @@ def train(epoch):
 		zoom0_3[:, :, 2] = target[:, :, 3] + target[:, :, 5]*0.15
 		zoom0_3[:, :, 3] = target[:, :, 3] - target[:, :, 5]*0.15
 
-		# pass data through network and predict
-		cla, loc = hawkEye(data)
 
 		# compute loss, gradient, and optimize
 		st = time.time()
-		claLoss, locLoss = computeLoss(cla, loc, target, zoom0_3, zoom1_2)
+		claLoss, locLoss, ps, ns = computeLoss(cla, loc, target, zoom0_3, zoom1_2)
 		ed = time.time()
 		if claLoss is None:
 			trainLoss = None
@@ -97,7 +100,13 @@ def train(epoch):
 		
 		ed1 = time.time()
 		# ls = ls + 'elapsed time: '+str(ed-st)+' secs ' + 'batch elapsed time: '+str(ed1-st1)+' secs\n\n'
-		queue.put((epoch, batchId, claLoss, locLoss, trainLoss, (ed-st), (ed1-st1)))
+		queue.put((epoch, batchId, claLoss, locLoss, trainLoss, int(ps), int(ns), ed-st, ed1-st1))
+
+		del data
+		del target
+		del filenames
+		del zoom0_3
+		del zoom1_2
 
 def validation(epoch):
 	hawkEye.eval()
@@ -150,7 +159,7 @@ if __name__ == '__main__':
 			st = time.time()
 			train(epoch)
 			ed = time.time()
-			misc.writeToFile(cnf.trainlog, '\n\n\n~~~~~epoch end time taken: '+str(st-ed)+' secs~~~~\n\n\n')
+			misc.writeToFile(cnf.trainlog2, '\n\n\n~~~~~epoch' + str(epoch) + 'end time taken: '+str(ed-st)+' secs~~~~\n\n\n')
 
 			# run validation every 10 epochs
 			# if (epoch+1)%10 == 0:
@@ -158,8 +167,11 @@ if __name__ == '__main__':
 
 			if (epoch+1)%10 == 0:
 				torch.save(hawkEye.state_dict(), cnf.model_file)
+
+			del hawkEye
 	except BaseException as e:
-		misc.writeToFile(cnf.errorlog, str(e)+'\n\n\n')
+		trace = traceback.format_exc()
+		misc.writeToFile(cnf.errorlog, trace+'\n\n\n')
 	finally:
 		torch.save(hawkEye.state_dict(), cnf.model_file)
 

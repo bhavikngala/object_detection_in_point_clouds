@@ -29,8 +29,8 @@ epsilon = 1e-5
 
 # select gpu device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-posLabel = torch.Tensor([1.0]).to(device)
-negLabel = torch.Tensor([0.0]).to(device)
+# posLabel = torch.Tensor([1.0]).to(device)
+# negLabel = torch.Tensor([0.0]).to(device)
 
 # filename of saved model
 model_file = './models/hawkEye.pth'
@@ -42,6 +42,7 @@ testOutputDir = './output/test'
 
 # train, validation, test loss log file
 trainlog = './loss/train.txt'
+trainlog2 = './loss/etime.txt'
 vallog = './loss/vali.txt'
 testlog = './loss/test.txt'
 errorlog = './loss/error.txt'
@@ -51,9 +52,9 @@ calTrain = './../data_object_calib/training/calib'
 calTest = './../data_object_calib/testing/calib'
 
 # string for log
-logString1 = 'epoch: {:05d} | batch:{:05d} | cla loss: {:.4f} | loc loss: {:.4f} | total loss: {:.4f} | lt : {:.4f} | bt : {:.4f} \n\n'
-logString2 = 'epoch: {:05d} | batch:{:05d} | cla loss: {:.4f} | loc loss: None | total loss: {:.4f} | lt : {:.4f} | bt : {:.4f} \n\n'
-logString3 = 'epoch: {:05d} | batch:{:05d} | cla loss: None | loc loss: None| total loss: None | lt : {:.4f} | bt : {:.4f} \n\n'
+logString1 = 'epoch: {:03d} | batch:{:04d} | cla loss: {:.8f} | loc loss: {:.8f} | total loss: {:.8f} | PS : {:07d} | NS : {:07d} | lt : {:.4f} | bt : {:.4f} \n\n'
+logString2 = 'epoch: {:03d} | batch:{:04d} | cla loss: {:.8f} | loc loss: None | total loss: {:.8f} | PS : {:07d} | NS : {:07d} | lt : {:.4f} | bt : {:.4f} \n\n'
+logString3 = 'epoch: {:03d} | batch:{:04d} | cla loss: None | loc loss: None| total loss: None | PS : {:07d} | NS : {:07d} | lt : {:.4f} | bt : {:.4f} \n\n'
 # logString = Template('epoch: $e | cla loss: $cl | loc loss: $ll | total loss: $tl \n')
 
 numBatchInQueue = 4
