@@ -44,6 +44,7 @@ testOutputDir = './output/test'
 trainlog = './loss/train.txt'
 vallog = './loss/vali.txt'
 testlog = './loss/test.txt'
+errorlog = './loss/error.txt'
 
 # calibration dir
 calTrain = './../data_object_calib/training/calib'
