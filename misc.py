@@ -1,7 +1,7 @@
 import torch
 import os
 from threading import Thread
-from queue import Queue
+import config as cnf
 
 # custom weights initialization called on network
 def weights_init(m):
@@ -15,34 +15,25 @@ def weights_init(m):
 def savebatchOutput(cla, loc, filenames, outputDir, epoch):
 	for i in range(len(filenames)):
 		filename = filenames[i]
-		frameCla = cla[i].view(-1, 1)
-		frameLoc = loc[i].view(-1, 6)
-		# concatenate the tensors [cla, loc]
-		frameClaLoc = torch.cat((frameCla, frameLoc), 1)
-
-		# save
-		filename = filename.split('/')[-1][:-4]
 
 		# make directory if it doesnt exists
 		if not os.path.exists(outputDir+'/'+str(epoch)+'/output'):
 			os.makedirs(outputDir+'/'+str(epoch)+'/output')
 
-		torch.save(frameClaLoc,
-			outputDir+'/'+str(epoch)+'/output/'+filename+'.pt')
+		torch.save(cla[i],
+			outputDir+'/'+str(epoch)+'/output/'+filename+'_cla.pt')
+		torch.save(loc[i],
+			outputDir+'/'+str(epoch)+'/output/'+filename+'_loc.pt')
 
 def savebatchTarget(target, filenames, outputDir, epoch):
 	for i in range(len(filenames)):
 		filename = filenames[i]
-		t = target[i]
-
-		# save
-		filename = filename.split('/')[-1][:-4]
 
 		# make directory if it doesnt exists
 		if not os.path.exists(outputDir+'/'+str(epoch)+'/target'):
 			os.makedirs(outputDir+'/'+str(epoch)+'/target')
 
-		torch.save(t,
+		torch.save(target[i],
 			outputDir+'/'+str(epoch)+'/target/'+filename+'.pt')
 
 def writeToFile(filename, line):
@@ -51,14 +42,24 @@ def writeToFile(filename, line):
 
 class FileWriterThread(Thread):
 
-	def __init__(self, queue):
+	def __init__(self, queue, filename):
 		Thread.__init__(self)
 		self.queue = queue
+		self.filename = filename
 
 	def run(self):
 		while True:
-			filename, string = self.queue.get()
 			try:
-				writeToFile(filename, string)
+				epoch, batchId, claLoss, locLoss, trainLoss, lt, bt = self.queue.get()
+				if claLoss is None:
+					trainLoss = None
+					ls = cnf.logString3.format(epoch, batchId, lt, bt)
+				elif locLoss is not None:
+					trainLoss = claLoss + locLoss
+					ls = cnf.logString1.format(epoch, batchId, claLoss.item(), locLoss.item(), trainLoss.item(), lt, bt)
+				else:
+					trainLoss = claLoss
+					ls = cnf.logString2.format(epoch, batchId, claLoss.item(), trainLoss.item(), lt, bt)
+				writeToFile(self.filename, ls)
 			finally:
 				self.queue.task_done()
