@@ -29,7 +29,7 @@ pr = pr/cnf.batchSize
 z = torch.tensor([[1,3,3,1],[1,3,9,7],[3,5,6,4],[6,8,3,1],[5,7,9,7],[0,0,0,0],[0,0,0,0]])
 zr, zc = z.size()
 zr = zr/cnf.batchSize
-p1 = p.repeat(1, zr)
+p1 = p.repeat(1, zr).view(-1, zr, pc)
 p1 = p1.view(-1, zr, pc)
 z1 = z.repeat(1, pr, 1)
 z1 = z1.view(-1, zr, zc)
@@ -113,4 +113,51 @@ def computeLoss3_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 	# print('numPosSamples:', numPosSamples, 'numNegSamples:', numNegSamples)
 	return claLoss, locLoss
 
-computeLoss = computeLoss3_1
+def computeLoss4(cla, loc, targets, zoomed0_3, zoomed1_2):
+	lm, lc, lh, lw = loc.size()
+	_, zr, zc = zoomed0_3.size()
+	_, tr, tc = targets.size()
+
+	# move the channel axis to the last dimension and reshape
+	loc = loc.permute(0, 2, 3, 1).contiguous().view(-1, 6)
+	cla = cla.permute(0, 2, 3, 1).contiguous().view(-1, 1)
+
+	# repeat each row by zr times
+	loc = loc.repeat(1, zr).view(-1, 6)
+	cla1 = cla.repeat(1, zr).view(-1, 1)
+
+	# repeat entire zoom, target sample by lh*lw times and reshape
+	zoomed0_3 = zoomed0_3.repeat(1, lh*lw, 1).view(-1, zc)
+	zoomed1_2 = zoomed1_2.repeat(1, lh*lw, 1).view(-1, zc)
+	targets = targets.repeat(1, lh*lw, 1).view(-1, tc)
+
+	##############~POSITIVE SAMPLES~#################
+	b = ((loc[:,3]<zoomed0_3[:,0]) & (loc[:,3]>zoomed0_3[:,1])) & ((loc[:,2]>zoomed0_3[:,3]) & (loc[:,2]<zoomed0_3[:,2]))
+	numPosSamples = b.sum()
+
+	if numPosSamples>0:
+		pred = cla1[b]+cnf.epsilon
+		claLoss = (-cnf.alpha*targets[b][:,0]*(1-pred).pow(cnf.gamma)*torch.log(pred)).sum() \
+			+ (-cnf.alpha*(1-targets[b][:,0])*pred.pow(cnf.gamma)*torch.log(1-pred)).sum()
+		
+		locLoss = F.smooth_l1_loss(loc[b], targets[b][:,1:])
+	else:
+		locLoss = None
+	##############~POSITIVE SAMPLES~#################
+
+	##############~NEGATIVE SAMPLES~#################
+	b = (loc[:,2]<zoomed1_2[:,3])|(loc[:,2]>zoomed1_2[:,2])|(loc[:,3]>zoomed1_2[:,0])|(loc[:,3]<zoomed1_2[:,1])
+
+	negPred = cla[b.view(zr, -1).sum(0)!=zr]+cnf.epsilon
+	numNegSamples = negPred.size(0)
+	
+	if numPosSamples>0 and numNegSamples>0:
+		claLoss += (-cnf.alpha*negPred.pow(cnf.gamma)*torch.log(1-negPred)).sum()
+	elif numNegSamples>0:
+		claLoss = (-cnf.alpha*negPred.pow(cnf.gamma)*torch.log(1-negPred)).sum()
+	else:
+		claLoss = None
+	##############~NEGATIVE SAMPLES~#################
+	return claLoss, locLoss
+
+computeLoss = computeLoss4
