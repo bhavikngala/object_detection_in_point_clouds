@@ -159,7 +159,7 @@ if __name__ == '__main__':
 			st = time.time()
 			train(epoch)
 			ed = time.time()
-			misc.writeToFile(cnf.trainlog2, '\n\n\n~~~~~epoch' + str(epoch) + 'end time taken: '+str(ed-st)+' secs~~~~\n\n\n')
+			misc.writeToFile(cnf.trainlog2, '~~~~~epoch ' + str(epoch) + ' end time taken: '+str(ed-st)+' secs~~~~\n')
 
 			# run validation every 10 epochs
 			# if (epoch+1)%10 == 0:
@@ -168,12 +168,12 @@ if __name__ == '__main__':
 			if (epoch+1)%10 == 0:
 				torch.save(hawkEye.state_dict(), cnf.model_file)
 
-			del hawkEye
 	except BaseException as e:
 		trace = traceback.format_exc()
 		misc.writeToFile(cnf.errorlog, trace+'\n\n\n')
 	finally:
 		torch.save(hawkEye.state_dict(), cnf.model_file)
+		del hawkEye
 
 	# finish all tasks
 	queue.join()
