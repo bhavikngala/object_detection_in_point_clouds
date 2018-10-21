@@ -1,8 +1,7 @@
 import torch
-# from string import Template
 
 rootDir = './../data/KITTI_BEV'
-batchSize = 3
+trainRootDir = './../data/preprocessed/train'
 
 gridConfig = {
 	'x':(0, 70),
@@ -11,7 +10,7 @@ gridConfig = {
 	'res':0.1
 }
 
-objtype = 'Car'
+objtype = 'car'
 
 # res_block_layers = list if number of channels in the first conv layer of each res_block
 # up_sample_layers = list of tuple of number of channels input deconv and conv layers
@@ -51,7 +50,10 @@ calTrain = './../data_object_calib/training/calib'
 calTest = './../data_object_calib/testing/calib'
 
 # string for log
-logString1 = 'epoch: {:05d} | batch:{:05d} | cla loss: {:.4f} | loc loss: {:.4f} | total loss: {:.4f} \n'
-logString2 = 'epoch: {:05d} | batch:{:05d} | cla loss: {:.4f} | loc loss: None | total loss: {:.4f} \n'
-logString3 = 'epoch: {:05d} | batch:{:05d} | cla loss: None | loc loss: None| total loss: None \n'
+logString1 = 'epoch: {:05d} | batch:{:05d} | cla loss: {:.4f} | loc loss: {:.4f} | total loss: {:.4f} | lt : {:.4f} | bt : {:.4f} \n\n'
+logString2 = 'epoch: {:05d} | batch:{:05d} | cla loss: {:.4f} | loc loss: None | total loss: {:.4f} | lt : {:.4f} | bt : {:.4f} \n\n'
+logString3 = 'epoch: {:05d} | batch:{:05d} | cla loss: None | loc loss: None| total loss: None | lt : {:.4f} | bt : {:.4f} \n\n'
 # logString = Template('epoch: $e | cla loss: $cl | loc loss: $ll | total loss: $tl \n')
+
+numBatchInQueue = 4
+batchSize = 3
