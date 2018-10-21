@@ -18,7 +18,7 @@ torch.manual_seed(0)
 
 # data loaders
 train_loader = DataLoader(
-	LidarLoader_2(cnf.rootDir),
+	LidarLoader_2(cnf.rootDir+'/train', cnf.objtype),
 	batch_size = cnf.batchSize, shuffle=True, num_workers=3,
 	collate_fn=collate_fn_2, pin_memory=True
 )
@@ -56,15 +56,15 @@ def train(epoch):
 		zoom1_2 = target.new_full([m, tr, 4], fill_value=0)
 
 		# left: y + w/2, right: y - w/2, forward: x + l/2, backward: x - l/2
-		zoom1_2[:, 0] = labels[:, 4] + labels[:, 6]*0.6
-		zoom1_2[:, 1] = labels[:, 4] - labels[:, 6]*0.6
-		zoom1_2[:, 2] = labels[:, 3] + labels[:, 5]*0.6
-		zoom1_2[:, 3] = labels[:, 3] - labels[:, 5]*0.6
+		zoom1_2[:, :, 0] = target[:, :, 4] + target[:, :, 6]*0.6
+		zoom1_2[:, :, 1] = target[:, :, 4] - target[:, :, 6]*0.6
+		zoom1_2[:, :, 2] = target[:, :, 3] + target[:, :, 5]*0.6
+		zoom1_2[:, :, 3] = target[:, :, 3] - target[:, :, 5]*0.6
 
-		zoom0_3[:, 0] = labels[:, 4] + labels[:, 6]*0.15
-		zoom0_3[:, 1] = labels[:, 4] - labels[:, 6]*0.15
-		zoom0_3[:, 2] = labels[:, 3] + labels[:, 5]*0.15
-		zoom0_3[:, 3] = labels[:, 3] - labels[:, 5]*0.15
+		zoom0_3[:, :, 0] = target[:, :, 4] + target[:, :, 6]*0.15
+		zoom0_3[:, :, 1] = target[:, :, 4] - target[:, :, 6]*0.15
+		zoom0_3[:, :, 2] = target[:, :, 3] + target[:, :, 5]*0.15
+		zoom0_3[:, :, 3] = target[:, :, 3] - target[:, :, 5]*0.15
 
 		# pass data through network and predict
 		cla, loc = hawkEye(data)
@@ -97,7 +97,7 @@ def train(epoch):
 		
 		ed1 = time.time()
 		# ls = ls + 'elapsed time: '+str(ed-st)+' secs ' + 'batch elapsed time: '+str(ed1-st1)+' secs\n\n'
-		queue.put((epoch, i, claLoss, locLoss, trainLoss, (ed-st), (ed1-st1)))
+		queue.put((epoch, batchId, claLoss, locLoss, trainLoss, (ed-st), (ed1-st1)))
 
 def validation(epoch):
 	hawkEye.eval()
@@ -158,8 +158,10 @@ if __name__ == '__main__':
 
 			if (epoch+1)%10 == 0:
 				torch.save(hawkEye.state_dict(), cnf.model_file)
-		finally:
-			torch.save(hawkEye.state_dict(), cnf.model_file)
+	except BaseException as e:
+		misc.writeToFile(cnf.errorlog, str(e)+'\n\n\n')
+	finally:
+		torch.save(hawkEye.state_dict(), cnf.model_file)
 
 	# finish all tasks
 	queue.join()
