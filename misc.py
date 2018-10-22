@@ -56,10 +56,10 @@ class FileWriterThread(Thread):
 					ls = cnf.logString3.format(epoch, batchId, lt, bt, ps, ns)
 				elif locLoss is not None:
 					trainLoss = claLoss + locLoss
-					ls = cnf.logString1.format(epoch, batchId, claLoss.item(), locLoss.item(), trainLoss.item(), lt, bt, ps, ns)
+					ls = cnf.logString1.format(epoch, batchId, claLoss, locLoss, trainLoss, lt, bt, ps, ns)
 				else:
 					trainLoss = claLoss
-					ls = cnf.logString2.format(epoch, batchId, claLoss.item(), trainLoss.item(), lt, bt, ps, ns)
+					ls = cnf.logString2.format(epoch, batchId, claLoss, trainLoss, lt, bt, ps, ns)
 				writeToFile(self.filename, ls)
 			finally:
 				self.queue.task_done()

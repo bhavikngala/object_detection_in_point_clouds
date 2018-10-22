@@ -10,7 +10,6 @@ import traceback
 
 from networks.networks import PointCloudDetector as HawkEye
 from datautils.dataloader import *
-from datautils.DataLoaderThread import DataLoaderThread
 import config as cnf
 from lossUtils import computeLoss
 import misc
@@ -78,12 +77,21 @@ def train(epoch):
 		ed = time.time()
 		if claLoss is None:
 			trainLoss = None
+			tl = None
+			cl = None
+			ll = None
 			# ls = cnf.logString3.format(epoch, batchId)
 		elif locLoss is not None:
 			trainLoss = claLoss + locLoss
+			tl = trainLoss.item()
+			cl = claLoss.item()
+			ll = locLoss.item()
 			# ls = cnf.logString1.format(epoch, batchId, claLoss.item(), locLoss.item(), trainLoss.item())
 		else:
 			trainLoss = claLoss
+			tl = trainLoss.item()
+			cl = claLoss.item()
+			ll = None
 			# ls = cnf.logString2.format(epoch, batchId, claLoss.item(), trainLoss.item())
 
 		# trainLoss = claLoss+locLoss
@@ -100,7 +108,7 @@ def train(epoch):
 		
 		ed1 = time.time()
 		# ls = ls + 'elapsed time: '+str(ed-st)+' secs ' + 'batch elapsed time: '+str(ed1-st1)+' secs\n\n'
-		queue.put((epoch, batchId, claLoss, locLoss, trainLoss, int(ps), int(ns), ed-st, ed1-st1))
+		queue.put((epoch, batchId, cl, ll, tl, int(ps), int(ns), ed-st, ed1-st1))
 
 		del data
 		del target
