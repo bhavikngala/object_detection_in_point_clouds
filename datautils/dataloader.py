@@ -315,7 +315,6 @@ class LidarLoader_2(Dataset):
 
 		# read bev
 		lidarData = np.fromfile(filename, dtype=np.float32).reshape(-1, 4)
-		bev = lidarToBEV(lidarData, cnf.gridConfig)
 
 		labels = []
 		# read training labels
@@ -348,9 +347,13 @@ class LidarLoader_2(Dataset):
 						 data[8], data[9], data[13]])
 
 					labels.append(datalist)
+			labels = np.array(labels)	
 
-		labels = np.array(labels)
-		labels[:,1:] = ku.camera_to_lidar_box_1(labels[:,1:])
+		# augment data
+		if self.train:
+			lidar, labels = ku.aug_data(lidar, labels)
+
+		bev = lidarToBEV(lidarData, cnf.gridConfig)
 		labels1 = np.zeros((labels.shape[0], 7),dtype=np.float32)
 		labels1[:,0] = labels[:,0]
 		labels1[:,1], labels1[:,2] = np.cos(labels[:,7]), np.sin(labels[:,7])

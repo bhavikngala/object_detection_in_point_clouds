@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import cv2
+import config as cnf
 
 
 # File Name : utils.py
@@ -10,50 +11,24 @@ import cv2
 # Created By : Jeasine Ma [jeasinema[at]gmail[dot]com]
 # Source : https://github.com/jeasinema/VoxelNet-tensorflow/blob/master/utils/utils.py
 
-gridConfig = {
-        'x':(0, 70),
-        'y':(-40, 40),
-        'z':(-2.5, 1),
-        'res':0.1
-    }
-
-Tr_velo_to_cam = np.array([
-		[7.49916597e-03, -9.99971248e-01, -8.65110297e-04, -6.71807577e-03],
-		[1.18652889e-02, 9.54520517e-04, -9.99910318e-01, -7.33152811e-02],
-		[9.99882833e-01, 7.49141178e-03, 1.18719929e-02, -2.78557062e-01],
-		[0, 0, 0, 1]
-	])
-# cal mean from train set
-R0 = np.array([
-		[0.99992475, 0.00975976, -0.00734152, 0],
-		[-0.0097913, 0.99994262, -0.00430371, 0],
-		[0.00729911, 0.0043753, 0.99996319, 0],
-		[0, 0, 0, 1]
-])
-P2 = np.array([[719.787081,    0.,            608.463003, 44.9538775],
-                      [0.,            719.787081,    174.545111, 0.1066855],
-                      [0.,            0.,            1.,         3.0106472e-03],
-[0., 0., 0., 0]])
-R0_inv = np.linalg.inv(R0)
-Tr_velo_to_cam_inv = np.linalg.inv(Tr_velo_to_cam)
-P2_inv = np.linalg.pinv(P2)
 
 def lidar_to_bird_view(x, y, factor=1):
-	x_r, y_r, z_r = gridConfig['x'], gridConfig['y'], gridConfig['z']
-	res = gridConfig['res']
+	x_r, y_r, z_r = cnf.gridConfig['x'], cnf.gridConfig['y'], cnf.gridConfig['z']
+	res = cnf.gridConfig['res']
 	a = -(y + int(y_r[0])/res)
 	b = x/res
 	a = np.clip(a, a_max=(x_r[1] - x_r[0]) / res, a_min=0)
 	b = np.clip(b, a_max=(y_r[1] - y_r[0]) / res, a_min=0)
 	return a, b
 
+
 def batch_lidar_to_bird_view(points, factor=1):
 	# Input:
 	#   points (N, 2)
 	# Outputs:
 	#   points (N, 2)
-	x_r, y_r, z_r = gridConfig['x'], gridConfig['y'], gridConfig['z']
-	res = gridConfig['res']
+	x_r, y_r, z_r = cnf.gridConfig['x'], cnf.gridConfig['y'], cnf.gridConfig['z']
+	res = cnf.gridConfig['res']
 	a = -(points[:, 1] + y_r[0]) / res
 	b = points[:, 0]/res
 	a = np.clip(a, a_max=(x_r[1] - x_r[0]) / res, a_min=0)
@@ -75,16 +50,16 @@ def angle_in_limit(angle):
 
 def camera_to_lidar(x, y, z):
 	p = np.array([x, y, z, 1])
-	p = np.matmul(R0_inv, p)
-	p = np.matmul(Tr_velo_to_cam_inv, p)
+	p = np.matmul(cnf.R0_inv, p)
+	p = np.matmul(cnf.Tr_velo_to_cam_inv, p)
 	p = p[0:3]
 	return tuple(p)
 
 
 def lidar_to_camera(x, y, z):
 	p = np.array([x, y, z, 1])
-	p = np.matmul(Tr_velo_to_cam, p)
-	p = np.matmul(R0, p)
+	p = np.matmul(cnf.Tr_velo_to_cam, p)
+	p = np.matmul(cnf.R0, p)
 	p = p[0:3]
 	return tuple(p)
 
@@ -94,9 +69,8 @@ def camera_to_lidar_point(points):
 	N = points.shape[0]
 	points = np.hstack([points, np.ones((N, 1))]).T  # (N,4) -> (4,N)
 
-	points = np.matmul(R0_inv, points)
-	points = np.matmul(np.linalg.inv(
-		Tr_velo_to_cam), points).T  # (4, N) -> (N, 4)
+	points = np.matmul(cnf.R0_inv, points)
+	points = np.matmul(cnf.Tr_velo_to_cam_inv, points).T  # (4, N) -> (N, 4)
 	points = points[:, 0:3]
 	return points.reshape(-1, 3)
 
@@ -106,8 +80,8 @@ def lidar_to_camera_point(points):
 	N = points.shape[0]
 	points = np.hstack([points, np.ones((N, 1))]).T
 
-	points = np.matmul(Tr_velo_to_cam, points)
-	points = np.matmul(R0, points).T
+	points = np.matmul(cnf.Tr_velo_to_cam, points)
+	points = np.matmul(cnf.R0, points).T
 	points = points[:, 0:3]
 	return points.reshape(-1, 3)
 
@@ -327,7 +301,7 @@ def lidar_box3d_to_camera_box(boxes3d, cal_projection=False):
 		box3d = lidar_boxes3d_corner[n]
 		box3d = lidar_to_camera_point(box3d)
 		points = np.hstack((box3d, np.ones((8, 1)))).T  # (8, 4) -> (4, 8)
-		points = np.matmul(P2, points).T
+		points = np.matmul(cnf.P2, points).T
 		points[:, 0] /= points[:, 2]
 		points[:, 1] /= points[:, 2]
 
@@ -697,3 +671,77 @@ def cal_box2d_iou(boxes2d, gt_boxes2d):
 
 if __name__ == '__main__':
 	pass
+
+
+def aug_data(lidar, labels):
+    np.random.seed()
+    
+    gt_box3d = labels  # (N', 7) x, y, z, h, w, l, r
+
+    choice = np.random.randint(1, 18)
+
+    if choice >= 15:
+
+        lidar_center_gt_box3d = camera_to_lidar_box_1(gt_box3d)
+        lidar_corner_gt_box3d = center_to_corner_box3d(
+            lidar_center_gt_box3d, coordinate='lidar')
+
+        for idx in range(len(lidar_corner_gt_box3d)):
+            # TODO: precisely gather the point
+            is_collision = True
+            _count = 0
+            while is_collision and _count < 100:
+                t_rz = np.random.uniform(-np.pi / 10, np.pi / 10)
+                t_x = np.random.normal()
+                t_y = np.random.normal()
+                t_z = np.random.normal()
+                # check collision
+                tmp = box_transform(
+                    lidar_center_gt_box3d[[idx]], t_x, t_y, t_z, t_rz, 'lidar')
+                is_collision = False
+                for idy in range(idx):
+                    x1, y1, w1, l1, r1 = tmp[0][[0, 1, 4, 5, 6]]
+                    x2, y2, w2, l2, r2 = lidar_center_gt_box3d[idy][[
+                        0, 1, 4, 5, 6]]
+                    iou = cal_iou2d(np.array([x1, y1, w1, l1, r1], dtype=np.float32),
+                                    np.array([x2, y2, w2, l2, r2], dtype=np.float32))
+                    if iou > 0:
+                        is_collision = True
+                        _count += 1
+                        break
+            if not is_collision:
+                box_corner = lidar_corner_gt_box3d[idx]
+                minx = np.min(box_corner[:, 0])
+                miny = np.min(box_corner[:, 1])
+                minz = np.min(box_corner[:, 2])
+                maxx = np.max(box_corner[:, 0])
+                maxy = np.max(box_corner[:, 1])
+                maxz = np.max(box_corner[:, 2])
+                bound_x = np.logical_and(
+                    lidar[:, 0] >= minx, lidar[:, 0] <= maxx)
+                bound_y = np.logical_and(
+                    lidar[:, 1] >= miny, lidar[:, 1] <= maxy)
+                bound_z = np.logical_and(
+                    lidar[:, 2] >= minz, lidar[:, 2] <= maxz)
+                bound_box = np.logical_and(
+                    np.logical_and(bound_x, bound_y), bound_z)
+                lidar[bound_box, 0:3] = point_transform(
+                    lidar[bound_box, 0:3], t_x, t_y, t_z, rz=t_rz)
+                lidar_center_gt_box3d[idx] = box_transform(
+                    lidar_center_gt_box3d[[idx]], t_x, t_y, t_z, t_rz, 'lidar')
+
+    elif choice <= 11 and choice >= 14:
+        # global rotation
+        angle = np.random.uniform(-np.pi / 4, np.pi / 4)
+        lidar[:, 0:3] = point_transform(lidar[:, 0:3], 0, 0, 0, rz=angle)
+        lidar_center_gt_box3d = camera_to_lidar_box_1(gt_box3d)
+        lidar_center_gt_box3d = box_transform(lidar_center_gt_box3d, 0, 0, 0, r=angle, coordinate='lidar')
+    
+    elif choice>=9 and choice <=10:
+        # global scaling
+        factor = np.random.uniform(0.95, 1.05)
+        lidar[:, 0:3] = lidar[:, 0:3] * factor
+        lidar_center_gt_box3d = camera_to_lidar_box_1(gt_box3d)
+        lidar_center_gt_box3d[:, 0:6] = lidar_center_gt_box3d[:, 0:6] * factor
+   
+    return lidar, label
