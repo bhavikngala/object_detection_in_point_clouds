@@ -7,12 +7,17 @@ import os
 import time
 from queue import Queue
 import traceback
+import argparse
 
 from networks.networks import PointCloudDetector as HawkEye
 from datautils.dataloader import *
 import config as cnf
 from lossUtils import computeLoss
 import misc
+
+parser = argparse.ArgumentParser(description='Train network')
+parser.add_argument('--step-lr', action='store_true')
+args = parser.parse_args()
 
 torch.manual_seed(0)
 
@@ -28,8 +33,11 @@ hawkEye = HawkEye(cnf.res_block_layers, cnf.up_sample_layers).to(cnf.device)
 hawkEye.apply(misc.weights_init)
 
 # network optimization method
-optimizer = Adam(hawkEye.parameters(), lr=cnf.learningRate)
-scheduler = MultiStepLR(optimizer, milestones=[20,30], gamma=0.1)
+if args.step_lr:
+	optimizer = Adam(hawkEye.parameters(), lr=cnf.slr)	
+	scheduler = MultiStepLR(optimizer, milestones=[20,30], gamma=0.1)
+else:	
+	optimizer = Adam(hawkEye.parameters(), lr=cnf.lr)
 
 # status string writier thread and queue
 queue = Queue()
@@ -162,7 +170,8 @@ if __name__ == '__main__':
 	try:
 		for epoch in range(cnf.epochs):
 			# learning rate decay scheduler
-			scheduler.step()
+			if args.step_lr:
+				scheduler.step()
 
 			st = time.time()
 			train(epoch)
