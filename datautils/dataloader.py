@@ -351,7 +351,7 @@ class LidarLoader_2(Dataset):
 
 		# augment data
 		if self.train:
-			lidar, labels = ku.aug_data(lidar, labels)
+			lidarData, labels[:,1:] = ku.aug_data(lidarData, labels[:,1:])
 
 		bev = lidarToBEV(lidarData, cnf.gridConfig)
 		labels1 = np.zeros((labels.shape[0], 7),dtype=np.float32)
