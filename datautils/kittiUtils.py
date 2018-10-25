@@ -673,14 +673,14 @@ if __name__ == '__main__':
 	pass
 
 
-def aug_data(lidar, labels):
+def aug_data(lidar, labels, augData):
 	np.random.seed()
 	
 	gt_box3d = labels  # (N', 7) x, y, z, h, w, l, r
 
 	choice = np.random.randint(1, 18)
 
-	if choice >= 15:
+	if augData and choice >= 15:
 
 		lidar_center_gt_box3d = camera_to_lidar_box_1(gt_box3d)
 		lidar_corner_gt_box3d = center_to_corner_box3d(
@@ -730,20 +730,20 @@ def aug_data(lidar, labels):
 				lidar_center_gt_box3d[idx] = box_transform(
 					lidar_center_gt_box3d[[idx]], t_x, t_y, t_z, t_rz, 'lidar')
 
-	elif choice <= 11 and choice >= 14:
+	elif augData and choice <= 11 and choice >= 14:
 		# global rotation
 		angle = np.random.uniform(-np.pi / 4, np.pi / 4)
 		lidar[:, 0:3] = point_transform(lidar[:, 0:3], 0, 0, 0, rz=angle)
 		lidar_center_gt_box3d = camera_to_lidar_box_1(gt_box3d)
 		lidar_center_gt_box3d = box_transform(lidar_center_gt_box3d, 0, 0, 0, r=angle, coordinate='lidar')
 	
-	elif choice>=9 and choice <=10:
+	elif augData and choice>=9 and choice <=10:
 		# global scaling
 		factor = np.random.uniform(0.95, 1.05)
 		lidar[:, 0:3] = lidar[:, 0:3] * factor
 		lidar_center_gt_box3d = camera_to_lidar_box_1(gt_box3d)
 		lidar_center_gt_box3d[:, 0:6] = lidar_center_gt_box3d[:, 0:6] * factor
 	else:
-		lidar_center_gt_box3d = labels
+		lidar_center_gt_box3d = camera_to_lidar_box_1(gt_box3d)
 
 	return lidar, lidar_center_gt_box3d
