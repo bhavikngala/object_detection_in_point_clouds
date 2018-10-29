@@ -338,7 +338,7 @@ def lidar_to_bird_view_img(lidar, factor=1):
 
 	return None
 
-'''
+
 def draw_lidar_box3d_on_image(img, boxes3d, scores, gt_boxes3d=np.array([]),
 							  color=(0, 255, 255), gt_color=(255, 0, 255), thickness=1):
 	# Input:
@@ -426,7 +426,7 @@ def draw_lidar_box3d_on_birdview(birdview, boxes3d, scores, gt_boxes3d=np.array(
 				 color, thickness, cv2.LINE_AA)
 
 	return cv2.cvtColor(img.astype(np.uint8), cv2.COLOR_BGR2RGB)
-'''
+
 
 def label_to_gt_box3d(labels, cls='Car', coordinate='camera'):
 	# Input:

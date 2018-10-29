@@ -1,5 +1,4 @@
 import torch
-import torch.nn.functional as F
 from torch.optim import Adam
 from torch.optim.lr_scheduler import MultiStepLR
 from torch.utils.data import DataLoader
@@ -24,7 +23,7 @@ torch.manual_seed(0)
 
 # data loaders
 train_loader = DataLoader(
-	LidarLoader_2(cnf.rootDir+'/train', cnf.objtype, train=True, aug_data=args.aug_data),
+	LidarLoader_2(cnf.rootDir+'/train', cnf.objtype, train=True, augData=args.aug_data),
 	batch_size = cnf.batchSize, shuffle=True, num_workers=3,
 	collate_fn=collate_fn_2, pin_memory=True
 )

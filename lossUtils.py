@@ -5,20 +5,6 @@ import numpy as np
 
 import config as cnf
 
-def focalLoss(pred, target, gamma=cnf.gamma):
-	'''
-	Focal loss function.
-	ref: https://arxiv.org/pdf/1708.02002.pdf
-	FL = -y*(1-p)^gamma*log(p) - (1-y)*p^gamma*lop(1-p)
-	'''
-	return -target*(1-pred).pow(gamma)*torch.log(pred) - \
-		   (1-target)*pred.pow(gamma)*torch.log(1-pred)
-
-def smoothL1(loc, target):
-	'''
-	returns smooth l1 loss between loc and target
-	'''
-	return F.smooth_l1_loss(loc, target)
 
 '''
 TOY EXAMPLE
@@ -74,9 +60,8 @@ def computeLoss3_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 		pred = cla1[b]
 		pred.squeeze_(-1)
 		pred.clamp_(1e-7, 1-1e-7)
-		target = targets[b][:,0]
-		claLoss = -cnf.alpha*(target*(1-pred).pow(cnf.gamma)*torch.log(pred)).sum()
-		claLoss += -cnf.alpha*((1-target)*pred.pow(cnf.gamma)*torch.log(1-pred)).sum()
+		claLoss = -cnf.alpha*(targets[b][:,0]*(1-pred).pow(cnf.gamma)*torch.log(pred)).sum()
+		claLoss += -cnf.alpha*((1-targets[b][:,0])*pred.pow(cnf.gamma)*torch.log(1-pred)).sum()
 		locLoss = F.smooth_l1_loss(loc1[b], targets[b][:,1:])
 	else:
 		locLoss = None
@@ -91,61 +76,16 @@ def computeLoss3_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 	if numPosSamples>0 and numNegSamples>0:
 		negPred.squeeze_(-1)
 		negPred.clamp_(1e-7, 1-1e-7)
-		claLoss += -cnf.alpha*(negPred.pow(cnf.gamma)*torch.log(1-negPred)).sum()
+		claLoss += -cnf.alpha*(targets[b][:,0]*(1-negPred).pow(cnf.gamma)*torch.log(negPred)).sum()
+		claLoss += -cnf.alpha*((1-targets[b][:,0])*negPred.pow(cnf.gamma)*torch.log(1-negPred)).sum()
 	elif numNegSamples>0:
 		negPred.squeeze_(-1)
 		negPred.clamp_(1e-7, 1-1e-7)
-		claLoss = -cnf.alpha*(negPred.pow(cnf.gamma)*torch.log(1-negPred)).sum()
+		claLoss = -cnf.alpha*(targets[b][:,0]*(1-negPred).pow(cnf.gamma)*torch.log(negPred)).sum()
+		claLoss -= -cnf.alpha*((1-targets[b][:,0])*negPred.pow(cnf.gamma)*torch.log(1-negPred)).sum()
 	else:
 		claLoss = None
 	##############~NEGATIVE SAMPLES~#################
 	return claLoss, locLoss, numPosSamples, numNegSamples
-
-def computeLoss4(cla, loc, targets, zoomed0_3, zoomed1_2):
-	lm, lc, lh, lw = loc.size()
-	_, zr, zc = zoomed0_3.size()
-	_, tr, tc = targets.size()
-
-	# move the channel axis to the last dimension and reshape
-	loc = loc.permute(0, 2, 3, 1).contiguous().view(-1, 6)
-	cla = cla.permute(0, 2, 3, 1).contiguous().view(-1, 1)
-
-	# repeat each row by zr times
-	loc = loc.repeat(1, zr).view(-1, 6)
-	cla1 = cla.repeat(1, zr).view(-1, 1)
-
-	# repeat entire zoom, target sample by lh*lw times and reshape
-	zoomed0_3 = zoomed0_3.repeat(1, lh*lw, 1).view(-1, zc)
-	zoomed1_2 = zoomed1_2.repeat(1, lh*lw, 1).view(-1, zc)
-	targets = targets.repeat(1, lh*lw, 1).view(-1, tc)
-
-	##############~POSITIVE SAMPLES~#################
-	b = ((loc[:,3]<zoomed0_3[:,0]) & (loc[:,3]>zoomed0_3[:,1])) & ((loc[:,2]>zoomed0_3[:,3]) & (loc[:,2]<zoomed0_3[:,2]))
-	numPosSamples = b.sum()
-
-	if numPosSamples>0:
-		pred = cla1[b]+cnf.epsilon
-		claLoss = (-cnf.alpha*targets[b][:,0]*(1-pred).pow(cnf.gamma)*torch.log(pred) \
-			-cnf.alpha*(1-targets[b][:,0])*pred.pow(cnf.gamma)*torch.log(1-pred)).sum()
-		
-		locLoss = F.smooth_l1_loss(loc[b], targets[b][:,1:])
-	else:
-		locLoss = None
-	##############~POSITIVE SAMPLES~#################
-
-	##############~NEGATIVE SAMPLES~#################
-	b = (loc[:,2]<zoomed1_2[:,3])|(loc[:,2]>zoomed1_2[:,2])|(loc[:,3]>zoomed1_2[:,0])|(loc[:,3]<zoomed1_2[:,1])
-
-	negPred = cla[b.view(zr, -1).sum(0)!=zr]+cnf.epsilon
-	numNegSamples = negPred.size(0)
-	
-	if numPosSamples>0 and numNegSamples>0:
-		claLoss += (-cnf.alpha*negPred.pow(cnf.gamma)*torch.log(1-negPred)).sum()
-	elif numNegSamples>0:
-		claLoss = (-cnf.alpha*negPred.pow(cnf.gamma)*torch.log(1-negPred)).sum()
-	else:
-		claLoss = None
-	##############~NEGATIVE SAMPLES~#################
-	return claLoss, locLoss
 
 computeLoss = computeLoss3_1
