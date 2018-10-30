@@ -48,11 +48,11 @@ worker.start()
 
 def train(epoch):
 	hawkEye.train()
+	# empty the gradient buffer
+	hawkEye.zero_grad()
 
 	for batchId, batch_data in enumerate(train_loader):
 		st1 = time.time()
-		# empty the gradient buffer
-		hawkEye.zero_grad()
 		
 		data, target, filenames = batch_data
 
@@ -90,7 +90,7 @@ def train(epoch):
 			ll = None
 			# ls = cnf.logString3.format(epoch, batchId)
 		elif locLoss is not None:
-			trainLoss = claLoss + locLoss
+			trainLoss = claLoss + locLoss/cnf.accumulationSteps
 			tl = trainLoss.item()
 			cl = claLoss.item()
 			ll = locLoss.item()
@@ -105,7 +105,11 @@ def train(epoch):
 		# trainLoss = claLoss+locLoss
 		if trainLoss is not None:
 			trainLoss.backward()
+
+		# gradients are accumulated over cnf.accumulationSteps
+		if (batchId+1)%cnf.accumulationSteps == 0:
 			optimizer.step()
+			hawkEye.zero_grad()
 
 		# TODO: mAP
 

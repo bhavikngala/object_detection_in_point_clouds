@@ -80,5 +80,5 @@ logString2 = 'epoch: {:03d} | batch:{:04d} | cla loss: {:.8f} | loc loss: None |
 logString3 = 'epoch: {:03d} | batch:{:04d} | cla loss: None | loc loss: None| total loss: None | PS : {:07d} | NS : {:07d} | lt : {:.4f} | bt : {:.4f} \n\n'
 # logString = Template('epoch: $e | cla loss: $cl | loc loss: $ll | total loss: $tl \n')
 
-numBatchInQueue = 4
 batchSize = 4
+accumulationSteps = 4.0
