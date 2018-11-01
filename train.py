@@ -17,6 +17,7 @@ import misc
 parser = argparse.ArgumentParser(description='Train network')
 parser.add_argument('--step-lr', action='store_true')
 parser.add_argument('--aug-data', action='store_true')
+parser.add_argument('-f', '--model-file', default=None)
 args = parser.parse_args()
 
 torch.manual_seed(0)
@@ -38,6 +39,9 @@ if args.step_lr:
 	scheduler = MultiStepLR(optimizer, milestones=[20,30], gamma=0.1)
 else:	
 	optimizer = Adam(hawkEye.parameters(), lr=cnf.lr)
+
+if args.model_file:
+	cnf.model_file = args.model_file
 
 # status string writier thread and queue
 queue = Queue()
@@ -114,9 +118,9 @@ def train(epoch):
 		# TODO: mAP
 
 		# save the results, loss in a file
-		if (epoch+1)==cnf.epochs:
-			misc.savebatchOutput(cla, loc, filenames, cnf.trainOutputDir, epoch)
-			misc.savebatchTarget(target, filenames, cnf.trainOutputDir, epoch)
+		# if (epoch+1)==cnf.epochs:
+		# 	misc.savebatchOutput(cla, loc, filenames, cnf.trainOutputDir, epoch)
+		# 	misc.savebatchTarget(target, filenames, cnf.trainOutputDir, epoch)
 		
 		ed1 = time.time()
 		# ls = ls + 'elapsed time: '+str(ed-st)+' secs ' + 'batch elapsed time: '+str(ed1-st1)+' secs\n\n'
