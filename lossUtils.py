@@ -60,8 +60,8 @@ def computeLoss3_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 		pred = cla1[b]
 		pred.squeeze_(-1)
 		pred.clamp_(1e-7, 1-1e-7)
-		claLoss = -cnf.alpha*(targets[b][:,0]*(1-pred).pow(cnf.gamma)*torch.log(pred)).mean()
-		claLoss += -cnf.alpha*((1-targets[b][:,0])*pred.pow(cnf.gamma)*torch.log(1-pred)).mean()
+		claLoss = -cnf.alpha*(targets[b][:,0]*(1-pred).pow(cnf.gamma)*torch.log(pred)).sum()
+		claLoss += -cnf.alpha*((1-targets[b][:,0])*pred.pow(cnf.gamma)*torch.log(1-pred)).sum()
 		locLoss = F.smooth_l1_loss(loc1[b], targets[b][:,1:])
 	else:
 		locLoss = None
@@ -76,11 +76,11 @@ def computeLoss3_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 	if numPosSamples>0 and numNegSamples>0:
 		negPred.squeeze_(-1)
 		negPred.clamp_(1e-7, 1-1e-7)
-		claLoss += -cnf.alpha*((1-negPred).pow(cnf.gamma)*torch.log(negPred)).mean()
+		claLoss += -cnf.alpha*((1-negPred).pow(cnf.gamma)*torch.log(negPred)).sum()
 	elif numNegSamples>0:
 		negPred.squeeze_(-1)
 		negPred.clamp_(1e-7, 1-1e-7)
-		claLoss = -cnf.alpha*((1-negPred).pow(cnf.gamma)*torch.log(negPred)).mean()
+		claLoss = -cnf.alpha*((1-negPred).pow(cnf.gamma)*torch.log(negPred)).sum()
 	else:
 		claLoss = None
 	##############~NEGATIVE SAMPLES~#################
