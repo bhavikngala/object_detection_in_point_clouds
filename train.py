@@ -18,6 +18,7 @@ parser = argparse.ArgumentParser(description='Train network')
 parser.add_argument('--step-lr', action='store_true')
 parser.add_argument('--aug-data', action='store_true')
 parser.add_argument('-f', '--model-file', default=None)
+parser.add_argument('--root-dir', default=None)
 args = parser.parse_args()
 
 torch.manual_seed(0)
@@ -42,6 +43,8 @@ else:
 
 if args.model_file:
 	cnf.model_file = args.model_file
+if args.root_dir:
+	cnf.rootDir = args.root_dir
 
 # status string writier thread and queue
 queue = Queue()
