@@ -47,6 +47,8 @@ else:
 
 if args.model_file:
 	cnf.model_file = args.model_file
+	cnf.trainlog = cnf.trainlog[:-9] + args.model_file.split('/')[-1][:-11] + '_train.txt'
+	cnf.trainlog2 = cnf.trainlog2[:-9] + args.model_file.split('/')[-1][:-11] + '_etime.txt'
 if args.root_dir:
 	cnf.rootDir = args.root_dir
 if args.pixor:
