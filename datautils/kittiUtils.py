@@ -669,19 +669,15 @@ def cal_box2d_iou(boxes2d, gt_boxes2d):
 	return output
 
 
-if __name__ == '__main__':
-	pass
-
-
-def aug_data(lidar, labels, augData):
+def voxelNetAugScheme(lidar, labels, augData):
 	np.random.seed()
 	
-	gt_box3d = labels  # (N', 7) x, y, z, h, w, l, r
+	gt_box3d = labels  # (N', 7) x, y, z, h, w, l, r; camera coordinates
 
 	choice = np.random.randint(1, 18)
 
 	if augData and choice >= 15:
-
+		# perturbation
 		lidar_center_gt_box3d = camera_to_lidar_box_1(gt_box3d)
 		lidar_corner_gt_box3d = center_to_corner_box3d(
 			lidar_center_gt_box3d, coordinate='lidar')
@@ -744,6 +740,37 @@ def aug_data(lidar, labels, augData):
 		lidar_center_gt_box3d = camera_to_lidar_box_1(gt_box3d)
 		lidar_center_gt_box3d[:, 0:6] = lidar_center_gt_box3d[:, 0:6] * factor
 	else:
+		lidar_center_gt_box3d = camera_to_lidar_box_1(gt_box3d)
+
+	return lidar, lidar_center_gt_box3d
+
+def pixorAugScheme(lidar, labels, augData):	
+	gt_box3d = labels  # (N', 7) x, y, z, h, w, l, r; camera coordinates
+
+	'''
+	Randomly choose between 0-2, equal probability
+	0: Rotation
+	1: flipping about X axis
+	2: No augmentation
+	'''
+	choice = np.random.randint(low=0, high=3)
+
+	if augData and choice == 0:
+		# rotation
+		# global rotation
+		angle = np.random.uniform(-np.pi / 36, np.pi / 36)
+		lidar[:, 0:3] = point_transform(lidar[:, 0:3], 0, 0, 0, rz=angle)
+		lidar_center_gt_box3d = camera_to_lidar_box_1(gt_box3d)
+		lidar_center_gt_box3d = box_transform(lidar_center_gt_box3d, 0, 0, 0, r=angle, coordinate='lidar')
+
+	elif augData and choice == 1:
+		# random flip
+		lidar[:, 1] = -lidar[:, 1]
+		lidar_center_gt_box3d = camera_to_lidar_box_1(gt_box3d)
+		lidar_center_gt_box3d[:, 1] = -lidar_center_gt_box3d[:, 1]
+
+	else:
+		# no augmentation
 		lidar_center_gt_box3d = camera_to_lidar_box_1(gt_box3d)
 
 	return lidar, lidar_center_gt_box3d

@@ -19,13 +19,15 @@ parser.add_argument('--step-lr', action='store_true')
 parser.add_argument('--aug-data', action='store_true')
 parser.add_argument('-f', '--model-file', default=None)
 parser.add_argument('--root-dir', default=None)
+parser.add_argument('p', '--pixor', action='store_true')
+parser.add_argument('v', '--voxelnet', action='store_true')
 args = parser.parse_args()
 
 torch.manual_seed(0)
 
 # data loaders
 train_loader = DataLoader(
-	LidarLoader_2(cnf.rootDir+'/train', cnf.objtype, train=True, augData=args.aug_data),
+	LidarLoader_2(cnf.rootDir+'/train', cnf.objtype, train=True, args=args),
 	batch_size = cnf.batchSize, shuffle=True, num_workers=3,
 	collate_fn=collate_fn_2, pin_memory=True
 )
@@ -45,6 +47,12 @@ if args.model_file:
 	cnf.model_file = args.model_file
 if args.root_dir:
 	cnf.rootDir = args.root_dir
+if args.pixor 
+	args.aug_scheme = 'pixor'
+elif args.voxelnet:
+	args.aug_scheme = 'voxelnet'
+else:
+	args.aug_scheme = None
 
 # status string writier thread and queue
 queue = Queue()
