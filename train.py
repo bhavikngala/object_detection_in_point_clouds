@@ -22,13 +22,14 @@ parser.add_argument('--root-dir', default=None)
 parser.add_argument('-p', '--pixor', action='store_true')
 parser.add_argument('-v', '--voxelnet', action='store_true')
 parser.add_argument('-e', '--epochs', type=int, default=None)
+parser.add_argument('--aug_scheme', default=None)
 args = parser.parse_args()
 
 torch.manual_seed(0)
 
 # data loaders
 train_loader = DataLoader(
-	LidarLoader_2(cnf.rootDir+'/train', cnf.objtype, train=True, args=args),
+	LidarLoader_2(cnf.rootDir+'/train', cnf.objtype, args=args, train=True),
 	batch_size = cnf.batchSize, shuffle=True, num_workers=3,
 	collate_fn=collate_fn_2, pin_memory=True
 )
