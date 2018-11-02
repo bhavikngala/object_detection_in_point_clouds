@@ -19,8 +19,9 @@ parser.add_argument('--step-lr', action='store_true')
 parser.add_argument('--aug-data', action='store_true')
 parser.add_argument('-f', '--model-file', default=None)
 parser.add_argument('--root-dir', default=None)
-parser.add_argument('p', '--pixor', action='store_true')
-parser.add_argument('v', '--voxelnet', action='store_true')
+parser.add_argument('-p', '--pixor', action='store_true')
+parser.add_argument('-v', '--voxelnet', action='store_true')
+parser.add_argument('-e', '--epochs', type=int, default=None)
 args = parser.parse_args()
 
 torch.manual_seed(0)
@@ -47,12 +48,14 @@ if args.model_file:
 	cnf.model_file = args.model_file
 if args.root_dir:
 	cnf.rootDir = args.root_dir
-if args.pixor 
+if args.pixor:
 	args.aug_scheme = 'pixor'
 elif args.voxelnet:
 	args.aug_scheme = 'voxelnet'
 else:
 	args.aug_scheme = None
+if args.epochs:
+	cnf.epochs = args.epochs
 
 # status string writier thread and queue
 queue = Queue()
