@@ -23,6 +23,7 @@ parser.add_argument('-p', '--pixor', action='store_true')
 parser.add_argument('-v', '--voxelnet', action='store_true')
 parser.add_argument('-e', '--epochs', type=int, default=None)
 parser.add_argument('--aug_scheme', default=None)
+parser.add_argument('-r', '--root-dir', default=None)
 args = parser.parse_args()
 
 torch.manual_seed(0)
@@ -47,8 +48,8 @@ else:
 
 if args.model_file:
 	cnf.model_file = args.model_file
-	cnf.trainlog = cnf.trainlog[:-9] + args.model_file.split('/')[-1][:-11] + '_train.txt'
-	cnf.trainlog2 = cnf.trainlog2[:-9] + args.model_file.split('/')[-1][:-11] + '_etime.txt'
+	cnf.trainlog = cnf.trainlog[:-9] + args.model_file.split('/')[-1][:-11] + 'train.txt'
+	cnf.trainlog2 = cnf.trainlog2[:-9] + args.model_file.split('/')[-1][:-11] + 'etime.txt'
 if args.root_dir:
 	cnf.rootDir = args.root_dir
 if args.pixor:
@@ -59,6 +60,8 @@ else:
 	args.aug_scheme = None
 if args.epochs:
 	cnf.epochs = args.epochs
+if args.root_dir:
+	cnf.rootDir = args.root_dir
 
 # status string writier thread and queue
 queue = Queue()
