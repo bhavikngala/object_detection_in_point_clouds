@@ -32,7 +32,9 @@ p = torch.tensor([[4,8],[7,5],[2,2],[2,2],[6,2],[10,8]])
 p shape = (-1, 6)
 z shape = (m, points, 4)
 
-z = torch.tensor([[[1,3,3,1],[1,3,9,7],[3,5,6,4],[6,8,3,1],[5,7,9,7],[0,0,0,0],[0,0,0,0]],[[3,5,3,1],[7,9,4,2],[5,7,7,5],[1,3,8,6],[0,2,11,9],[4,6,11,9],[9,11,9,7]]])
+z3 = torch.tensor([[[1,3,3,1],[1,3,9,7],[3,5,6,4],[6,8,3,1],[5,7,9,7],[0,0,0,0],[0,0,0,0]],[[3,5,3,1],[7,9,4,2],[5,7,7,5],[1,3,8,6],[0,2,11,9],[4,6,11,9],[9,11,9,7]]])
+z12 = torch.tensor([[[0,4,4,0],[0,4,10,6],[2,6,7,3],[5,9,4,0],[4,8,10,6],[0,0,0,0],[0,0,0,0]],[[2,6,4,0],[6,10,5,1],[4,8,8,4],[0,4,9,6],[-1,3,12,8],[3,7,12,8],[8,12,10,6]]])
+t = torch.tensor([[[1,2,2],[1,2,8],[1,4,5],[1,7,2],[0,6,8],[0,0,0],[0,0,0]],[[0,4,2],[0,8,3],[1,6,6],[1,2,7],[0,1,10],[0,5,10],[0,10,8]]])
 
 '''
 
@@ -61,7 +63,7 @@ def computeLoss3_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 		pred.squeeze_(-1)
 		pred.clamp_(1e-7, 1-1e-7)
 		claLoss = -cnf.alpha*(targets[b][:,0]*(1-pred).pow(cnf.gamma)*torch.log(pred)).sum()
-		claLoss += -cnf.alpha*((1-targets[b][:,0])*pred.pow(cnf.gamma)*torch.log(1-pred)).sum()
+		claLoss += -(1-cnf.alpha)*((1-targets[b][:,0])*pred.pow(cnf.gamma)*torch.log(1-pred)).sum()
 		locLoss = F.smooth_l1_loss(loc1[b], targets[b][:,1:])
 	else:
 		locLoss = None
@@ -76,11 +78,11 @@ def computeLoss3_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 	if numPosSamples>0 and numNegSamples>0:
 		negPred.squeeze_(-1)
 		negPred.clamp_(1e-7, 1-1e-7)
-		claLoss += -cnf.alpha*((1-negPred).pow(cnf.gamma)*torch.log(negPred)).sum()
+		claLoss += -(1-cnf.alpha)*((1-negPred).pow(cnf.gamma)*torch.log(negPred)).sum()
 	elif numNegSamples>0:
 		negPred.squeeze_(-1)
 		negPred.clamp_(1e-7, 1-1e-7)
-		claLoss = -cnf.alpha*((1-negPred).pow(cnf.gamma)*torch.log(negPred)).sum()
+		claLoss = -(1-cnf.alpha)*((1-negPred).pow(cnf.gamma)*torch.log(negPred)).sum()
 	else:
 		claLoss = None
 	##############~NEGATIVE SAMPLES~#################
