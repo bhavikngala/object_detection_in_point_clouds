@@ -78,11 +78,11 @@ def computeLoss3_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 	if numPosSamples>0 and numNegSamples>0:
 		negPred.squeeze_(-1)
 		negPred.clamp_(1e-7, 1-1e-7)
-		claLoss += -(1-cnf.alpha)*((1-negPred).pow(cnf.gamma)*torch.log(negPred)).sum()
+		claLoss += -(1-cnf.alpha)*(negPred.pow(cnf.gamma)*torch.log(1-negPred)).sum()
 	elif numNegSamples>0:
 		negPred.squeeze_(-1)
 		negPred.clamp_(1e-7, 1-1e-7)
-		claLoss = -(1-cnf.alpha)*((1-negPred).pow(cnf.gamma)*torch.log(negPred)).sum()
+		claLoss = -(1-cnf.alpha)*(negPred.pow(cnf.gamma)*torch.log(1-negPred)).sum()
 	else:
 		claLoss = None
 	##############~NEGATIVE SAMPLES~#################
