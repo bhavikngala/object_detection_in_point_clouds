@@ -18,15 +18,29 @@ parser = argparse.ArgumentParser(description='Train network')
 parser.add_argument('--step-lr', action='store_true')
 parser.add_argument('--aug-data', action='store_true')
 parser.add_argument('-f', '--model-file', default=None)
-parser.add_argument('--root-dir', default=None)
+parser.add_argument('-r', '--root-dir', default=None)
 parser.add_argument('-p', '--pixor', action='store_true')
 parser.add_argument('-v', '--voxelnet', action='store_true')
 parser.add_argument('-e', '--epochs', type=int, default=None)
 parser.add_argument('--aug_scheme', default=None)
-parser.add_argument('-r', '--root-dir', default=None)
 args = parser.parse_args()
 
 torch.manual_seed(0)
+
+if args.model_file:
+	cnf.model_file = args.model_file
+	cnf.trainlog = cnf.trainlog[:-9] + args.model_file.split('/')[-1][:-11] + 'train.txt'
+	cnf.trainlog2 = cnf.trainlog2[:-9] + args.model_file.split('/')[-1][:-11] + 'etime.txt'
+if args.root_dir:
+	cnf.rootDir = args.root_dir
+if args.pixor:
+	args.aug_scheme = 'pixor'
+elif args.voxelnet:
+	args.aug_scheme = 'voxelnet'
+else:
+	args.aug_scheme = None
+if args.epochs:
+	cnf.epochs = args.epochs
 
 # data loaders
 train_loader = DataLoader(
@@ -45,23 +59,6 @@ if args.step_lr:
 	scheduler = MultiStepLR(optimizer, milestones=[20,30], gamma=0.1)
 else:	
 	optimizer = Adam(hawkEye.parameters(), lr=cnf.lr)
-
-if args.model_file:
-	cnf.model_file = args.model_file
-	cnf.trainlog = cnf.trainlog[:-9] + args.model_file.split('/')[-1][:-11] + 'train.txt'
-	cnf.trainlog2 = cnf.trainlog2[:-9] + args.model_file.split('/')[-1][:-11] + 'etime.txt'
-if args.root_dir:
-	cnf.rootDir = args.root_dir
-if args.pixor:
-	args.aug_scheme = 'pixor'
-elif args.voxelnet:
-	args.aug_scheme = 'voxelnet'
-else:
-	args.aug_scheme = None
-if args.epochs:
-	cnf.epochs = args.epochs
-if args.root_dir:
-	cnf.rootDir = args.root_dir
 
 # status string writier thread and queue
 queue = Queue()
