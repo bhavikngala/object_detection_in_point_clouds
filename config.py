@@ -46,7 +46,7 @@ slr = 1e-2  # step learning rate
 epochs = 200
 
 # gamma, alpha, epsilon for focal loss
-gamma = 5
+gamma = 2
 alpha = 0.25
 epsilon = 1e-5
 
