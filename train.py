@@ -61,7 +61,8 @@ hawkEye = HawkEye(cnf.res_block_layers, cnf.up_sample_layers).to(cnf.device)
 hawkEye.apply(misc.weights_init)
 
 if args.multi_gpu:
-	hawkEye = nn.DataParallel(hawkEye)
+	device_ids = [int(i) for i in args.gpu_nums.split(',')]
+	hawkEye = nn.DataParallel(hawkEye, device_ids=device_ids)
 
 # network optimization method
 if args.step_lr:
