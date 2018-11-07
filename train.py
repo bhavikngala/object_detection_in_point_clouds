@@ -23,6 +23,8 @@ parser.add_argument('-p', '--pixor', action='store_true')
 parser.add_argument('-v', '--voxelnet', action='store_true')
 parser.add_argument('-e', '--epochs', type=int, default=None)
 parser.add_argument('--aug_scheme', default=None)
+parser.add_argument('-m', '--multi-gpu', action='store_true')
+parser.add_argument('-g', '--gpu-nums', default=None)
 args = parser.parse_args()
 
 torch.manual_seed(0)
@@ -49,9 +51,16 @@ train_loader = DataLoader(
 	collate_fn=collate_fn_2, pin_memory=True
 )
 
+if args.gpu_nums:
+	os.environ['CUDA_VISIBLE_DEVICES']=args.gpu_nums
+	cnf.device = torch.device('cuda')
+
 # create detector object and intialize weights
 hawkEye = HawkEye(cnf.res_block_layers, cnf.up_sample_layers).to(cnf.device)
 hawkEye.apply(misc.weights_init)
+
+if args.multi_gpu:
+	hawkEye = nn.DataParallel(hawkEye)
 
 # network optimization method
 if args.step_lr:
