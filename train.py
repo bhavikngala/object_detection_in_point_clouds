@@ -52,17 +52,12 @@ train_loader = DataLoader(
 	collate_fn=collate_fn_2, pin_memory=True
 )
 
-if args.gpu_nums:
-	os.environ['CUDA_VISIBLE_DEVICES']=args.gpu_nums
-	cnf.device = torch.device('cuda')
-
 # create detector object and intialize weights
 hawkEye = HawkEye(cnf.res_block_layers, cnf.up_sample_layers).to(cnf.device)
 hawkEye.apply(misc.weights_init)
 
 if args.multi_gpu:
-	device_ids = [int(i) for i in args.gpu_nums.split(',')]
-	hawkEye = nn.DataParallel(hawkEye, device_ids=device_ids)
+	hawkEye = nn.DataParallel(hawkEye)
 
 # network optimization method
 if args.step_lr:
