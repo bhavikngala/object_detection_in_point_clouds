@@ -64,7 +64,7 @@ def computeLoss3_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 		pred.clamp_(1e-7, 1-1e-7)
 		claLoss = -cnf.alpha*(targets[b][:,0]*(1-pred).pow(cnf.gamma)*torch.log(pred)).sum()
 		claLoss += -(1-cnf.alpha)*((1-targets[b][:,0])*pred.pow(cnf.gamma)*torch.log(1-pred)).sum()
-		locLoss = F.smooth_l1_loss(loc1[b], targets[b][:,1:])
+		locLoss = F.smooth_l1_loss(loc1[b], targets[b][:,1:], reduction='sum')
 	else:
 		locLoss = None
 	##############~POSITIVE SAMPLES~#################

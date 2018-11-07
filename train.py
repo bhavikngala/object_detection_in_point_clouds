@@ -82,6 +82,9 @@ def train(epoch):
 		st1 = time.time()
 		
 		data, target, filenames = batch_data
+		
+		if data.size(0) < cnf.batchSize:
+			continue
 
 		data = data.cuda(non_blocking=True)
 
@@ -117,15 +120,15 @@ def train(epoch):
 			ll = None
 			# ls = cnf.logString3.format(epoch, batchId)
 		elif locLoss is not None:
-			trainLoss = claLoss + locLoss/cnf.accumulationSteps
+			trainLoss = claLoss/(cnf.batchSize*cnf.accumulationSteps) + locLoss/(cnf.batchSize*cnf.accumulationSteps)
 			tl = trainLoss.item()
-			cl = claLoss.item()
-			ll = locLoss.item()
+			cl = claLoss.item()/(cnf.batchSize*cnf.accumulationSteps)
+			ll = locLoss.item()/(cnf.batchSize*cnf.accumulationSteps)
 			# ls = cnf.logString1.format(epoch, batchId, claLoss.item(), locLoss.item(), trainLoss.item())
 		else:
-			trainLoss = claLoss
+			trainLoss = claLoss/(cnf.batchSize*cnf.accumulationSteps)
 			tl = trainLoss.item()
-			cl = claLoss.item()
+			cl = claLoss.item()/(cnf.batchSize*cnf.accumulationSteps)
 			ll = None
 			# ls = cnf.logString2.format(epoch, batchId, claLoss.item(), trainLoss.item())
 
