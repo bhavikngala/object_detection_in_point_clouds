@@ -120,15 +120,15 @@ def train(epoch):
 			ll = None
 			# ls = cnf.logString3.format(epoch, batchId)
 		elif locLoss is not None:
-			trainLoss = claLoss/(cnf.batchSize*cnf.accumulationSteps) + locLoss/(cnf.batchSize*cnf.accumulationSteps)
+			trainLoss = claLoss/(cnf.accumulationSteps) + locLoss/(cnf.accumulationSteps)
 			tl = trainLoss.item()
-			cl = claLoss.item()/(cnf.batchSize*cnf.accumulationSteps)
-			ll = locLoss.item()/(cnf.batchSize*cnf.accumulationSteps)
+			cl = claLoss.item()/(cnf.accumulationSteps)
+			ll = locLoss.item()/(cnf.accumulationSteps)
 			# ls = cnf.logString1.format(epoch, batchId, claLoss.item(), locLoss.item(), trainLoss.item())
 		else:
-			trainLoss = claLoss/(cnf.batchSize*cnf.accumulationSteps)
+			trainLoss = claLoss/(cnf.accumulationSteps)
 			tl = trainLoss.item()
-			cl = claLoss.item()/(cnf.batchSize*cnf.accumulationSteps)
+			cl = claLoss.item()/(cnf.accumulationSteps)
 			ll = None
 			# ls = cnf.logString2.format(epoch, batchId, claLoss.item(), trainLoss.item())
 
