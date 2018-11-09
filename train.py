@@ -245,7 +245,7 @@ if __name__ == '__main__':
 			misc.writeToFile(cnf.trainlog2, '~~~~~epoch ' + str(epoch) + ' end time taken: '+str(ed-st)+' secs~~~~\n')
 
 			# run validation every 10 epochs
-			if args.validate:
+			if args.val:
 				validation(epoch)
 
 			if (epoch+1)%10 == 0:
