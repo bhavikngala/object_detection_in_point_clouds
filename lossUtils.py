@@ -38,6 +38,34 @@ t = torch.tensor([[[1,2,2],[1,2,8],[1,4,5],[1,7,2],[0,6,8],[0,0,0],[0,0,0]],[[0,
 
 '''
 
+
+def computeIoU(matchedBoxes, targets):
+	'''
+	Compute Intersection over Union for 2D boxes
+	'''
+
+	f1, l1 = matchedBoxes[:,2] + matchedBoxes[:,4]/2, matchedBoxes[:,3] + matchedBoxes[:,5]/2
+	b1, r1 = matchedBoxes[:,2] - matchedBoxes[:,4]/2, matchedBoxes[:,3] - matchedBoxes[:,5]/2
+
+	f2, l2 = targets[:,2] + targets[:,4]/2, targets[:,3] + targets[:,5]/2
+	b2, r2 = targets[:,2] - targets[:,4]/2, targets[:,3] - targets[:,5]/2
+
+	intl = torch.min(torch.cat(l1, l2), dim=0)[0]
+	intr = torch.max(torch.cat(r1, r2), dim=0)[0]
+	intf = torch.min(torch.cat(f1, f2), dim=0)[0]
+	intb = torch.min(torch.cat(b1, b2), dim=0)[0]
+
+	intlen = intf - intb
+	intwid = intl - intr
+
+	intersectionArea = intlen * intwid
+	unionArea = matchedBoxes[:,4]*matchedBoxes[:,5] + \
+				targets[:, 4]*targets[:, 5] - \
+				intersectionArea
+
+	return (intersectionArea/unionArea).mean()
+
+
 def computeLoss3_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 	lm, lc, lh, lw = loc.size()
 	_, zr, zc = zoomed0_3.size()
@@ -65,8 +93,10 @@ def computeLoss3_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 		claLoss = -cnf.alpha*(targets[b][:,0]*(1-pred).pow(cnf.gamma)*torch.log(pred)).mean()
 		claLoss += -(1-cnf.alpha)*((1-targets[b][:,0])*pred.pow(cnf.gamma)*torch.log(1-pred)).mean()
 		locLoss = F.smooth_l1_loss(loc1[b], targets[b][:,1:])
+		iou = computeIoU(loc1[b], targets[b][:,1:])
 	else:
 		locLoss = None
+		iou = None
 	##############~POSITIVE SAMPLES~#################
 
 	##############~NEGATIVE SAMPLES~#################
@@ -86,6 +116,6 @@ def computeLoss3_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 	else:
 		claLoss = None
 	##############~NEGATIVE SAMPLES~#################
-	return claLoss, locLoss, numPosSamples, numNegSamples
+	return claLoss, locLoss, iou, numPosSamples, numNegSamples
 
 computeLoss = computeLoss3_1
