@@ -98,18 +98,6 @@ def camera_to_lidar_box(boxes):
 	return np.array(ret).reshape(-1, 7)
 
 
-def camera_to_lidar_box_1(boxes):
-	# (N, 7) -> (N, 7) x,y,z,h,w,l,r
-	ret = []
-	for i in range(boxes.shape[0]):
-		x, y, z, h, w, l, ry = boxes[i]
-		(x, y, z), h, w, l, rz = camera_to_lidar(
-			x, y, z), h, w, l, -ry - np.pi / 2
-		rz = angle_in_limit(rz)
-		ret.append([x, y, z, h, w, l, rz])
-	return np.array(ret).reshape(-1, 7)
-
-
 def lidar_to_camera_box(boxes):
 	# (N, 7) -> (N, 7) x,y,z,h,w,l,r
 	ret = []
@@ -737,17 +725,17 @@ def voxelNetAugScheme(lidar, labels, augData):
 		# global rotation
 		angle = np.random.uniform(-np.pi / 4, np.pi / 4)
 		lidar[:, 0:3] = point_transform(lidar[:, 0:3], 0, 0, 0, rz=angle)
-		lidar_center_gt_box3d = camera_to_lidar_box_1(gt_box3d)
+		lidar_center_gt_box3d = camera_to_lidar_box(gt_box3d)
 		lidar_center_gt_box3d = box_transform(lidar_center_gt_box3d, 0, 0, 0, r=angle, coordinate='lidar')
 	
 	elif augData and choice == 2:
 		# global scaling
 		factor = np.random.uniform(0.95, 1.05)
 		lidar[:, 0:3] = lidar[:, 0:3] * factor
-		lidar_center_gt_box3d = camera_to_lidar_box_1(gt_box3d)
+		lidar_center_gt_box3d = camera_to_lidar_box(gt_box3d)
 		lidar_center_gt_box3d[:, 0:6] = lidar_center_gt_box3d[:, 0:6] * factor
 	else:
-		lidar_center_gt_box3d = camera_to_lidar_box_1(gt_box3d)
+		lidar_center_gt_box3d = camera_to_lidar_box(gt_box3d)
 
 	return lidar, lidar_center_gt_box3d
 
@@ -767,17 +755,17 @@ def pixorAugScheme(lidar, labels, augData):
 		# global rotation
 		angle = np.random.uniform(-np.pi / 36, np.pi / 36)
 		lidar[:, 0:3] = point_transform(lidar[:, 0:3], 0, 0, 0, rz=angle)
-		lidar_center_gt_box3d = camera_to_lidar_box_1(gt_box3d)
+		lidar_center_gt_box3d = camera_to_lidar_box(gt_box3d)
 		lidar_center_gt_box3d = box_transform(lidar_center_gt_box3d, 0, 0, 0, r=angle, coordinate='lidar')
 
 	elif augData and choice == 1:
 		# random flip
 		lidar[:, 1] = -lidar[:, 1]
-		lidar_center_gt_box3d = camera_to_lidar_box_1(gt_box3d)
+		lidar_center_gt_box3d = camera_to_lidar_box(gt_box3d)
 		lidar_center_gt_box3d[:, 1] = -lidar_center_gt_box3d[:, 1]
 
 	else:
 		# no augmentation
-		lidar_center_gt_box3d = camera_to_lidar_box_1(gt_box3d)
+		lidar_center_gt_box3d = camera_to_lidar_box(gt_box3d)
 
 	return lidar, lidar_center_gt_box3d

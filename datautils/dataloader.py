@@ -55,7 +55,7 @@ class LidarLoader_2(Dataset):
 			with open(labelFilename) as f:
 				for line in f.readlines():
 					datalist = []
-					data = line.lower().split()
+					data = line.lower().strip().split()
 
 					# object type
 					if data[0] == self.objtype:
@@ -71,8 +71,9 @@ class LidarLoader_2(Dataset):
 					# TODO: is w, and l log(w) and log(l)?
 					# [x, y, z, h, w, l, r]
 					datalist.extend(
-						[data[10], data[11], data[12], data[7], \
-						 data[8], data[9], data[13]])
+						[data[10], data[11], data[12], \
+						 data[7], data[8], data[9], \
+						 data[13]])
 
 					labels.append(datalist)
 			labels = np.array(labels)	
@@ -84,7 +85,7 @@ class LidarLoader_2(Dataset):
 			elif self.augScheme == 'voxelnet':
 				lidarData, labels[:,1:] = ku.voxelNetAugScheme(lidarData, labels[:,1:], self.augData)
 			else:
-				labels[:,1:] = ku.camera_to_lidar_box_1(labels[:,1:])
+				labels[:,1:] = ku.camera_to_lidar_box(labels[:,1:])
 
 		bev = lidarToBEV(lidarData, cnf.gridConfig)
 		labels1 = np.zeros((labels.shape[0], 7),dtype=np.float32)
