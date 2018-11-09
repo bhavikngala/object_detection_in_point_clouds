@@ -51,7 +51,7 @@ train_loader = DataLoader(
 	batch_size = cnf.batchSize, shuffle=True, num_workers=3,
 	collate_fn=collate_fn_2, pin_memory=True
 )
-if args.validate:
+if args.val:
 	val_loader = DataLoader(
 		LidarLoader_2(cnf.rootDir+'/val', cnf.objtype, args=args, train=True, augData=False),
 		batch_size = cnf.batchSize, shuffle=True, num_workers=3,
@@ -78,7 +78,7 @@ worker = misc.FileWriterThread(queue, cnf.trainlog)
 worker.daemon = True
 worker.start()
 
-if args.validate:
+if args.val:
 	valqueue = Queue()
 	valworker = misc.FileWriterThread(valqueue, cnf.vallog)
 	valworker.daemon = True
