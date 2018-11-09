@@ -94,9 +94,11 @@ def computeLoss3_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 		claLoss += -(1-cnf.alpha)*((1-targets[b][:,0])*pred.pow(cnf.gamma)*torch.log(1-pred)).mean()
 		locLoss = F.smooth_l1_loss(loc1[b], targets[b][:,1:])
 		iou = computeIoU(loc1[b], targets[b][:,1:])
+		meanConfidence = (pred[targets[b][:,0]==1]).mean()
 	else:
 		locLoss = None
 		iou = None
+		meanConfidence = None
 	##############~POSITIVE SAMPLES~#################
 
 	##############~NEGATIVE SAMPLES~#################
@@ -116,6 +118,6 @@ def computeLoss3_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 	else:
 		claLoss = None
 	##############~NEGATIVE SAMPLES~#################
-	return claLoss, locLoss, iou, numPosSamples, numNegSamples
+	return claLoss, locLoss, iou, meanConfidence, numPosSamples, numNegSamples
 
 computeLoss = computeLoss3_1
