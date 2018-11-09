@@ -111,7 +111,7 @@ def train(epoch):
 
 		# compute loss, gradient, and optimize
 		st = time.time()
-		claLoss, locLoss, ps, ns = computeLoss(cla, loc, target, zoom0_3, zoom1_2)
+		claLoss, iou, locLoss, ps, ns = computeLoss(cla, loc, target, zoom0_3, zoom1_2)
 		ed = time.time()
 		if claLoss is None:
 			trainLoss = None
@@ -141,16 +141,8 @@ def train(epoch):
 			optimizer.step()
 			hawkEye.zero_grad()
 
-		# TODO: mAP
-
-		# save the results, loss in a file
-		# if (epoch+1)==cnf.epochs:
-		# 	misc.savebatchOutput(cla, loc, filenames, cnf.trainOutputDir, epoch)
-		# 	misc.savebatchTarget(target, filenames, cnf.trainOutputDir, epoch)
-		
 		ed1 = time.time()
-		# ls = ls + 'elapsed time: '+str(ed-st)+' secs ' + 'batch elapsed time: '+str(ed1-st1)+' secs\n\n'
-		queue.put((epoch, batchId, cl, ll, tl, int(ps), int(ns), ed-st, ed1-st1))
+		queue.put((epoch, batchId, cl, ll, tl, int(ps), int(ns), iou, ed-st, ed1-st1))
 
 		del data
 		del target
