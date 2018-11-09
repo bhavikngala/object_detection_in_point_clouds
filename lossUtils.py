@@ -53,7 +53,7 @@ def computeIoU(matchedBoxes, targets):
 	intl = torch.min(torch.cat((l1, l2)), dim=0)[0]
 	intr = torch.max(torch.cat((r1, r2)), dim=0)[0]
 	intf = torch.min(torch.cat((f1, f2)), dim=0)[0]
-	intb = torch.min(torch.cat((b1, b2)), dim=0)[0]
+	intb = torch.max(torch.cat((b1, b2)), dim=0)[0]
 
 	intlen = intf - intb
 	intwid = intl - intr
