@@ -20,12 +20,12 @@ class LidarLoader_2(Dataset):
 	No augmentation is done, direct training on the train data
 	This model might overfit but we get a good point to start at
 	'''
-	def __init__(self, directory, objtype, args, train=True):
+	def __init__(self, directory, objtype, args, train=True, augData=True):
 		# load train dataset or test dataset
 		self.train = train
 		self.directory = directory
 		self.objtype = objtype
-		self.augData = args.aug_data
+		self.augData = args.aug_data and augData
 		self.augScheme = args.aug_scheme
 
 		# read all the filenames in the directory
@@ -80,9 +80,9 @@ class LidarLoader_2(Dataset):
 
 		# augment data
 		if self.train:
-			if self.augScheme == 'pixor':
+			if self.augData and self.augScheme == 'pixor':
 				lidarData, labels[:,1:] = ku.pixorAugScheme(lidarData, labels[:,1:], self.augData)
-			elif self.augScheme == 'voxelnet':
+			elif self.augData and self.augScheme == 'voxelnet':
 				lidarData, labels[:,1:] = ku.voxelNetAugScheme(lidarData, labels[:,1:], self.augData)
 			else:
 				labels[:,1:] = ku.camera_to_lidar_box(labels[:,1:])
