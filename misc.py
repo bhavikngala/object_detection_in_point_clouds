@@ -50,16 +50,13 @@ class FileWriterThread(Thread):
 	def run(self):
 		while True:
 			try:
-				epoch, batchId, claLoss, locLoss, trainLoss, lt, bt, ps, ns = self.queue.get()
-				if claLoss is None:
-					trainLoss = None
-					ls = cnf.logString3.format(epoch, batchId, lt, bt, ps, ns)
-				elif locLoss is not None:
-					trainLoss = claLoss + locLoss
-					ls = cnf.logString1.format(epoch, batchId, claLoss, locLoss, trainLoss, lt, bt, ps, ns)
+				epoch, batchId, cl, ll, tl, ps, ns, iou, mc, lt, bt = self.queue.get()
+				if cl is None:
+					ls = cnf.logString3.format(epoch, batchId, ps, ns, lt, bt)
+				elif ll is not None:
+					ls = cnf.logString1.format(epoch, batchId, cl, ll, tl, ps, ns, iou, mc, lt, bt)
 				else:
-					trainLoss = claLoss
-					ls = cnf.logString2.format(epoch, batchId, claLoss, trainLoss, lt, bt, ps, ns)
+					ls = cnf.logString2.format(epoch, batchId, cl, tl, ps, ns, lt, bt)
 				writeToFile(self.filename, ls)
 			finally:
 				self.queue.task_done()
