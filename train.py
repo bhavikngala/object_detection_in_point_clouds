@@ -25,7 +25,7 @@ parser.add_argument('-v', '--voxelnet', action='store_true')
 parser.add_argument('-e', '--epochs', type=int, default=None)
 parser.add_argument('--aug-scheme', default=None)
 parser.add_argument('-m', '--multi-gpu', action='store_true')
-parser.add_argument('-v', '--validate', action='store_true')
+parser.add_argument('--val', action='store_true')
 args = parser.parse_args()
 
 torch.manual_seed(0)
