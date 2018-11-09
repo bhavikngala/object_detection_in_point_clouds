@@ -21,13 +21,13 @@ Requirements
 ```
 python train.py [options] [--step-lr] [--aug-data] [-f] [-r] [-p] [-v] [-e] [--aug-scheme] [-m]
 
-	--step-lr, type = boolean, description = If set then step 			learning rates is used, default = False
-	--aug-data type = boolean, description = Used to turn data 			augmentation on/off, default = False
-	-f, --model-file, type = string, description = Used to specify 		model file name, defualt = None 
-	-r, --root-dir, type = string, description = Used to specify 		root directory for data, default = None
-	-p, --pixor, type = boolean, description = Used when pixor data 	augmentation method is to be used, default = False
-	-v, --voxelnet, type = boolean, description = Used when voxelnet 	 data augmentation method is to be used, default = False
-	-e, --epochs, type = int, description = Used to specify number 		of epochs, default=None
-	--aug_scheme, type = string, description = pixor of voxelnet 		augmentation scheme, set internally depending on -p -v 			flags, default=None
-	-m, --multi-gpu, type = boolean, description = Set to train 		model on multiple GPUs, default = False
+	--step-lr, type = boolean, description = If set then step </br>learning rates is used, default = False
+	--aug-data type = boolean, description = Used to turn data  </br>augmentation on/off, default = False
+	-f, --model-file, type = string, description = Used to specify </br>model file name, defualt = None 
+	-r, --root-dir, type = string, description = Used to specify </br>root directory for data, default = None
+	-p, --pixor, type = boolean, description = Used when pixor data </br>augmentation method is to be used, default = False
+	-v, --voxelnet, type = boolean, description = Used when voxelnet </br>data augmentation method is to be used, default = False
+	-e, --epochs, type = int, description = Used to specify number </br>of epochs, default=None
+	--aug_scheme, type = string, description = pixor of voxelnet </br>augmentation scheme, set internally depending on -p -v </br>flags, default=None
+	-m, --multi-gpu, type = boolean, description = Set to train </br>model on multiple GPUs, default = False
 ```
