@@ -77,7 +77,7 @@ class LidarLoader_2(Dataset):
 						 data[13]])
 
 					labels.append(datalist)
-			labels = np.zeros((1, 7), dtype=np.float32) if len(labels)==0 else np.array(labels)	
+			labels = np.zeros((1, 8), dtype=np.float32) if len(labels)==0 else np.array(labels)	
 
 		# augment data
 		if self.train:
