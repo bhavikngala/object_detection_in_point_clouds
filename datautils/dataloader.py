@@ -61,7 +61,8 @@ class LidarLoader_2(Dataset):
 					if data[0] == self.objtype:
 						datalist.append(1)
 					elif data[0] != 'dontcare':
-						datalist.append(0)
+						# datalist.append(0)
+						continue
 					else:
 						continue
 
@@ -76,7 +77,7 @@ class LidarLoader_2(Dataset):
 						 data[13]])
 
 					labels.append(datalist)
-			labels = np.array(labels)	
+			labels = np.zeros((1, 7), dtype=np.float32) if len(labels)==0 else np.array(labels)	
 
 		# augment data
 		if self.train:
