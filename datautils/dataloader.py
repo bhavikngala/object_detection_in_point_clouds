@@ -60,11 +60,11 @@ class LidarLoader_2(Dataset):
 					# object type
 					if data[0] == self.objtype:
 						datalist.append(1)
-					elif data[0] != 'dontcare':
+					# elif data[0] != 'dontcare':
 						# datalist.append(0)
-						continue
+						# continue
 					else:
-						continue
+						datalist.append(0)
 
 					# convert string to float
 					data = [float(data[i]) for i in range(1, len(data))]
