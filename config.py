@@ -34,11 +34,17 @@ P2_inv = np.linalg.pinv(P2)
 
 objtype = 'car'
 
+carTargetMean = np.array([[ 0.8216354, 0.08494052, 28.304243, 2.4187818, 1.3506572, 0.48570955]])
+carSTD = np.array([[16.32046613, 8.3399593, 0.36412882, 0.13669496, 0.10216206, 0.42591674, 0.63424664]])
+
 # res_block_layers = list if number of channels in the first conv layer of each res_block
 # up_sample_layers = list of tuple of number of channels input deconv and conv layers
+# deconv = tuplr of (dilation, stride, padding, output_padding) for deconvolution in upsampling
 
 res_block_layers = [24, 48, 64, 96]
 up_sample_layers = [(196, 256), (128, 192)]
+deconv = [(1, 2, (1, 1), (1, 1)), # upsamole block 1
+		  (1, 2, (1, 1), (1, 0))] # upsample block 2
 
 # training parameters
 lr = 1e-4   # learning rate without step
@@ -80,5 +86,5 @@ logString2 = 'epoch: {:03d} | batch:{:04d} | cla loss: {:.8f} | loc loss: None |
 logString3 = 'epoch: {:03d} | batch:{:04d} | cla loss: None | loc loss: None| total loss: None | PS : {:07d} | NS : {:07d} | iou : None | mc : None | lt : {:.4f} | bt : {:.4f} \n\n'
 # logString = Template('epoch: $e | cla loss: $cl | loc loss: $ll | total loss: $tl \n')
 
-batchSize = 4
+batchSize = 3
 accumulationSteps = 4.0

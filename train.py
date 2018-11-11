@@ -60,7 +60,7 @@ if args.val:
 	)
 
 # create detector object and intialize weights
-hawkEye = HawkEye(cnf.res_block_layers, cnf.up_sample_layers).to(cnf.device)
+hawkEye = HawkEye(cnf.res_block_layers, cnf.up_sample_layers, cnf.deconv).to(cnf.device)
 hawkEye.apply(misc.weights_init)
 
 if args.multi_gpu:
@@ -261,4 +261,6 @@ if __name__ == '__main__':
 
 	# finish all tasks
 	queue.join()
-	valqueue.join()
+
+	if args.val:
+		valqueue.join()
