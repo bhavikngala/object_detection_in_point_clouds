@@ -85,9 +85,9 @@ calTrain = './../data_object_calib/training/calib'
 calTest = './../data_object_calib/testing/calib'
 
 # string for log
-logString1 = 'epoch: {:03d} | batch:{:04d} | cla loss: {:.8f} | loc loss: {:.8f} | total loss: {:.8f} | PS : {:07d} | NS : {:07d} | iou : {:.4f} | mc : {:.4f} | lt : {:.4f} | bt : {:.4f} \n\n'
-logString2 = 'epoch: {:03d} | batch:{:04d} | cla loss: {:.8f} | loc loss: None | total loss: {:.8f} | PS : {:07d} | NS : {:07d} | iou : None | mc : None | lt : {:.4f} | bt : {:.4f} \n\n'
-logString3 = 'epoch: {:03d} | batch:{:04d} | cla loss: None | loc loss: None| total loss: None | PS : {:07d} | NS : {:07d} | iou : None | mc : None | lt : {:.4f} | bt : {:.4f} \n\n'
+logString1 = 'epoch: {:03d} | batch:{:04d} | cla loss: {:.8f} | loc loss: {:.8f} | total loss: {:.8f} | PS : [{:3d}/{:07d}] | NS : {:07d} | iou : {:.4f} | mc : {:.4f} | lt : {:.4f} | bt : {:.4f} \n\n'
+logString2 = 'epoch: {:03d} | batch:{:04d} | cla loss: {:.8f} | loc loss: None | total loss: {:.8f} | PS : [{:3d}/{:07d}] | NS : {:07d} | iou : None | mc : None | lt : {:.4f} | bt : {:.4f} \n\n'
+logString3 = 'epoch: {:03d} | batch:{:04d} | cla loss: None | loc loss: None| total loss: None | PS : [{:3d}/{:07d}] | NS : {:07d} | iou : None | mc : None | lt : {:.4f} | bt : {:.4f} \n\n'
 # logString = Template('epoch: $e | cla loss: $cl | loc loss: $ll | total loss: $tl \n')
 
 batchSize = 3
