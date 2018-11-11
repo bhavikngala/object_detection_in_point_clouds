@@ -98,9 +98,9 @@ class LidarLoader_2(Dataset):
 		# normalize data
 		
 		for i in range(labels1.shape[0]):
-			if labels[i,0] == 1:
-				labels[i, 1:] = labels[i, 1:]-cnf.carMean
-				labels[i, 1:] = labels[i, 1:]/cnf.carSTD
+			if labels1[i,0] == 1:
+				labels1[i, 1:] = labels1[i, 1:]-cnf.carMean
+				labels1[i, 1:] = labels1[i, 1:]/cnf.carSTD
 
 		return fnp(bev), fnp(labels1), labelfilename
 
