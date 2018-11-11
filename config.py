@@ -27,15 +27,19 @@ R0 = np.array([
 P2 = np.array([[719.787081,         0., 608.463003,    44.9538775],
                [        0., 719.787081, 174.545111,     0.1066855],
                [        0.,         0.,         1., 3.0106472e-03],
-			   [0., 0., 0., 0]])
+			   [0., 0., 0., 0]
+])
 R0_inv = np.linalg.inv(R0)
 Tr_velo_to_cam_inv = np.linalg.inv(Tr_velo_to_cam)
 P2_inv = np.linalg.pinv(P2)
 
 objtype = 'car'
 
-carTargetMean = np.array([[ 0.8216354, 0.08494052, 28.304243, 2.4187818, 1.3506572, 0.48570955]])
+# without log(l) and log(w)
+carMean = np.array([[0.8216354, 0.08494052, 28.304243, 2.4187818, 3.8839872, 1.6286187]])
 carSTD = np.array([[16.32046613, 8.3399593, 0.36412882, 0.13669496, 0.10216206, 0.42591674, 0.63424664]])
+# carMean = np.array([[ 0.8216354, 0.08494052, 28.304243, 2.4187818, 1.3506572, 0.48570955]])
+# carSTD = np.array([[16.32046613, 8.3399593, 0.36412882, 0.13669496, 0.10216206, 0.42591674, 0.63424664]])
 
 # res_block_layers = list if number of channels in the first conv layer of each res_block
 # up_sample_layers = list of tuple of number of channels input deconv and conv layers
