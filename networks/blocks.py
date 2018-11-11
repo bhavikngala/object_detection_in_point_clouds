@@ -104,7 +104,7 @@ class Bottleneck_6_0(nn.Module):
 
 		return x + res
 
-class Upsample(nn.Module):
+class Upsample_1(nn.Module):
 	'''
 	Upsamples the input sample by a factor of 2.
 	First the input is upsample by bilinear interpolation.
@@ -128,8 +128,42 @@ class Upsample(nn.Module):
 		x = self.conv1(originalFeatureMap)
 		return x + u
 
+class Upsample_2(nn.Module):
+	'''
+	Upsampling block as described in the PIXOR paper.
+	First apply deconvolution to input, apply convolution 
+	to res connection, and perform element wise addition.
+
+	Requires: in_channels
+			: out_channels
+			: output_size
+			: args - (dilation, stride, padding, output_padding) for deconv layer
+	'''
+	def __init__(self, in_channels, out_channels, args):
+		super(Upsample, self).__init__()
+
+		dilation, stride, padding, output_padding = args
+		self.deconv1 = nn.ConvTranspose2d(
+			in_channels[0],
+			out_channels,
+			kernel_size=3,
+			stride=stride,
+			padding=padding,
+			output_padding=output_padding,
+			groups=1,
+			bias=False,
+			dilation=dilation
+		)
+		self.conv1 = nn.Conv2d(in_channels[1], out_channels, kernel_size=1, bias=False)
+
+	def forward(self, featureMapToUpsample, originalFeatureMap):
+		d = self.deconv1(featureMapToUpsample)
+		res = self.conv1(originalFeatureMap)
+
+		return d + res
+
 # for new variants of bottleneck change names here
 Bottleneck_3 = Bottleneck_3_0
 Bottleneck_4 = Bottleneck_4_0
 Bottleneck_6 = Bottleneck_6_0
-Upsample = Upsample
+Upsample = Upsample_2

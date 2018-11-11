@@ -8,7 +8,8 @@ class PointCloudDetector(nn.Module):
 
 	# res_block_layers = list if number of channels in the first conv layer of each res_block
 	# up_sample_layers = list of tuple of number of channels input deconv and conv layers
-	def __init__(self, res_block_layers, up_sample_layers):
+	# up_sample_deconv = tuplr of (dilation, stride, padding, output_padding) for deconvolution in upsampling
+	def __init__(self, res_block_layers, up_sample_layers, up_sample_deconv):
 
 		super(PointCloudDetector, self).__init__()
 
@@ -36,10 +37,10 @@ class PointCloudDetector(nn.Module):
 		self.conv4 = nn.Conv2d(in_channels=4*res_block_layers[3], out_channels=196, kernel_size=1, bias=False)
 		self.bn4 = nn.BatchNorm2d(196)
 
-		self.upsample1 = Upsample(in_channels = up_sample_layers[0], out_channels = 128)
+		self.upsample1 = Upsample(in_channels = up_sample_layers[0], out_channels = 128, args = up_sample_deconv[0])
 		self.bn_upsample1 = nn.BatchNorm2d(128)
 
-		self.upsample2 = Upsample(in_channels = up_sample_layers[1], out_channels = 96, output_size=(200, 175))
+		self.upsample2 = Upsample(in_channels = up_sample_layers[1], out_channels = 96, args = up_sample_deconv[1])
 		self.bn_upsample2 = nn.BatchNorm2d(96)
 		
 		self.conv5 = nn.Conv2d(in_channels=96, out_channels=96, kernel_size=3, padding=1, bias=False)
