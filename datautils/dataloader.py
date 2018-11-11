@@ -93,7 +93,7 @@ class LidarLoader_2(Dataset):
 		labels1[:,0] = labels[:,0]
 		labels1[:,1], labels1[:,2] = np.cos(labels[:,7]), np.sin(labels[:,7])
 		labels1[:,3], labels1[:,4] = labels[:,1], labels[:,2]#x,y
-		labels1[:,5], labels1[:,6] = np.log(labels[:,6]), np.log(labels[:,5])#l,w
+		labels1[:,5], labels1[:,6] = labels[:,6], labels[:,5]#l,w
 
 		# normalize data
 		
