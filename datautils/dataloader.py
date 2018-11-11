@@ -99,7 +99,8 @@ class LidarLoader_2(Dataset):
 		
 		for i in range(labels1.shape[0]):
 			if labels[i,0] == 1:
-				labels[i, 1:] = (labels[i, 1:]-cnf.carMean)/cnf.carSTD
+				labels[i, 1:] = labels[i, 1:]-cnf.carMean
+				labels[i, 1:] = labels[i, 1:]/cnf.carSTD
 
 		return fnp(bev), fnp(labels1), labelfilename
 
