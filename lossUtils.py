@@ -67,6 +67,11 @@ def computeIoU(matchedBoxes, targets):
 
 
 def computeLoss3_1(cla, loc, targets, zoomed0_3, zoomed1_2):
+	claLoss = None
+	locLoss = None
+	iou = None
+	meanConfidence = None
+
 	lm, lc, lh, lw = loc.size()
 	_, zr, zc = zoomed0_3.size()
 	_, tr, tc = targets.size()
@@ -85,23 +90,36 @@ def computeLoss3_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 	##############~POSITIVE SAMPLES~#################
 	b = ((loc1[:,:,3]<zoomed0_3[:,:,0]) & (loc1[:,:,3]>zoomed0_3[:,:,1])) & ((loc1[:,:,2]>zoomed0_3[:,:,3]) & (loc1[:,:,2]<zoomed0_3[:,:,2]))
 	numPosSamples = (b.sum()).item()
-
+	objSamples = 0
 	if numPosSamples>0:
 		pred = cla1[b]
 		pred.squeeze_(-1)
 		pred.clamp_(1e-7, 1-1e-7)
-		
-		logpt = targets[b][:, 0] * torch.log(pred) + (1-targets[b][:, 0]) * torch.log(1-pred)
-		pt = torch.exp(logpt)
-		claLoss = cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
 
-		locLoss = F.smooth_l1_loss(loc1[b], targets[b][:,1:])
-		iou = computeIoU(loc1[b], targets[b][:,1:])
-		meanConfidence = (pred[targets[b][:,0]==1]).mean()
-	else:
-		locLoss = None
-		iou = None
-		meanConfidence = None
+		# get positive ground truth
+		c  = targets[b][:, 0] == 1
+		objSamples = c.sum().item()
+		# target == 1
+		if objSamples>0:
+			pt = pred[c]
+			logpt = torch.log(pred)
+			claLoss = cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
+
+			locLoss = F.smooth_l1_loss(loc1[b][c], targets[b][c][:,1:])
+			iou = computeIoU(loc1[b][c], targets[b][c][:,1:])
+			meanConfidence = pt.mean()
+
+		# get negative ground truth
+		# target == 0
+		c = targets[b][:, 0] == 0
+		if c.sum()>0 and claLoss is not None:
+			pt = 1-pred[c]
+			logpt = torch.log(pt)
+			claLoss += cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
+		elif c.sum()>0 and claLoss is None:
+			pt = 1-pred[c]
+			logpt = torch.log(pt)
+			claLoss = cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
 	##############~POSITIVE SAMPLES~#################
 
 	##############~NEGATIVE SAMPLES~#################
@@ -129,6 +147,6 @@ def computeLoss3_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 	else:
 		claLoss = None
 	##############~NEGATIVE SAMPLES~#################
-	return claLoss, locLoss, iou, meanConfidence, numPosSamples, numNegSamples
+	return claLoss, locLoss, iou, meanConfidence, objSamples, numPosSamples, numNegSamples
 
 computeLoss = computeLoss3_1
