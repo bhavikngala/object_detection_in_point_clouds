@@ -155,7 +155,7 @@ def computeLoss3_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 	##############~NEGATIVE SAMPLES~#################
 	return claLoss, locLoss, iou, meanConfidence, objSamples, numPosSamples, numNegSamples
 
-def computeLoss4_1():
+def computeLoss4_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 	claLoss = None
 	locLoss = None
 	iou = None
