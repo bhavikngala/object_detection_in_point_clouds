@@ -14,54 +14,30 @@ class Bottleneck_3_0(nn.Module):
 
 		# using pre-normalization and pre-activation
 		# TODO: switch stride=2 between conv1 and conv2 and check results
-		self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=2, padding=1, bias=False)
+		self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False)
+		self.bn1 = nn.BatchNorm2d(out_channels)
 
-		self.bn2 = nn.BatchNorm2d(out_channels)
-		self.conv2 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=3, stride=1, padding=1, bias=False)
-
-		self.conv1_skip = nn.Conv2d(in_channels, out_channels*self.expansion, kernel_size=3, stride=2, padding=1, bias=False)
-
-		self.relu = nn.ReLU(inplace=True)
-
-	def forward(self, x):
-		res = self.conv1_skip(x)
-
-		x = self.conv1(x)
-		x = self.bn2(x)
-		x = self.conv2(self.relu(x))
-
-		return x + res
-
-class Bottleneck_4_0(nn.Module):
-	expansion = 4
-
-	def __init__(self, in_channels, out_channels):
-		super(Bottleneck_4_0, self).__init__()
-
-		# using pre-normalization and pre-activation
-		# TODO: switch stride=2 between conv1 and conv2 and check results
-		self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, bias=False)
-
-		self.bn2 = nn.BatchNorm2d(out_channels)
-		self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=2, padding=1, bias=False)
-
-		self.bn3 = nn.BatchNorm2d(out_channels)
-		self.conv3 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=1, bias=False)
+		self.conv2 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=3, stride=2, padding=1, bias=False)
+		self.bn2 = nn.BatchNorm2d(out_channels*self.expansion)
 
 		self.conv1_skip = nn.Conv2d(in_channels, out_channels*self.expansion, kernel_size=1, stride=2, bias=False)
+		self.bn1_skip = nn.BatchNorm2d(out_channels*self.expansion)
 
 		self.relu = nn.ReLU(inplace=True)
 
 	def forward(self, x):
 		res = self.conv1_skip(x)
+		res = self.bn1_skip(res)
 
 		x = self.conv1(x)
-		x = self.bn2(x)
+		x = self.bn1(x)
 		x = self.conv2(self.relu(x))
-		x = self.bn3(x)
-		x = self.conv3(self.relu(x))
+		x = self.bn2(x)
 
-		return x + res
+		out = self.relu(x+res)
+
+		return out
+
 
 class Bottleneck_6_0(nn.Module):
 	expansion = 4
@@ -71,38 +47,45 @@ class Bottleneck_6_0(nn.Module):
 
 		# using pre-normalization and pre-activation
 		# TODO: switch stride=2 between conv1 and conv2 and check results
-		self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=2, padding=1, bias=False)
+		self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False)
+		self.bn1 = nn.BatchNorm2d(out_channels)
 
-		self.bn2 = nn.BatchNorm2d(out_channels)
 		self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False)
+		self.bn2 = nn.BatchNorm2d(out_channels)
 
-		self.bn3 = nn.BatchNorm2d(out_channels)
 		self.conv3 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False)
+		self.bn3 = nn.BatchNorm2d(out_channels)
 
-		self.bn4 = nn.BatchNorm2d(out_channels)
 		self.conv4 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False)
+		self.bn4 = nn.BatchNorm2d(out_channels)
 
-		self.bn5 = nn.BatchNorm2d(out_channels)
 		self.conv5 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=3, stride=1, padding=1, bias=False)
+		self.bn5 = nn.BatchNorm2d(out_channels*self.expansion)
 
 		self.conv1_skip = nn.Conv2d(in_channels, out_channels*self.expansion, kernel_size=3, stride=2, padding=1, bias=False)
+		self.bn1_skip = nn.BatchNorm2d(out_channels*self.expansion)
 
 		self.relu = nn.ReLU(inplace=True)
 
 	def forward(self, x):
 		res = self.conv1_skip(x)
+		res = self.bn1_skip(res)
 
 		x = self.conv1(x)
-		x = self.bn2(x)
+		x = self.bn1(x)
 		x = self.conv2(self.relu(x))
-		x = self.bn3(x)
+		x = self.bn2(x)
 		x = self.conv3(self.relu(x))
-		x = self.bn4(x)
+		x = self.bn3(x)
 		x = self.conv4(self.relu(x))
-		x = self.bn5(x)
+		x = self.bn4(x)
 		x = self.conv5(self.relu(x))
+		x = self.bn5(x)
 
-		return x + res
+		out = self.relu(x+res)
+
+		return out
+
 
 class Upsample_1(nn.Module):
 	'''
@@ -127,6 +110,7 @@ class Upsample_1(nn.Module):
 
 		x = self.conv1(originalFeatureMap)
 		return x + u
+
 
 class Upsample_2(nn.Module):
 	'''
@@ -154,13 +138,24 @@ class Upsample_2(nn.Module):
 			bias=False,
 			dilation=dilation
 		)
+		self.bn_deconv1 = nn.BatchNorm2d(out_channels)
+
 		self.conv1 = nn.Conv2d(in_channels[1], out_channels, kernel_size=1, bias=False)
+		self.bn1 = nn.BatchNorm2d(out_channels)
+
+		self.relu = nn.ReLU(inplace=True)
 
 	def forward(self, featureMapToUpsample, originalFeatureMap):
 		d = self.deconv1(featureMapToUpsample)
-		res = self.conv1(originalFeatureMap)
+		d = self.bn_deconv1(d)
 
-		return d + res
+		res = self.conv1(originalFeatureMap)
+		res = self.bn1(res)
+
+		out = self.relu(d+res)
+
+		return out
+
 
 # for new variants of bottleneck change names here
 Bottleneck_3 = Bottleneck_3_0
