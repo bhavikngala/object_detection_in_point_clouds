@@ -209,7 +209,7 @@ def computeLoss4_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 		logpt = torch.log(pt)
 		claLoss += cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
 	else:
-		cla1 = cla1.view(lm, -1, zr*lw*lh)
+		cla1 = cla1.view(lm, lw*lh, 1*zr)
 
 		pt = 1-cla1[b1][:,0]
 		pt.clamp_(1e-7, 1-1e-7)
