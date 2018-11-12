@@ -56,10 +56,10 @@ class PointCloudDetector(nn.Module):
 		self.bn8 = nn.BatchNorm2d(96)
 
 		# sigmoid activation
-		self.conv_cla = nn.Conv2d(in_channels=96, out_channels=1, kernel_size=3, padding=1, bias=False)
+		self.conv_cla = nn.Conv2d(in_channels=96, out_channels=1, kernel_size=3, padding=1, bias=True)
 
 		# check activation function from SSD code
-		self.conv_loc = nn.Conv2d(in_channels=96, out_channels=6, kernel_size=3, padding=1, bias=False)
+		self.conv_loc = nn.Conv2d(in_channels=96, out_channels=6, kernel_size=3, padding=1, bias=True)
 
 		self.relu = nn.ReLU(inplace=True)
 		self.cla_act = nn.Sigmoid()
