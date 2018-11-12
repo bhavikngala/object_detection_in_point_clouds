@@ -43,7 +43,6 @@ def computeIoU(matchedBoxes, targets):
 	'''
 	Compute Intersection over Union for 2D boxes
 	'''
-
 	f1, l1 = matchedBoxes[:,2] + matchedBoxes[:,4]/2, matchedBoxes[:,3] + matchedBoxes[:,5]/2
 	b1, r1 = matchedBoxes[:,2] - matchedBoxes[:,4]/2, matchedBoxes[:,3] - matchedBoxes[:,5]/2
 
@@ -156,4 +155,69 @@ def computeLoss3_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 	##############~NEGATIVE SAMPLES~#################
 	return claLoss, locLoss, iou, meanConfidence, objSamples, numPosSamples, numNegSamples
 
-computeLoss = computeLoss3_1
+def computeLoss4_1():
+	claLoss = None
+	locLoss = None
+	iou = None
+	meanConfidence = None
+
+	lm, lc, lh, lw = loc.size()
+	_, zr, zc = zoomed0_3.size()
+	_, tr, tc = targets.size()
+
+	# move the channel axis to the last dimension
+	loc1 = loc.permute(0, 2, 3, 1).contiguous().view(lm, lw*lh, lc)
+	cla = cla.permute(0, 2, 3, 1).contiguous().view(lm, lw*lh, 1)
+
+	loc1 = loc1.repeat(1, 1, zr).view(lm, -1, lc)
+	cla1 = cla.repeat(1, 1, zr).view(lm, -1, 1)
+
+	zoomed0_3 = zoomed0_3.repeat(1, lh*lw, 1)
+	zoomed1_2 = zoomed1_2.repeat(1, lh*lw, 1)
+	targets = targets.repeat(1, lh*lw, 1)
+
+	#***************PS******************
+	
+	b = ((loc1[:,:,2]<zoomed0_3[:,:,2])&(loc1[:,:,2]>zoomed0_3[:,:,3]))&((loc1[:,:,3]<zoomed0_3[:,:,0])&(loc1[:,:,3]>zoomed0_3[:,:,1]))
+	numPosSamples = b.sum().item()
+	
+	if numPosSamples>0:
+		pt = cla1[b]
+		pt.clamp_(1e-7, 1-1e-7)
+		logpt = torch.log(pt)
+		claLoss = cnf.alpha(-((1-pt)**cnf.gamma)*logpt).mean()
+
+		locLoss = F.smooth_l1_loss(loc1[b], targets[b][:,1:])
+
+		iou = computeIoU(loc1[b], targets[b][:,1:])
+		meanConfidence = pt.mean()
+
+	#***************PS******************
+
+	#***************NS******************
+	
+	b1 = ((loc1[:,:,2]>zoomed1_2[:,:,2])|(loc1[:,:,2]<zoomed1_2[:,:,3]))|((loc1[:,:,3]>zoomed1_2[:,:,0])|(loc1[:,:,3]<zoomed1_2[:,:,1]))
+	b1 = b1.view(lm, lw*lh, zr).sum(dim=-1)==zr
+
+	numNegSamples = b1.sum()
+
+	if numNegSamples>0 and numPosSamples>0:
+		cla1 = cla1.view(lm, -1, zr*lw*lh)
+
+		pt = 1-cla1[b1][:,0]
+		pt.clamp_(1e-7, 1-1e-7)
+		logpt = torch.log(pt)
+		claLoss += cnf.alpha(-((1-pt)**cnf.gamma)*logpt).mean()
+	else:
+		cla1 = cla1.view(lm, -1, zr*lw*lh)
+
+		pt = 1-cla1[b1][:,0]
+		pt.clamp_(1e-7, 1-1e-7)
+		logpt = torch.log(pt)
+		claLoss = cnf.alpha(-((1-pt)**cnf.gamma)*logpt).mean()
+
+	#***************NS******************
+
+	return claLoss, locLoss, iou, meanConfidence, numPosSamples, numNegSamples
+
+computeLoss = computeLoss4_1
