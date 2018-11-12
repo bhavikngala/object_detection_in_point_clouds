@@ -50,7 +50,7 @@ class Bottleneck_6_0(nn.Module):
 		self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False)
 		self.bn1 = nn.BatchNorm2d(out_channels)
 
-		self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False)
+		self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=2, padding=1, bias=False)
 		self.bn2 = nn.BatchNorm2d(out_channels)
 
 		self.conv3 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False)
@@ -62,7 +62,7 @@ class Bottleneck_6_0(nn.Module):
 		self.conv5 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=3, stride=1, padding=1, bias=False)
 		self.bn5 = nn.BatchNorm2d(out_channels*self.expansion)
 
-		self.conv1_skip = nn.Conv2d(in_channels, out_channels*self.expansion, kernel_size=3, stride=2, padding=1, bias=False)
+		self.conv1_skip = nn.Conv2d(in_channels, out_channels*self.expansion, kernel_size=1, stride=2, bias=False)
 		self.bn1_skip = nn.BatchNorm2d(out_channels*self.expansion)
 
 		self.relu = nn.ReLU(inplace=True)
@@ -159,6 +159,5 @@ class Upsample_2(nn.Module):
 
 # for new variants of bottleneck change names here
 Bottleneck_3 = Bottleneck_3_0
-Bottleneck_4 = Bottleneck_4_0
 Bottleneck_6 = Bottleneck_6_0
 Upsample = Upsample_2
