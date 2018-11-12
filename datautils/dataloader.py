@@ -63,8 +63,8 @@ class LidarLoader_2(Dataset):
 					# elif data[0] != 'dontcare':
 						# datalist.append(0)
 					else:
-						# continue
-						datalist.append(0)
+						continue
+						# datalist.append(0)
 
 					# convert string to float
 					data = [float(data[i]) for i in range(1, len(data))]
@@ -77,7 +77,7 @@ class LidarLoader_2(Dataset):
 						 data[13]])
 
 					labels.append(datalist)
-			labels = np.zeros((1, 8), dtype=np.float32) if len(labels)==0 else np.array(labels)	
+			labels = np.zeros((1, 8), dtype=np.float32) if len(labels)==0 else np.array(labels, dtype=np.float32)	
 
 		# augment data
 		if self.train:
@@ -96,11 +96,15 @@ class LidarLoader_2(Dataset):
 		labels1[:,5], labels1[:,6] = labels[:,6], labels[:,5]#l,w
 
 		# normalize data
-		
-		for i in range(labels1.shape[0]):
-			if labels1[i,0] == 1:
-				labels1[i, 1:] = labels1[i, 1:]-cnf.carMean
-				labels1[i, 1:] = labels1[i, 1:]/cnf.carSTD
+		# for i in range(labels1.shape[0]):
+		# 	if labels1[i,0] == 1:
+		# 		labels1[i, 1:] = labels1[i, 1:]-cnf.carMean
+		# 		labels1[i, 1:] = labels1[i, 1:]/cnf.carSTD
+		if labels1.shape[0] == 1 and labels1.sum() == 0:
+			pass
+		else:
+			labels1[:,1:] = labels1[:, 1:] - cnf.carMean
+			labels1[:,1:] = labels1[:, 1:]/cnf.carSTD
 
 		return fnp(bev), fnp(labels1), labelfilename
 
