@@ -123,7 +123,7 @@ def train(epoch):
 
 		# compute loss, gradient, and optimize
 		st = time.time()
-		claLoss, locLoss, iou, meanConfidence, objs, ps, ns = computeLoss(cla, loc, target, zoom0_3, zoom1_2)
+		claLoss, locLoss, iou, meanConfidence, ps, ns = computeLoss(cla, loc, target, zoom0_3, zoom1_2)
 		ed = time.time()
 		if claLoss is None:
 			trainLoss = None
@@ -154,7 +154,7 @@ def train(epoch):
 			hawkEye.zero_grad()
 
 		ed1 = time.time()
-		queue.put((epoch, batchId, cl, ll, tl, int(objs), int(ps), int(ns), iou, meanConfidence, ed-st, ed1-st1))
+		queue.put((epoch, batchId, cl, ll, tl, int(ps), int(ns), iou, meanConfidence, ed-st, ed1-st1))
 
 		del data
 		del target
@@ -198,7 +198,7 @@ def validation(epoch):
 
 		# compute loss, gradient, and optimize
 		st = time.time()
-		claLoss, locLoss, iou, meanConfidence, objs, ps, ns = computeLoss(cla, loc, target, zoom0_3, zoom1_2)
+		claLoss, locLoss, iou, meanConfidence, ps, ns = computeLoss(cla, loc, target, zoom0_3, zoom1_2)
 		ed = time.time()
 		if claLoss is None:
 			trainLoss = None
@@ -220,7 +220,7 @@ def validation(epoch):
 			# ls = cnf.logString2.format(epoch, batchId, claLoss.item(), trainLoss.item())
 
 		ed1 = time.time()
-		valqueue.put((epoch, batchId, cl, ll, tl, int(objs), int(ps), int(ns), iou, meanConfidence, ed-st, ed1-st1))
+		valqueue.put((epoch, batchId, cl, ll, tl, int(ps), int(ns), iou, meanConfidence, ed-st, ed1-st1))
 
 		del data
 		del target
