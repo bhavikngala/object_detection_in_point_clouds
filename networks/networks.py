@@ -63,7 +63,6 @@ class PointCloudDetector(nn.Module):
 
 		self.relu = nn.ReLU(inplace=True)
 		self.cla_act = nn.Sigmoid()
-		self.loc_act = nn.Tanh()
 
 	def forward(self, x):
 		x = self.conv1(x)
@@ -122,7 +121,5 @@ class PointCloudDetector(nn.Module):
 		cla = self.cla_act(cla)
 
 		loc = self.conv_loc(x)
-		if self.loc_act:
-			loc = self.loc_act(loc)
 
 		return cla, loc
