@@ -185,7 +185,7 @@ def computeLoss4_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 		pt = cla1[b]
 		pt.clamp_(1e-7, 1-1e-7)
 		logpt = torch.log(pt)
-		claLoss = cnf.alpha(-((1-pt)**cnf.gamma)*logpt).mean()
+		claLoss = cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
 
 		locLoss = F.smooth_l1_loss(loc1[b], targets[b][:,1:])
 
@@ -207,14 +207,14 @@ def computeLoss4_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 		pt = 1-cla1[b1][:,0]
 		pt.clamp_(1e-7, 1-1e-7)
 		logpt = torch.log(pt)
-		claLoss += cnf.alpha(-((1-pt)**cnf.gamma)*logpt).mean()
+		claLoss += cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
 	else:
 		cla1 = cla1.view(lm, -1, zr*lw*lh)
 
 		pt = 1-cla1[b1][:,0]
 		pt.clamp_(1e-7, 1-1e-7)
 		logpt = torch.log(pt)
-		claLoss = cnf.alpha(-((1-pt)**cnf.gamma)*logpt).mean()
+		claLoss = cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
 
 	#***************NS******************
 
