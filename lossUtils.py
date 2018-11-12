@@ -92,34 +92,41 @@ def computeLoss3_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 	numPosSamples = (b.sum()).item()
 	objSamples = 0
 	if numPosSamples>0:
-		pred = cla1[b]
-		pred.squeeze_(-1)
-		pred.clamp_(1e-7, 1-1e-7)
+		pt = cla1[b]
+		pt.squeeze_(-1)
+		pt.clamp_(1e-7, 1-1e-7)
 
 		# get positive ground truth
-		c  = targets[b][:, 0] == 1
-		objSamples = c.sum().item()
+		# c  = targets[b][:, 0] == 1
+		# objSamples = c.sum().item()
 		# target == 1
-		if objSamples>0:
-			pt = pred[c]
-			logpt = torch.log(pred)
-			claLoss = cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
+		# if objSamples>0:
+		# 	pt = pred[c]
+		# 	logpt = torch.log(pred)
+		# 	claLoss = cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
 
-			locLoss = F.smooth_l1_loss(loc1[b][c], targets[b][c][:,1:])
-			iou = computeIoU(loc1[b][c], targets[b][c][:,1:])
-			meanConfidence = pt.mean()
+		# 	locLoss = F.smooth_l1_loss(loc1[b][c], targets[b][c][:,1:])
+		# 	iou = computeIoU(loc1[b][c], targets[b][c][:,1:])
+		# 	meanConfidence = pt.mean()
+
+		logpt = torch.log(pt)
+		claLoss = cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
+
+		locLoss = F.smooth_l1_loss(loc1[b], targets[b][:,1:])
+		iou = computeIoU(loc1[b], targets[b][:,1:])
+		meanConfidence = pt.mean()
 
 		# get negative ground truth
 		# target == 0
-		c = targets[b][:, 0] == 0
-		if c.sum()>0 and claLoss is not None:
-			pt = 1-pred[c]
-			logpt = torch.log(pt)
-			claLoss += cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
-		elif c.sum()>0 and claLoss is None:
-			pt = 1-pred[c]
-			logpt = torch.log(pt)
-			claLoss = cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
+		# c = targets[b][:, 0] == 0
+		# if c.sum()>0 and claLoss is not None:
+		# 	pt = 1-pred[c]
+		# 	logpt = torch.log(pt)
+		# 	claLoss += cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
+		# elif c.sum()>0 and claLoss is None:
+		# 	pt = 1-pred[c]
+		# 	logpt = torch.log(pt)
+		# 	claLoss = cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
 	##############~POSITIVE SAMPLES~#################
 
 	##############~NEGATIVE SAMPLES~#################
