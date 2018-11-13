@@ -62,98 +62,49 @@ def computeIoU(matchedBoxes, targets):
 				targets[:, 4]*targets[:, 5] - \
 				intersectionArea
 
-	return (intersectionArea/unionArea).mean()
+	return (intersectionArea/unionArea).mean().item()
 
 
-def computeLoss3_1(cla, loc, targets, zoomed0_3, zoomed1_2):
-	claLoss = None
-	locLoss = None
-	iou = None
-	meanConfidence = None
+def findInOutMask(loc, rectangle, inside=True):
+	# rectangle is array of 4 points of 2d bounding box
+	# find vectors of 2 adjacent sides
+	# AB = (Bx-Ax, By-Ay) and so on
+	# point inside rectangle ABCD should satisfy the condition
+	# 0 <= dot(AB, AM) <= dot(AB,AB) and
+	# 0 <= dot(BC, BM) <= dot(BC,BC)
+	m, zr, _ = zoomed0_3.size()
+	# AB
+	AB = torch.zeros((m, zr, 2))
+	AB[:, :, 0] = rectangle[:, :, 2] - rectangle[:, :, 0] # Bx - Ax
+	AB[:, :, 1] = rectangle[:, :, 3] - rectangle[:, :, 1] # By - Ay
 
-	lm, lc, lh, lw = loc.size()
-	_, zr, zc = zoomed0_3.size()
-	_, tr, tc = targets.size()
+	# BC
+	BC = torch.zeros((m, zr, 2))
+	BC[:, :, 0] = rectangle[:, :, 4] - rectangle[:, :, 2] # Cx - Bx
+	BC[:, :, 1] = rectangle[:, :, 5] - rectangle[:, :, 3] # Cy - By
 
-	# move the channel axis to the last dimension
-	loc1 = loc.permute(0, 2, 3, 1).contiguous().view(-1, 6)
-	cla = cla.permute(0, 2, 3, 1).contiguous().view(-1, 1)
+	# AM
+	AM = torch.zeros((m, zr, 2))
+	AM[:, :, 0] = loc[:, :, 2] - rectangle[:, :, 0] # Mx - Ax
+	AM[:, :, 1] = loc[:, :, 3] - rectangle[:, :, 1] # My - Ay
 
-	loc1 = loc1.repeat(1, zr).view(-1, zr, 6)
-	cla1 = cla.repeat(1, zr).view(-1, zr, 1)
+	# BM
+	BM = torch.zeros((m, zr, 2))
+	BM[:, :, 0] = loc[:, :, 2] - rectangle[:, :, 2] # Mx - Bx
+	BM[:, :, 1] = loc[:, :, 3] - rectangle[:, :, 3] # My - By
 
-	zoomed0_3 = zoomed0_3.repeat(1, lh*lw, 1).view(-1, zr, zc)
-	zoomed1_2 = zoomed1_2.repeat(1, lh*lw, 1).view(-1, zr, zc)
-	targets = targets.repeat(1, lh*lw, 1).view(-1, tr, tc)
+	dot_AB_AM = torch.sum(AB*AM, dim=-1, keepdim=True)
+	dot_AB_AB = torch.sum(AB*AB, dim=-1, keepdim=True)
+	dot_BC_BM = torch.sum(BC*BM, dim=-1, keepdim=True)
+	dot_BC_BC = torch.sum(BC*BC, dim=-1, keepdim=True)
 
-	##############~POSITIVE SAMPLES~#################
-	b = ((loc1[:,:,3]<zoomed0_3[:,:,0]) & (loc1[:,:,3]>zoomed0_3[:,:,1])) & ((loc1[:,:,2]>zoomed0_3[:,:,3]) & (loc1[:,:,2]<zoomed0_3[:,:,2]))
-	numPosSamples = (b.sum()).item()
-	objSamples = 0
-	if numPosSamples>0:
-		pt = cla1[b]
-		pt.squeeze_(-1)
-		pt.clamp_(1e-7, 1-1e-7)
-
-		# get positive ground truth
-		# c  = targets[b][:, 0] == 1
-		# objSamples = c.sum().item()
-		# target == 1
-		# if objSamples>0:
-		# 	pt = pred[c]
-		# 	logpt = torch.log(pred)
-		# 	claLoss = cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
-
-		# 	locLoss = F.smooth_l1_loss(loc1[b][c], targets[b][c][:,1:])
-		# 	iou = computeIoU(loc1[b][c], targets[b][c][:,1:])
-		# 	meanConfidence = pt.mean()
-
-		logpt = torch.log(pt)
-		claLoss = cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
-
-		locLoss = F.smooth_l1_loss(loc1[b], targets[b][:,1:])
-		iou = computeIoU(loc1[b], targets[b][:,1:])
-		meanConfidence = pt.mean()
-
-		# get negative ground truth
-		# target == 0
-		# c = targets[b][:, 0] == 0
-		# if c.sum()>0 and claLoss is not None:
-		# 	pt = 1-pred[c]
-		# 	logpt = torch.log(pt)
-		# 	claLoss += cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
-		# elif c.sum()>0 and claLoss is None:
-		# 	pt = 1-pred[c]
-		# 	logpt = torch.log(pt)
-		# 	claLoss = cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
-	##############~POSITIVE SAMPLES~#################
-
-	##############~NEGATIVE SAMPLES~#################
-	b = (loc1[:,:,2]<zoomed1_2[:,:,3])|(loc1[:,:,2]>zoomed1_2[:,:,2])|(loc1[:,:,3]>zoomed1_2[:,:,0])|(loc1[:,:,3]<zoomed1_2[:,:,1])
-
-	negPred = cla[b.sum(-1)==zr]
-	numNegSamples = negPred.size(0)
-	
-	if numPosSamples>0 and numNegSamples>0:
-		negPred.squeeze_(-1)
-		negPred.clamp_(1e-7, 1-1e-7)
-
-		pt = 1-negPred
-		logpt = torch.log(pt)
-		claLoss += cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
-
-	elif numNegSamples>0:
-		negPred.squeeze_(-1)
-		negPred.clamp_(1e-7, 1-1e-7)
-		
-		pt = 1-negPred
-		logpt = torch.log(pt)
-		claLoss = cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
-
+	if inside:
+		mask = (0<=dot_AB_AM) & (dot_AB_AM<=dot_AB_AB) & (0<=dot_BC_BM) & (dot_BC_BM<=dot_BC_BC)
 	else:
-		claLoss = None
-	##############~NEGATIVE SAMPLES~#################
-	return claLoss, locLoss, iou, meanConfidence, objSamples, numPosSamples, numNegSamples
+		mask = (0>dot_AB_AM) | (dot_AB_AM>dot_AB_AB) | (0>dot_BC_BM) | (dot_BC_BM>dot_BC_BC)
+
+	return mask
+
 
 def computeLoss4_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 	claLoss = None
@@ -178,7 +129,7 @@ def computeLoss4_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 
 	#***************PS******************
 	
-	b = ((loc1[:,:,2]<zoomed0_3[:,:,2])&(loc1[:,:,2]>zoomed0_3[:,:,3]))&((loc1[:,:,3]<zoomed0_3[:,:,0])&(loc1[:,:,3]>zoomed0_3[:,:,1]))
+	b = findInOutMask(loc1, zoomed0_3, inside=True)
 	numPosSamples = b.sum().item()
 	
 	if numPosSamples>0:
@@ -189,17 +140,17 @@ def computeLoss4_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 
 		locLoss = F.smooth_l1_loss(loc1[b], targets[b][:,1:])
 
-		iou = computeIoU(loc1[b], targets[b][:,1:])
-		meanConfidence = pt.mean()
+		# iou = computeIoU(loc1[b], targets[b][:,1:])
+		meanConfidence = pt.mean().item()
 
 	#***************PS******************
 
 	#***************NS******************
 	
-	b1 = ((loc1[:,:,2]>zoomed1_2[:,:,2])|(loc1[:,:,2]<zoomed1_2[:,:,3]))|((loc1[:,:,3]>zoomed1_2[:,:,0])|(loc1[:,:,3]<zoomed1_2[:,:,1]))
+	b1 = findInOutMask(loc1, zoomed1_2, inside=False)
 	b1 = b1.view(lm, lw*lh, zr).sum(dim=-1)==zr
 
-	numNegSamples = b1.sum()
+	numNegSamples = b1.sum().item()
 
 	if numNegSamples>0 and numPosSamples>0:
 		cla1 = cla1.view(lm, lw*lh, 1*zr)
