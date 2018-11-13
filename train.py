@@ -93,7 +93,7 @@ def train(epoch):
 	for batchId, batch_data in enumerate(train_loader):
 		st1 = time.time()
 		
-		data, target, filenames = batch_data
+		data, target, filenames, zoom0_3, zoom1_2 = batch_data
 		
 		if data.size(0) < cnf.batchSize:
 			continue
@@ -104,22 +104,10 @@ def train(epoch):
 		cla, loc = hawkEye(data)
 		
 		target = target.cuda(non_blocking=True)
+		zoom0_3 = zoom0_3.cuda(non_blocking=True)
+		zoom1_2 = zoom1_2.cuda(non_blocking=True)
+
 		m, tr, tc = target.size()
-		# create zoom boxes
-		zoom0_3 = target.new_full([m, tr, 4], fill_value=0)
-		zoom1_2 = target.new_full([m, tr, 4], fill_value=0)
-
-		# left: y + w/2, right: y - w/2, forward: x + l/2, backward: x - l/2
-		zoom1_2[:, :, 0] = target[:, :, 4] + target[:, :, 6]*0.6
-		zoom1_2[:, :, 1] = target[:, :, 4] - target[:, :, 6]*0.6
-		zoom1_2[:, :, 2] = target[:, :, 3] + target[:, :, 5]*0.6
-		zoom1_2[:, :, 3] = target[:, :, 3] - target[:, :, 5]*0.6
-
-		zoom0_3[:, :, 0] = target[:, :, 4] + target[:, :, 6]*0.15
-		zoom0_3[:, :, 1] = target[:, :, 4] - target[:, :, 6]*0.15
-		zoom0_3[:, :, 2] = target[:, :, 3] + target[:, :, 5]*0.15
-		zoom0_3[:, :, 3] = target[:, :, 3] - target[:, :, 5]*0.15
-
 
 		# compute loss, gradient, and optimize
 		st = time.time()
@@ -168,7 +156,7 @@ def validation(epoch):
 	for batchId, batch_data in enumerate(val_loader):
 		st1 = time.time()
 		
-		data, target, filenames = batch_data
+		data, target, filenames, zoom0_3, zoom1_2 = batch_data
 		
 		if data.size(0) < cnf.batchSize:
 			continue
@@ -179,22 +167,10 @@ def validation(epoch):
 		cla, loc = hawkEye(data)
 		
 		target = target.cuda(non_blocking=True)
+		zoom0_3 = zoom0_3.cuda(non_blocking=True)
+		zoom1_2 = zoom1_2.cuda(non_blocking=True)
+
 		m, tr, tc = target.size()
-		# create zoom boxes
-		zoom0_3 = target.new_full([m, tr, 4], fill_value=0)
-		zoom1_2 = target.new_full([m, tr, 4], fill_value=0)
-
-		# left: y + w/2, right: y - w/2, forward: x + l/2, backward: x - l/2
-		zoom1_2[:, :, 0] = target[:, :, 4] + target[:, :, 6]*0.6
-		zoom1_2[:, :, 1] = target[:, :, 4] - target[:, :, 6]*0.6
-		zoom1_2[:, :, 2] = target[:, :, 3] + target[:, :, 5]*0.6
-		zoom1_2[:, :, 3] = target[:, :, 3] - target[:, :, 5]*0.6
-
-		zoom0_3[:, :, 0] = target[:, :, 4] + target[:, :, 6]*0.15
-		zoom0_3[:, :, 1] = target[:, :, 4] - target[:, :, 6]*0.15
-		zoom0_3[:, :, 2] = target[:, :, 3] + target[:, :, 5]*0.15
-		zoom0_3[:, :, 3] = target[:, :, 3] - target[:, :, 5]*0.15
-
 
 		# compute loss, gradient, and optimize
 		st = time.time()
