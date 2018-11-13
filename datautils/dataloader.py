@@ -102,7 +102,7 @@ class LidarLoader_2(Dataset):
 			labels1[:,1:] = labels1[:, 1:] - cnf.carMean
 			labels1[:,1:] = labels1[:, 1:]/cnf.carSTD
 
-		return fnp(bev), fnp(labels1), labelfilename, z03, z12
+		return fnp(bev), fnp(labels1), labelfilename, fnp(z03), fnp(z12)
 
 	def __len__(self):
 		return len(self.filenames)
@@ -117,8 +117,8 @@ class LidarLoader_2(Dataset):
 		l1[:, [5, 6]] = l1[:, [5, 6]]*0.3
 		l2[:, [5, 6]] = l2[:, [5, 6]]*1.2
 
-		z03 = ku.center_to_corner_box2d(l1[:,[1,2,5,6,7]])
-		z12 = ku.center_to_corner_box2d(l2[:,[1,2,5,6,7]])
+		z03 = ku.center_to_corner_box2d(l1[:,[1,2,5,6,7]]).reshape(labels.shape[0], -1)
+		z12 = ku.center_to_corner_box2d(l2[:,[1,2,5,6,7]]).reshape(labels.shape[0], -1)
 
 		# standarize
 		z03[:, [0, 2, 4, 6]] = (z03[:, [0, 2, 4, 6]] - cnf.carMean[:,2])/cnf.carSTD[:,2]
@@ -126,7 +126,7 @@ class LidarLoader_2(Dataset):
 		z12[:, [0, 2, 4, 6]] = (z12[:, [0, 2, 4, 6]] - cnf.carMean[:,2])/cnf.carSTD[:,2]
 		z12[:, [1, 3, 5, 7]] = (z12[:, [1, 3, 5, 7]] - cnf.carMean[:,3])/cnf.carSTD[:,3]
 
-		return z03.reshape(labels.shape[0], -1), z12.reshape(labels.shape[0], -1) 
+		return z03, z12 
 
 
 def collate_fn_2(batch):
@@ -141,8 +141,8 @@ def collate_fn_2(batch):
 	m = max(l)
 
 	labels1 = torch.zeros((batchSize, m, labels[0].size(1)))
-	z03_1 = torch.zero((batchSize, m, z03[0].size(1)))
-	z12_1 = torch.zero((batchSize, m, z12[0].size(1)))
+	z03_1 = torch.zeros((batchSize, m, z03[0].size(1)))
+	z12_1 = torch.zeros((batchSize, m, z12[0].size(1)))
 
 	for i in range(batchSize):
 		r = labels[i].size(0)

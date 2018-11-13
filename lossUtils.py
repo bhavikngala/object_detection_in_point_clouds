@@ -72,7 +72,7 @@ def findInOutMask(loc, rectangle, inside=True):
 	# point inside rectangle ABCD should satisfy the condition
 	# 0 <= dot(AB, AM) <= dot(AB,AB) and
 	# 0 <= dot(BC, BM) <= dot(BC,BC)
-	m, zr, _ = zoomed0_3.size()
+	m, zr, _ = rectangle.size()
 	# AB
 	AB = torch.zeros((m, zr, 2))
 	AB[:, :, 0] = rectangle[:, :, 2] - rectangle[:, :, 0] # Bx - Ax
@@ -99,12 +99,11 @@ def findInOutMask(loc, rectangle, inside=True):
 	dot_BC_BC = torch.sum(BC*BC, dim=-1, keepdim=True)
 
 	if inside:
-		mask = (0<=dot_AB_AM) & (dot_AB_AM<=dot_AB_AB) & (0<=dot_BC_BM) & (dot_BC_BM<=dot_BC_BC)
+		mask = (0<dot_AB_AM) & (dot_AB_AM<dot_AB_AB) & (0<dot_BC_BM) & (dot_BC_BM<dot_BC_BC)
 	else:
-		mask = (0>dot_AB_AM) | (dot_AB_AM>dot_AB_AB) | (0>dot_BC_BM) | (dot_BC_BM>dot_BC_BC)
+		mask = ~((0<dot_AB_AM) & (dot_AB_AM<dot_AB_AB) & (0<dot_BC_BM) & (dot_BC_BM<dot_BC_BC))
 
-	return mask
-
+	return mask.squeeze()
 
 def computeLoss4_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 	claLoss = None
