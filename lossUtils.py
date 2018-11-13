@@ -103,7 +103,9 @@ def findInOutMask(loc, rectangle, inside=True):
 	else:
 		mask = ~((0<dot_AB_AM) & (dot_AB_AM<dot_AB_AB) & (0<dot_BC_BM) & (dot_BC_BM<dot_BC_BC))
 
-	return mask.squeeze()
+	del AB, BC, AM, BM, dot_AB_AB, dot_AB_AM, dot_BC_BC, dot_BC_BM
+	
+	return mask.squeeze(-1)
 
 def computeLoss4_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 	claLoss = None
@@ -140,6 +142,7 @@ def computeLoss4_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 		locLoss = F.smooth_l1_loss(loc1[b], targets[b][:,1:])
 
 		# iou = computeIoU(loc1[b], targets[b][:,1:])
+		iou = 0
 		meanConfidence = pt.mean().item()
 
 	#***************PS******************
@@ -167,7 +170,7 @@ def computeLoss4_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 		claLoss = cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
 
 	#***************NS******************
-
+	del b, b1
 	return claLoss, locLoss, iou, meanConfidence, numPosSamples, numNegSamples
 
 computeLoss = computeLoss4_1
