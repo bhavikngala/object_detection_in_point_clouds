@@ -94,7 +94,7 @@ class LidarLoader_2(Dataset):
 		labels1[:,1], labels1[:,2] = np.cos(labels[:,7]), np.sin(labels[:,7])
 		labels1[:,[0, 3, 4, 5, 6]] = labels[:,[0, 1, 2, 6, 5]] #class, x,y,l,w
 
-		if labels1.shape[0] == 1 and labels1.[0,0] == 0:
+		if labels1.shape[0] == 1 and labels1[0,0] == 0:
 			z03, z12 = np.zeros((1, 6), dtype=np.float32), np.zeros((1, 6), dtype=np.float32)
 			pass
 		else:
