@@ -38,7 +38,6 @@ t = torch.tensor([[[1,2,2],[1,2,8],[1,4,5],[1,7,2],[0,6,8],[0,0,0],[0,0,0]],[[0,
 
 '''
 
-
 def computeIoU(matchedBoxes, targets):
 	'''
 	Compute Intersection over Union for 2D boxes
@@ -64,7 +63,6 @@ def computeIoU(matchedBoxes, targets):
 
 	return (intersectionArea/unionArea).mean().item()
 
-
 def findInOutMask(loc, rectangle, inside=True):
 	# rectangle is array of 4 points of 2d bounding box
 	# find vectors of 2 adjacent sides
@@ -72,40 +70,33 @@ def findInOutMask(loc, rectangle, inside=True):
 	# point inside rectangle ABCD should satisfy the condition
 	# 0 <= dot(AB, AM) <= dot(AB,AB) and
 	# 0 <= dot(BC, BM) <= dot(BC,BC)
-	m, zr, _ = rectangle.size()
 	# AB
-	AB = torch.zeros((m, zr, 2))
-	AB[:, :, 0] = rectangle[:, :, 2] - rectangle[:, :, 0] # Bx - Ax
-	AB[:, :, 1] = rectangle[:, :, 3] - rectangle[:, :, 1] # By - Ay
+	AB_x = rectangle[:, :, 2] - rectangle[:, :, 0] # Bx - Ax
+	AB_y = rectangle[:, :, 3] - rectangle[:, :, 1] # By - Ay
 
 	# BC
-	BC = torch.zeros((m, zr, 2))
-	BC[:, :, 0] = rectangle[:, :, 4] - rectangle[:, :, 2] # Cx - Bx
-	BC[:, :, 1] = rectangle[:, :, 5] - rectangle[:, :, 3] # Cy - By
+	BC_x = rectangle[:, :, 4] - rectangle[:, :, 2] # Cx - Bx
+	BC_y = rectangle[:, :, 5] - rectangle[:, :, 3] # Cy - By
 
 	# AM
-	AM = torch.zeros((m, zr, 2))
-	AM[:, :, 0] = loc[:, :, 2] - rectangle[:, :, 0] # Mx - Ax
-	AM[:, :, 1] = loc[:, :, 3] - rectangle[:, :, 1] # My - Ay
+	AM_x = loc[:, :, 2] - rectangle[:, :, 0] # Mx - Ax
+	AM_y = loc[:, :, 3] - rectangle[:, :, 1] # My - Ay
 
 	# BM
-	BM = torch.zeros((m, zr, 2))
-	BM[:, :, 0] = loc[:, :, 2] - rectangle[:, :, 2] # Mx - Bx
-	BM[:, :, 1] = loc[:, :, 3] - rectangle[:, :, 3] # My - By
+	BM_x = loc[:, :, 2] - rectangle[:, :, 2] # Mx - Bx
+	BM_y = loc[:, :, 3] - rectangle[:, :, 3] # My - By
 
-	dot_AB_AM = torch.sum(AB*AM, dim=-1, keepdim=True)
-	dot_AB_AB = torch.sum(AB*AB, dim=-1, keepdim=True)
-	dot_BC_BM = torch.sum(BC*BM, dim=-1, keepdim=True)
-	dot_BC_BC = torch.sum(BC*BC, dim=-1, keepdim=True)
+	dot_AB_AM = AB_x*AM_x + AB_y*AM_y
+	dot_AB_AB = AB_x*AB_x + AB_y*AB_y
+	dot_BC_BM = BC_x*BM_x + BC_y*BM_y
+	dot_BC_BC = BC_x*BC_x + BC_y*BC_y
 
 	if inside:
 		mask = (0<dot_AB_AM) & (dot_AB_AM<dot_AB_AB) & (0<dot_BC_BM) & (dot_BC_BM<dot_BC_BC)
 	else:
 		mask = ~((0<dot_AB_AM) & (dot_AB_AM<dot_AB_AB) & (0<dot_BC_BM) & (dot_BC_BM<dot_BC_BC))
-
-	del AB, BC, AM, BM, dot_AB_AB, dot_AB_AM, dot_BC_BC, dot_BC_BM
 	
-	return mask.squeeze(-1)
+	return mask
 
 def computeLoss4_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 	claLoss = None
@@ -170,7 +161,7 @@ def computeLoss4_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 		claLoss = cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
 
 	#***************NS******************
-	del b, b1
+	
 	return claLoss, locLoss, iou, meanConfidence, numPosSamples, numNegSamples
 
 computeLoss = computeLoss4_1
