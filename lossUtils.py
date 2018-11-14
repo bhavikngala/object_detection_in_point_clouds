@@ -130,7 +130,7 @@ def computeLoss4_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 		logpt = torch.log(pt)
 		claLoss = cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).sum()
 
-		locLoss = F.smooth_l1_loss(loc1[b], targets[b][:,1:])
+		locLoss = F.smooth_l1_loss(loc1[b], targets[b][:,1:], reduction='sum')
 
 		# iou = computeIoU(loc1[b], targets[b][:,1:])
 		iou = 0
