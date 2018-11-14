@@ -38,8 +38,10 @@ objtype = 'car'
 # without log(l) and log(w)
 carMean = np.array([[0.8216354, 0.08494052, 28.304243, 2.4187818, 3.8839872, 1.6286187]])
 carSTD = np.array([[0.33836445, 0.4508648, 16.32045, 8.339981, 0.4259141, 0.10216219]])
-# carMean = np.array([[ 0.8216354, 0.08494052, 28.304243, 2.4187818, 1.3506572, 0.48570955]])
-# carSTD = np.array([[16.32046613, 8.3399593, 0.36412882, 0.13669496, 0.10216206, 0.42591674, 0.63424664]])
+zoom03Mean = np.array([[28.136889, 2.207453, 28.097183, 2.5897021, 28.471579, 2.6301286, 28.511364, 2.247868]])
+zoom03STD = np.array([[16.30122, 8.321556, 16.322311, 8.354368, 16.341236, 8.359552, 16.319061, 8.329018]])
+zoom12Mean = np.array([[27.634792, 1.5734423, 27.475872, 3.102446, 28.973452, 3.2641282, 29.13241, 1.7351091]])
+zoom12STD = np.array([[16.25314, 8.273551, 16.331024, 8.418133, 16.41331, 8.425362, 16.318035, 8.317054]])
 
 # res_block_layers = list if number of channels in the first conv layer of each res_block
 # up_sample_layers = list of tuple of number of channels input deconv and conv layers
@@ -90,5 +92,5 @@ logString2 = 'epoch: {:03d} | batch:{:04d} | cla loss: {:.8f} | loc loss: -.----
 logString3 = 'epoch: {:03d} | batch:{:04d} | cla loss: -.-------- | loc loss: -.--------| total loss: -.-------- | PS : {:07d} | NS : {:07d} | iou : -.---- | mc : -.---- | lt : {:.4f} | bt : {:.4f} \n\n'
 # logString = Template('epoch: $e | cla loss: $cl | loc loss: $ll | total loss: $tl \n')
 
-batchSize = 4
+batchSize = 1
 accumulationSteps = 4.0

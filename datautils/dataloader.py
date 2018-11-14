@@ -117,14 +117,12 @@ class LidarLoader_2(Dataset):
 		l1[:, [5, 6]] = l1[:, [5, 6]]*0.3
 		l2[:, [5, 6]] = l2[:, [5, 6]]*1.2
 
-		z03 = ku.center_to_corner_box2d(l1[:,[1,2,5,6,7]]).reshape(labels.shape[0], -1)
-		z12 = ku.center_to_corner_box2d(l2[:,[1,2,5,6,7]]).reshape(labels.shape[0], -1)
+		z03 = ku.center_to_corner_box2d(l1[:,[1,2,5,6,7]]).reshape(labels.shape[0], 8)
+		z12 = ku.center_to_corner_box2d(l2[:,[1,2,5,6,7]]).reshape(labels.shape[0], 8)
 
 		# standarize
-		z03[:, [0, 2, 4, 6]] = (z03[:, [0, 2, 4, 6]] - cnf.carMean[:,2])/cnf.carSTD[:,2]
-		z03[:, [1, 3, 5, 7]] = (z03[:, [1, 3, 5, 7]] - cnf.carMean[:,3])/cnf.carSTD[:,3]
-		z12[:, [0, 2, 4, 6]] = (z12[:, [0, 2, 4, 6]] - cnf.carMean[:,2])/cnf.carSTD[:,2]
-		z12[:, [1, 3, 5, 7]] = (z12[:, [1, 3, 5, 7]] - cnf.carMean[:,3])/cnf.carSTD[:,3]
+		z03 = (z03-cnf.zoom03Mean)/cnf.zoom03STD
+		z03 = (z12-cnf.zoom12Mean)/cnf.zoom12STD
 
 		return z03, z12 
 
