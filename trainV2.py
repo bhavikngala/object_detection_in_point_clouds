@@ -26,7 +26,8 @@ parser.add_argument('-e', '--epochs', type=int, default=None)
 parser.add_argument('--aug-scheme', default=None)
 parser.add_argument('-m', '--multi-gpu', action='store_true')
 parser.add_argument('--val', action='store_true')
-parser.add_argument('-c', '--clip', type=float, default=0.25)
+parser.add_argument('-c', '--clip', action='store_true')
+parser.add_argument('--clipvalue', type=float, default=0.25)
 args = parser.parse_args()
 
 torch.manual_seed(0)
@@ -161,7 +162,8 @@ def train(epoch):
 			gradNorm = gradVec.norm(2)
 			misc.writeToFile(cnf.gradNormlog, cnf.normLogString.format(batchId+1, epoch+1, gradNorm))
 
-			torch.nn.utils.clip_grad_norm_(hawkEye.parameters(), args.clip)
+			if args.clip:
+				torch.nn.utils.clip_grad_norm_(hawkEye.parameters(), args.clip)
 			optimizer.step()
 			hawkEye.zero_grad()
 
