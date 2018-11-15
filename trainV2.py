@@ -236,7 +236,7 @@ if __name__ == '__main__':
 				scheduler.step()
 
 			st = time.time()
-			# train(epoch)
+			train(epoch)
 			ed = time.time()
 			misc.writeToFile(cnf.trainlog2, '~~~~~epoch ' + str(epoch) + ' end time taken: '+str(ed-st)+' secs~~~~\n')
 
