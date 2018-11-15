@@ -1,6 +1,7 @@
 import torch
 import os
 from threading import Thread
+from queue import Queue
 import config as cnf
 
 # custom weights initialization called on network
@@ -40,6 +41,20 @@ def writeToFile(filename, line):
 	with open(filename, 'a') as file:
 		file.write(line)
 
+class Logger():
+
+	def __init__(self, filename):
+		queue = Queue()
+		worker = FileWriterThread(queue, cnf.trainlog)
+		worker.daemon = True
+		worker.start()
+
+	def join(self):
+		self.queue.join()
+
+	def put(self, s):
+		self.queue.put(s)
+
 class FileWriterThread(Thread):
 
 	def __init__(self, queue, filename):
@@ -60,3 +75,15 @@ class FileWriterThread(Thread):
 				writeToFile(self.filename, ls)
 			finally:
 				self.queue.task_done()
+
+def parameters_to_vector(parameters):
+    # Flag for the device where the parameter is located
+    param_device = None
+
+    vec = []
+    for param in parameters:
+        # Ensure the parameters are located in the same device
+        param_device = _check_param_device(param, param_device)
+
+        vec.append(param.grad.view(-1))
+    return torch.cat(vec)

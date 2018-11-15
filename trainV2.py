@@ -5,7 +5,6 @@ from torch.optim.lr_scheduler import MultiStepLR
 from torch.utils.data import DataLoader
 import os
 import time
-from queue import Queue
 import traceback
 import argparse
 
@@ -36,6 +35,7 @@ if args.model_file:
 	cnf.trainlog = cnf.trainlog[:-9] + args.model_file.split('/')[-1][:-11] + 'train.txt'
 	cnf.trainlog2 = cnf.trainlog2[:-9] + args.model_file.split('/')[-1][:-11] + 'etime.txt'
 	cnf.vallog = cnf.vallog[:-8] + args.model_file.split('/')[-1][:-11] + 'val.txt'
+	cnf.gradNormlog = cnf.gradNormlog[:-9] + args.model_file.split('/')[-1][:-11] + 'gnorm.txt'
 if args.root_dir:
 	cnf.rootDir = args.root_dir
 if args.pixor:
@@ -76,6 +76,12 @@ if args.step_lr:
 	scheduler = MultiStepLR(optimizer, milestones=[20,30], gamma=0.1)
 else:	
 	optimizer = Adam(hawkEye.parameters(), lr=cnf.lr)
+
+# status string writer thread and queue
+queue = Queue()
+worker = misc.FileWriterThread(queue, cnf.trainlog)
+worker.daemon = True
+worker.start()
 
 # status string writer thread and queue
 queue = Queue()
@@ -148,10 +154,14 @@ def train(epoch):
 		# trainLoss = claLoss+locLoss
 		if trainLoss is not None:
 			trainLoss.backward()
-			torch.nn.utils.clip_grad_norm_(params, args.clip)
 
 		# gradients are accumulated over cnf.accumulationSteps
 		if (batchId+1)%cnf.accumulationSteps == 0:
+			gradVec = misc.parameters_to_vector(params)
+			gradNorm = gradVec.norm(2)
+			misc.writeToFile(cnf.gradNormlog, cnf.normLogString.format(batchId, epoch, gradNorm))
+
+			torch.nn.utils.clip_grad_norm_(params, args.clip)
 			optimizer.step()
 			hawkEye.zero_grad()
 

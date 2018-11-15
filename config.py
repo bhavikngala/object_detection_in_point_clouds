@@ -87,6 +87,7 @@ trainlog2 = './loss/etime.txt'
 vallog = './loss/vali.txt'
 testlog = './loss/test.txt'
 errorlog = './loss/error.txt'
+gradNormlog = './loss/gnorm.txt'
 
 # calibration dir
 calTrain = './../data_object_calib/training/calib'
@@ -96,7 +97,7 @@ calTest = './../data_object_calib/testing/calib'
 logString1 = 'epoch: {:03d} | batch:{:04d} | cla loss: {:.8f} | loc loss: {:.8f} | total loss: {:.8f} | PS : {:07d} | NS : {:07d} | iou : {:.4f} | mc : {:.4f} | lt : {:.4f} | bt : {:.4f} \n\n'
 logString2 = 'epoch: {:03d} | batch:{:04d} | cla loss: {:.8f} | loc loss: -.-------- | total loss: {:.8f} | PS : {:07d} | NS : {:07d} | iou : -.---- | mc : -.---- | lt : {:.4f} | bt : {:.4f} \n\n'
 logString3 = 'epoch: {:03d} | batch:{:04d} | cla loss: -.-------- | loc loss: -.--------| total loss: -.-------- | PS : {:07d} | NS : {:07d} | iou : -.---- | mc : -.---- | lt : {:.4f} | bt : {:.4f} \n\n'
-# logString = Template('epoch: $e | cla loss: $cl | loc loss: $ll | total loss: $tl \n')
+normLogString = 'epoch: [{:04d}/{:03d}] | grad norm: {:.8f}'
 
 batchSize = 4
 accumulationSteps = 4.0
