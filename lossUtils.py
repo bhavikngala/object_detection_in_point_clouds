@@ -248,10 +248,10 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 				claLoss = loss
 
 			if locLoss is not None:
-				locLoss += F.smooth_l1_loss(loc1[b], targets_1[b][:,1:])
+				locLoss += F.smooth_l1_loss(loc1[b], targets_1[b][:,1:], reduction='sum')
 				meanConfidence += mc
 			else:
-				locLoss = F.smooth_l1_loss(loc1[b], targets_1[b][:,1:])
+				locLoss = F.smooth_l1_loss(loc1[b], targets_1[b][:,1:], reduction='sum')
 				meanConfidence = mc
 
 		#***************PS******************
@@ -275,7 +275,7 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 		#***************NS******************
 	
 	if numPosSamples>0:
-		meanConfidence /=numPosSamples
+		meanConfidence /= numPosSamples
 	return claLoss, locLoss, iou, meanConfidence, numPosSamples, numNegSamples
 
 def focalLoss(p, t, reduction='sum'):
