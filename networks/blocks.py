@@ -20,7 +20,7 @@ class Bottleneck_3_0(nn.Module):
 		self.conv2 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=3, stride=2, padding=1, bias=False)
 		self.bn2 = nn.BatchNorm2d(out_channels*self.expansion)
 
-		self.conv1_skip = nn.Conv2d(in_channels, out_channels*self.expansion, kernel_size=1, stride=2, bias=False)
+		self.conv1_skip = nn.Conv2d(in_channels, out_channels*self.expansion, kernel_size=3, stride=2, padding=1, bias=False)
 		self.bn1_skip = nn.BatchNorm2d(out_channels*self.expansion)
 
 		self.relu = nn.ReLU(inplace=True)
@@ -62,7 +62,7 @@ class Bottleneck_6_0(nn.Module):
 		self.conv5 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=3, stride=1, padding=1, bias=False)
 		self.bn5 = nn.BatchNorm2d(out_channels*self.expansion)
 
-		self.conv1_skip = nn.Conv2d(in_channels, out_channels*self.expansion, kernel_size=1, stride=2, bias=False)
+		self.conv1_skip = nn.Conv2d(in_channels, out_channels*self.expansion, kernel_size=3, stride=2, padding=1, bias=False)
 		self.bn1_skip = nn.BatchNorm2d(out_channels*self.expansion)
 
 		self.relu = nn.ReLU(inplace=True)
