@@ -77,13 +77,7 @@ class FileWriterThread(Thread):
 				self.queue.task_done()
 
 def parameters_to_vector(parameters):
-    # Flag for the device where the parameter is located
-    param_device = None
-
     vec = []
     for param in parameters:
-        # Ensure the parameters are located in the same device
-        param_device = _check_param_device(param, param_device)
-
         vec.append(param.grad.view(-1))
     return torch.cat(vec)
