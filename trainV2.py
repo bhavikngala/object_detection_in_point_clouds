@@ -100,7 +100,6 @@ def train(epoch):
 	hawkEye.train()
 	# empty the gradient buffer
 	hawkEye.zero_grad()
-	params = hawkEye.parameters()
 
 	for batchId, batch_data in enumerate(train_loader):
 		st1 = time.time()
@@ -158,11 +157,11 @@ def train(epoch):
 
 		# gradients are accumulated over cnf.accumulationSteps
 		if (batchId+1)%cnf.accumulationSteps == 0:
-			gradVec = misc.parameters_to_vector(params)
+			gradVec = misc.parameters_to_vector(hawkEye.parameters())
 			gradNorm = gradVec.norm(2)
 			misc.writeToFile(cnf.gradNormlog, cnf.normLogString.format(batchId, epoch, gradNorm))
 
-			torch.nn.utils.clip_grad_norm_(params, args.clip)
+			torch.nn.utils.clip_grad_norm_(hawkEye.parameters(), args.clip)
 			optimizer.step()
 			hawkEye.zero_grad()
 
