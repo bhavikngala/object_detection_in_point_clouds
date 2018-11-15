@@ -165,8 +165,8 @@ class UnStandarizeLayer(nn.Module):
 	def __init__(self, mean, std):
 		super(UnStandarizeLayer, self).__init__()
 
-		self.mean = mean
-		self.std = std
+		self.register_buffer('mean', mean)
+		self.register_buffer('std', std)
 
 	def forward(self, X):
 		m, c, h, w = X.size()
