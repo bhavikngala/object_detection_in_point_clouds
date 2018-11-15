@@ -36,12 +36,18 @@ P2_inv = np.linalg.pinv(P2)
 objtype = 'car'
 
 # without log(l) and log(w)
-carMean = np.array([[0, 0, 28.304243, 2.4187818, 3.8839872, 1.6286187]], dtype=np.float32)
-carSTD = np.array([[1, 1, 16.32045, 8.339981, 0.4259141, 0.10216219]], dtype=np.float32)
+carMean2 = np.array([[0, 0, 28.304243, 2.4187818, 3.8839872, 1.6286187]], dtype=np.float32)
+carSTD2 = np.array([[1, 1, 16.32045, 8.339981, 0.4259141, 0.10216219]], dtype=np.float32)
 zoom03Mean = np.array([[28.136889, 2.207453, 28.097183, 2.5897021, 28.471579, 2.6301286, 28.511364, 2.247868]], dtype=np.float32)
 zoom03STD = np.array([[16.30122, 8.321556, 16.322311, 8.354368, 16.341236, 8.359552, 16.319061, 8.329018]], dtype=np.float32)
 zoom12Mean = np.array([[27.634792, 1.5734423, 27.475872, 3.102446, 28.973452, 3.2641282, 29.13241, 1.7351091]], dtype=np.float32)
 zoom12STD = np.array([[16.25314, 8.273551, 16.331024, 8.418133, 16.41331, 8.425362, 16.318035, 8.317054]], dtype=np.float32)
+
+carMeanLogWL = np.array([[0.8216354, 0.08494052, 28.304243, 2.4187818, 1.3506572, 0.48570955]], dtype=np.float32)
+carSTDLogWL = np.array([[0.33836445, 0.4508648, 16.32045, 8.339981, 0.1121646, 0.06327728]], dtype=np.float32)
+
+carMean = carMeanLogWL
+carSTD = carSTDLogWL
 
 # res_block_layers = list if number of channels in the first conv layer of each res_block
 # up_sample_layers = list of tuple of number of channels input deconv and conv layers
