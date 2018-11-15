@@ -20,13 +20,14 @@ class LidarLoader_2(Dataset):
 	No augmentation is done, direct training on the train data
 	This model might overfit but we get a good point to start at
 	'''
-	def __init__(self, directory, objtype, args, train=True, augData=True):
+	def __init__(self, directory, objtype, args, train=True, augData=True, standarize=False):
 		# load train dataset or test dataset
 		self.train = train
 		self.directory = directory
 		self.objtype = objtype
 		self.augData = args.aug_data and augData
 		self.augScheme = args.aug_scheme
+		self.standarize = standarize
 
 		# read all the filenames in the directory
 		self.filenames = [join(directory, f) for f in listdir(directory) \
@@ -45,6 +46,7 @@ class LidarLoader_2(Dataset):
 		lidarData = np.fromfile(filename, dtype=np.float32).reshape(-1, 4)
 
 		labels = []
+		noObjectLabels = False
 		# read training labels
 		if self.train:
 			# complete path of the label filename
@@ -77,7 +79,12 @@ class LidarLoader_2(Dataset):
 						 data[13]])
 
 					labels.append(datalist)
-			labels = np.zeros((1, 8), dtype=np.float32) if len(labels)==0 else np.array(labels, dtype=np.float32)	
+
+			if not labels:
+				noObjectLabels = True
+				labels = np.ones((1, 8), dtype=np.float32) * -1
+			else:
+				labels = np.array(labels, dtype=np.float32)	
 
 		# augment data
 		if self.train:
@@ -89,18 +96,22 @@ class LidarLoader_2(Dataset):
 				labels[:,1:] = ku.camera_to_lidar_box(labels[:,1:])
 
 		bev = lidarToBEV(lidarData, cnf.gridConfig)
-		labels1 = np.zeros((labels.shape[0], 7),dtype=np.float32)
-		
-		labels1[:,1], labels1[:,2] = np.cos(labels[:,7]), np.sin(labels[:,7])
-		labels1[:,[0, 3, 4, 5, 6]] = labels[:,[0, 1, 2, 6, 5]] #class, x,y,l,w
 
-		if labels1.shape[0] == 1 and labels1[0,0] == 0:
-			z03, z12 = np.zeros((1, 8), dtype=np.float32), np.zeros((1, 8), dtype=np.float32)
-			pass
+		if noObjectLabels:
+			z03 = np.ones((1, 8), dtype=np.float32)*-1
+			z12 = np.ones((1, 8), dtype=np.float32)*-1
+			labels1 = np.ones((1, 8), dtype=np.float32)*-1	
 		else:
 			z03, z12 = self.getZoomedBoxes(labels)
-			labels1[:,1:] = labels1[:, 1:] - cnf.carMean
-			labels1[:,1:] = labels1[:, 1:]/cnf.carSTD
+
+			labels1 = np.zeros((labels.shape[0], 7),dtype=np.float32)
+		
+			labels1[:,1], labels1[:,2] = np.cos(labels[:,7]), np.sin(labels[:,7])
+			labels1[:,[0, 3, 4, 5, 6]] = labels[:,[0, 1, 2, 6, 5]] #class, x,y,l,w
+
+			if self.standarize:
+				labels1[:,1:] = labels1[:, 1:] - cnf.carMean
+				labels1[:,1:] = labels1[:, 1:]/cnf.carSTD
 
 		return fnp(bev), fnp(labels1), labelfilename, fnp(z03), fnp(z12)
 
@@ -121,8 +132,9 @@ class LidarLoader_2(Dataset):
 		z12 = ku.center_to_corner_box2d(l2[:,[1,2,5,6,7]]).reshape(labels.shape[0], 8)
 
 		# standarize
-		z03 = (z03-cnf.zoom03Mean)/cnf.zoom03STD
-		z03 = (z12-cnf.zoom12Mean)/cnf.zoom12STD
+		if self.standarize:
+			z03 = (z03-cnf.zoom03Mean)/cnf.zoom03STD
+			z03 = (z12-cnf.zoom12Mean)/cnf.zoom12STD
 
 		return z03, z12 
 
@@ -149,3 +161,35 @@ def collate_fn_2(batch):
 		z12_1[i, :r, :] = z12[i]
 
 	return bev, labels1, filenames, z03_1, z12_1
+
+def collate_fn_2(batch):
+	bev, labels, filenames, z03, z12 = zip(*batch)
+	batchSize = len(filenames)
+
+	# Merge bev (from tuple of 3D tensor to 4D tensor).
+	bev = torch.stack(bev, 0)
+
+	# zero pad labels, zoom0_3, and zoom1_2 to make a tensor
+	l = [labels[i].size(0) for i in range(batchSize)]
+	m = max(l)
+
+	labels1 = torch.zeros((batchSize, m, labels[0].size(1)))
+	z03_1 = torch.zeros((batchSize, m, z03[0].size(1)))
+	z12_1 = torch.zeros((batchSize, m, z12[0].size(1)))
+
+	for i in range(batchSize):
+		r = labels[i].size(0)
+		labels1[i, :r, :] = labels[i]
+		z03_1[i, :r, :] = z03[i]
+		z12_1[i, :r, :] = z12[i]
+
+	return bev, labels1, filenames, z03_1, z12_1
+
+def collate_fn_3(batch):
+	bev, labels, filenames, z03, z12 = zip(*batch)
+	batchSize = len(filenames)
+
+	# Merge bev (from tuple of 3D tensor to 4D tensor).
+	bev = torch.stack(bev, 0)
+
+	return bev, labels, filenames, z03, z12
