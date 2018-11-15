@@ -203,7 +203,6 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 	meanConfidence = 0
 	numPosSamples = 0
 	numNegSamples = 0
-	counter = 1
 
 	if reshape:
 		# move the channel axis to the last dimension
@@ -251,7 +250,6 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 			if locLoss is not None:
 				locLoss += F.smooth_l1_loss(loc1[b], targets_1[b][:,1:])
 				meanConfidence += mc
-				counter += 1
 			else:
 				locLoss = F.smooth_l1_loss(loc1[b], targets_1[b][:,1:])
 				meanConfidence = mc
@@ -276,7 +274,9 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 
 		#***************NS******************
 	
-	return claLoss, locLoss, iou, meanConfidence/counter, numPosSamples, numNegSamples
+	if numPosSamples>0:
+		meanConfidence /=numPosSamples
+	return claLoss, locLoss, iou, meanConfidence, numPosSamples, numNegSamples
 
 def focalLoss(p, t, reduction='sum'):
 	if t == 1:
@@ -291,7 +291,7 @@ def focalLoss(p, t, reduction='sum'):
 	else:
 		loss = cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).sum()
 
-	return loss, pt.mean()
+	return loss, pt.sum()
 
 
 computeLoss = computeLoss5_1
