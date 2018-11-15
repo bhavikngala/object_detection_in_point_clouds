@@ -170,9 +170,9 @@ class UnStandarizeLayer(nn.Module):
 
 	def forward(self, X):
 		m, c, h, w = X.size()
-		X = X.permute(0, 2, 3, 1).contiguous().view(m, w*h, c)
-		X = X*self.std + self.mean
-		return X
+		h = X.permute(0, 2, 3, 1).contiguous().view(m, w*h, c)
+		h = X*self.std + self.mean
+		return h
 
 
 # for new variants of bottleneck change names here
