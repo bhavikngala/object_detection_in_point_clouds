@@ -171,7 +171,7 @@ class UnStandarizeLayer(nn.Module):
 	def forward(self, X):
 		m, c, h, w = X.size()
 		h = X.permute(0, 2, 3, 1).contiguous().view(m, w*h, c)
-		h = X*self.std + self.mean
+		h = h*self.std + self.mean
 		return h
 
 
