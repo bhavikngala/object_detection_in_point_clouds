@@ -159,14 +159,14 @@ def train(epoch):
 		if (batchId+1)%cnf.accumulationSteps == 0:
 			gradVec = misc.parameters_to_vector(hawkEye.parameters())
 			gradNorm = gradVec.norm(2)
-			misc.writeToFile(cnf.gradNormlog, cnf.normLogString.format(batchId, epoch, gradNorm))
+			misc.writeToFile(cnf.gradNormlog, cnf.normLogString.format(batchId+1, epoch+1, gradNorm))
 
 			torch.nn.utils.clip_grad_norm_(hawkEye.parameters(), args.clip)
 			optimizer.step()
 			hawkEye.zero_grad()
 
 		ed1 = time.time()
-		queue.put((epoch, batchId, cl, ll, tl, int(ps), int(ns), iou, meanConfidence, ed-st, ed1-st1))
+		queue.put((epoch+1, batchId+1, cl, ll, tl, int(ps), int(ns), iou, meanConfidence, ed-st, ed1-st1))
 
 		del data
 		del target
@@ -228,7 +228,7 @@ def validation(epoch):
 			# ls = cnf.logString2.format(epoch, batchId, claLoss.item(), trainLoss.item())
 
 		ed1 = time.time()
-		valqueue.put((epoch, batchId, cl, ll, tl, int(ps), int(ns), iou, meanConfidence, ed-st, ed1-st1))
+		valqueue.put((epoch+1, batchId+1, cl, ll, tl, int(ps), int(ns), iou, meanConfidence, ed-st, ed1-st1))
 
 		del data
 		del target
