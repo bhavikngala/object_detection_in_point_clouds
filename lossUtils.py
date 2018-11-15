@@ -145,23 +145,150 @@ def computeLoss4_1(cla, loc, targets, zoomed0_3, zoomed1_2):
 
 	numNegSamples = b1.sum().item()
 
-	if numPosSamples>0 and numNegSamples>0:
+	if numNegSamples>0:
 		cla1 = cla1.view(lm, lw*lh, 1*zr)
 
 		pt = 1-cla1[b1][:,0]
 		pt.clamp_(1e-7, 1-1e-7)
 		logpt = torch.log(pt)
-		claLoss += cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).sum()
-	else:
-		cla1 = cla1.view(lm, lw*lh, 1*zr)
 
-		pt = 1-cla1[b1][:,0]
-		pt.clamp_(1e-7, 1-1e-7)
-		logpt = torch.log(pt)
-		claLoss = cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).sum()
+		if claLoss is not None:
+			claLoss += cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).sum()
+		else:
+			claLoss = cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).sum()
 
 	#***************NS******************
 	
 	return claLoss, locLoss, iou, meanConfidence, numPosSamples, numNegSamples
 
-computeLoss = computeLoss4_1
+def findInOutMask_1(loc, rectangle, inside=True):
+	# rectangle is array of 4 points of 2d bounding box
+	# find vectors of 2 adjacent sides
+	# AB = (Bx-Ax, By-Ay) and so on
+	# point inside rectangle ABCD should satisfy the condition
+	# 0 <= dot(AB, AM) <= dot(AB,AB) and
+	# 0 <= dot(BC, BM) <= dot(BC,BC)
+	# AB
+	AB_x = rectangle[:, 2] - rectangle[:, 0] # Bx - Ax
+	AB_y = rectangle[:, 3] - rectangle[:, 1] # By - Ay
+
+	# BC
+	BC_x = rectangle[:, 4] - rectangle[:, 2] # Cx - Bx
+	BC_y = rectangle[:, 5] - rectangle[:, 3] # Cy - By
+
+	# AM
+	AM_x = loc[:, 2] - rectangle[:, 0] # Mx - Ax
+	AM_y = loc[:, 3] - rectangle[:, 1] # My - Ay
+
+	# BM
+	BM_x = loc[:, 2] - rectangle[:, 2] # Mx - Bx
+	BM_y = loc[:, 3] - rectangle[:, 3] # My - By
+
+	dot_AB_AM = AB_x*AM_x + AB_y*AM_y	
+	dot_AB_AB = AB_x*AB_x + AB_y*AB_y
+	dot_BC_BM = BC_x*BM_x + BC_y*BM_y
+	dot_BC_BC = BC_x*BC_x + BC_y*BC_y
+
+	if inside:
+		mask = (0<=dot_AB_AM) & (dot_AB_AM<=dot_AB_AB) & (0<=dot_BC_BM) & (dot_BC_BM<=dot_BC_BC)
+	else:
+		mask = ~((0<=dot_AB_AM) & (dot_AB_AM<=dot_AB_AB) & (0<=dot_BC_BM) & (dot_BC_BM<=dot_BC_BC))
+	
+	return mask
+
+def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
+	claLoss = None
+	locLoss = None
+	iou = 0
+	meanConfidence = None
+	numPosSamples = 0
+	numNegSamples = 0
+
+
+	if reshape:
+		# move the channel axis to the last dimension
+		lm, lc, lh, lw = loc.size()
+		lr = lh * lw
+		loc = loc.permute(0, 2, 3, 1).contiguous().view(lm, lr, lc)
+		cla = cla.permute(0, 2, 3, 1).contiguous().view(lm, lr, 1)
+	else:
+		lm, lr, lc= loc.size()
+		cla = cla.permute(0, 2, 3, 1).contiguous().view(lm, lr, 1)
+
+	for i in range(lm):
+		zr = zoomed0_3[i].size(0)
+
+		if zr == 1 and targets[i][0,0] == -1:
+			loss, _ = focalLoss(cla[i].view(-1, 1), 0)
+			if claLoss is not None:
+				claLoss += loss
+			else:
+				claLoss = loss
+			numNegSamples = lm * lr
+			continue
+
+		loc1 = loc[i].repeat(1, zr).view(-1, lc)
+		cla1 = cla[i].repeat(1, zr).view(-1, 1)
+
+		zoomed0_3_1 = zoomed0_3[i].repeat(lr, 1)
+		zoomed1_2_1 = zoomed1_2[i].repeat(lr, 1)
+		targets_1 = targets[i].repeat(lr, 1)
+
+
+		#***************PS******************
+		
+		b = findInOutMask_1(loc1, zoomed0_3_1, inside=True)
+		numPosSamples = b.sum().item()
+
+		if numPosSamples>0:
+			loss, mc = focalLoss(cla1[b], 1)
+			if claLoss is not None:
+				claLoss += loss
+			else:
+				claLoss = loss
+
+			if locLoss is not None:
+				locLoss += F.smooth_l1_loss(loc1[b], targets_1[b][:,1:], reduction='sum')
+				meanConfidence = meanConfidence/2 + mc/2
+			else:
+				locLoss = F.smooth_l1_loss(loc1[b], targets_1[b][:,1:], reduction='sum')
+				meanConfidence = mc
+
+		#***************PS******************
+
+		#***************NS******************
+		
+		b1 = findInOutMask_1(loc1, zoomed1_2_1, inside=False)
+		b1 = b1.view(lr, zr).sum(dim=-1)==zr
+		numNegSamples = b1.sum().item()
+
+		if numNegSamples>0:
+			cla1 = cla1.view(lr, 1*zr)
+			loss, _ = focalLoss(cla1[b1][:,0], 0)
+
+			if claLoss is not None:
+				claLoss += loss
+			else:
+				claLoss = loss
+
+		#***************NS******************
+	
+	return claLoss, locLoss, iou, meanConfidence, numPosSamples, numNegSamples
+
+def focalLoss(p, t, reduction='sum'):
+	if t == 1:
+		pt = p
+	else:
+		pt = 1 - p
+	pt.clamp_(1e-7, 1-1e-7)
+	logpt = torch.log(pt)
+
+	if reduction == 'mean':
+		loss = cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
+	else:
+		loss = cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).sum()
+
+	return loss, pt.mean()
+
+
+computeLoss = computeLoss5_1
