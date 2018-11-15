@@ -107,8 +107,6 @@ def train(epoch):
 		zoom0_3 = zoom0_3.cuda(non_blocking=True)
 		zoom1_2 = zoom1_2.cuda(non_blocking=True)
 
-		m, tr, tc = target.size()
-
 		# compute loss, gradient, and optimize
 		st = time.time()
 		claLoss, locLoss, iou, meanConfidence, ps, ns = computeLoss(cla, loc, target, zoom0_3, zoom1_2)
@@ -169,8 +167,6 @@ def validation(epoch):
 		target = target.cuda(non_blocking=True)
 		zoom0_3 = zoom0_3.cuda(non_blocking=True)
 		zoom1_2 = zoom1_2.cuda(non_blocking=True)
-
-		m, tr, tc = target.size()
 
 		# compute loss, gradient, and optimize
 		st = time.time()
