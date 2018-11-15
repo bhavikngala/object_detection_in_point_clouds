@@ -59,8 +59,8 @@ if args.val:
 		collate_fn=collate_fn_3, pin_memory=True
 	)
 
-cnf.carMean1 = torch.from_numpy(cnf.carMean).cuda(device=cnf.device)
-cnf.carSTD1 = torch.from_numpy(cnf.carSTD).cuda(device=cnf.device)
+cnf.carMean1 = torch.from_numpy(cnf.carMean)
+cnf.carSTD1 = torch.from_numpy(cnf.carSTD)
 
 # create detector object and intialize weights
 hawkEye = HawkEye(cnf.res_block_layers, cnf.up_sample_layers, cnf.deconv, cnf.carMean1, cnf.carSTD1).to(cnf.device)
