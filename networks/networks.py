@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from networks.blocks import Bottleneck_3, Bottleneck_6, Upsample
+from networks.blocks import Bottleneck_3, Bottleneck_6, Upsample, UnStandarizeLayer
 
 # resnet reference: https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
 
@@ -9,7 +9,7 @@ class PointCloudDetector(nn.Module):
 	# res_block_layers = list if number of channels in the first conv layer of each res_block
 	# up_sample_layers = list of tuple of number of channels input deconv and conv layers
 	# up_sample_deconv = tuplr of (dilation, stride, padding, output_padding) for deconvolution in upsampling
-	def __init__(self, res_block_layers, up_sample_layers, up_sample_deconv):
+	def __init__(self, res_block_layers, up_sample_layers, up_sample_deconv, mean=None, std=None):
 
 		super(PointCloudDetector, self).__init__()
 
@@ -63,6 +63,11 @@ class PointCloudDetector(nn.Module):
 
 		self.relu = nn.ReLU(inplace=True)
 		self.cla_act = nn.Sigmoid()
+
+		if mean is not None:
+			self.unstandarize = UnStandarizeLayer(mean, std)
+		else:
+			self.unstandarize = None
 
 	def forward(self, x):
 		x = self.conv1(x)
@@ -121,5 +126,8 @@ class PointCloudDetector(nn.Module):
 		cla = self.cla_act(cla)
 
 		loc = self.conv_loc(x)
+
+		if self.unstandarize is not None:
+			loc = self.unstandarize(loc)
 
 		return cla, loc

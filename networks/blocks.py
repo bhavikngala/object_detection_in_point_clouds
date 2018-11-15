@@ -157,7 +157,26 @@ class Upsample_2(nn.Module):
 		return out
 
 
+class UnStandarizeLayer(nn.Module):
+	'''
+	Changes the view of the input tensor
+	Then un standarizes the input tensor by given mean and std
+	'''
+	def __init__(self, mean, std):
+		super(UnStandarizeLayer, self).__init__()
+
+		self.mean = mean
+		self.std = std
+
+	def forward(self, X):
+		m, c, h, w = X.size()
+		X = X.permute(0, 2, 3, 1).contiguous().view(m, w*h, c)
+		X = X*self.std + self.mean
+		return X
+
+
 # for new variants of bottleneck change names here
 Bottleneck_3 = Bottleneck_3_0
 Bottleneck_6 = Bottleneck_6_0
 Upsample = Upsample_2
+UnStandarizeLayer = UnStandarizeLayer
