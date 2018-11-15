@@ -224,7 +224,7 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 				claLoss += loss
 			else:
 				claLoss = loss
-			numNegSamples += lm * lr
+			numNegSamples += lr
 			continue
 
 		loc1 = loc[i].repeat(1, zr).view(-1, lc)
@@ -262,9 +262,9 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 		b1 = findInOutMask_1(loc1, zoomed1_2_1, inside=False)
 		b1 = b1.view(lr, zr).sum(dim=-1)==zr
 		numNegSamples1 = b1.sum().item()
+		numNegSamples += numNegSamples1
 
 		if numNegSamples1>0:
-			numNegSamples += numNegSamples1
 			cla1 = cla1.view(lr, 1*zr)
 			loss, _ = focalLoss(cla1[b1][:,0], 0)
 
