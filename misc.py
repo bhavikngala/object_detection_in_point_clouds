@@ -16,12 +16,11 @@ def weights_init(m):
 
 # weights initialization for resnet
 def weights_init_resnet(m):
-	for m in self.modules():
-		if isinstance(m, nn.Conv2d):
-			nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
-		elif isinstance(m, nn.BatchNorm2d):
-			nn.init.constant_(m.weight, 1)
-			nn.init.constant_(m.bias, 0)
+	if isinstance(m, nn.Conv2d):
+		nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+	elif isinstance(m, nn.BatchNorm2d):
+		nn.init.constant_(m.weight, 1)
+		nn.init.constant_(m.bias, 0)
 
 def savebatchOutput(cla, loc, filenames, outputDir, epoch):
 	for i in range(len(filenames)):
