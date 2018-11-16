@@ -241,7 +241,9 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 		numPosSamples += numPosSamples1
 
 		if numPosSamples1>0:
-			loss, mc = focalLoss(cla1[b], 1)
+			loss = focalLoss(cla1[b], 1)
+			meanConfidence += cla1[b].sum()
+
 			if claLoss is not None:
 				claLoss += loss
 			else:
@@ -249,11 +251,9 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 
 			if locLoss is not None:
 				locLoss += F.smooth_l1_loss(loc1[b], targets_1[b][:,1:], reduction='sum')
-				meanConfidence += mc
 			else:
 				locLoss = F.smooth_l1_loss(loc1[b], targets_1[b][:,1:], reduction='sum')
-				meanConfidence = mc
-
+				
 		#***************PS******************
 
 		#***************NS******************
@@ -291,7 +291,6 @@ def focalLoss(p, t, reduction='sum'):
 	else:
 		loss = cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).sum()
 
-	return loss, pt.sum()
-
+	return loss
 
 computeLoss = computeLoss5_1
