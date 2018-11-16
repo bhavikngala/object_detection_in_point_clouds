@@ -67,7 +67,7 @@ carSTD = torch.from_numpy(cnf.carSTD)
 
 # create detector object and intialize weights
 hawkEye = HawkEye(cnf.res_block_layers, cnf.up_sample_layers, cnf.deconv, carMean, carSTD).to(cnf.device)
-hawkEye.apply(misc.weights_init_identity)
+hawkEye.apply(misc.weights_init_resnet)
 
 if args.multi_gpu:
 	hawkEye = nn.DataParallel(hawkEye)
@@ -160,9 +160,9 @@ def train(epoch):
 
 		# gradients are accumulated over cnf.accumulationSteps
 		if (batchId+1)%cnf.accumulationSteps == 0:
-			gradVec = misc.parameters_to_vector(hawkEye.parameters())
-			gradNorm = gradVec.norm(2)
-			misc.writeToFile(cnf.gradNormlog, cnf.normLogString.format(batchId+1, epoch+1, gradNorm))
+			gradNorm = parameterNorm(hawkEye.parameters(), 'grad')
+			weightNorm = parameterNorm(hawkEye.parameters(), 'weight')
+			misc.writeToFile(cnf.gradNormlog, cnf.normLogString.format(batchId+1, epoch+1, gradNorm, weightNorm))
 
 			if args.clip and gradNorm > args.clipvalue:
 				torch.nn.utils.clip_grad_norm_(hawkEye.parameters(), args.clipvalue)
