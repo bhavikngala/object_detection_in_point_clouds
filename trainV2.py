@@ -75,11 +75,11 @@ if args.multi_gpu:
 # network optimization method
 if args.step_lr:
 	# optimizer = Adam(hawkEye.parameters(), lr=cnf.slr)
-	optimizer = SGD(hawkEye.parameters(), lr=lr=cnf.slr, momentum=0.9, dampening=0, weight_decay=0, nesterov=False)
+	optimizer = SGD(hawkEye.parameters(), lr=cnf.slr, momentum=0.9, dampening=0, weight_decay=0, nesterov=False)
 	scheduler = MultiStepLR(optimizer, milestones=[20,30], gamma=0.1)
 else:	
 	# optimizer = Adam(hawkEye.parameters(), lr=cnf.lr)
-	optimizer = SGD(hawkEye.parameters(), lr=lr=cnf.slr, momentum=0.9, dampening=0, weight_decay=0, nesterov=False)
+	optimizer = SGD(hawkEye.parameters(), lr=cnf.lr, momentum=0.9, dampening=0, weight_decay=0, nesterov=False)
 
 # status string writer thread and queue
 queue = Queue()
