@@ -99,6 +99,6 @@ def parameterNorm(parameters, p):
 		if p == 'grad':
 			vec.append(param.grad.view(-1))
 		elif p == 'weight':
-			vec.append(param.weight.view(-1))
+			vec.append(param.view(-1))
 	param_norm = torch.cat(vec).norm(2)
 	return param_norm
