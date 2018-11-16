@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 import os
 from threading import Thread
 from queue import Queue
@@ -6,12 +7,21 @@ import config as cnf
 
 # custom weights initialization called on network
 def weights_init(m):
-    classname = m.__class__.__name__
-    if classname.find('Conv') != -1:
-        m.weight.data.normal_(0.0, 0.02)
-    elif classname.find('BatchNorm') != -1:
-        m.weight.data.normal_(1.0, 0.02)
+	classname = m.__class__.__name__
+	if classname.find('Conv') != -1:
+		m.weight.data.normal_(0.0, 0.02)
+	elif classname.find('BatchNorm') != -1:
+		m.weight.data.normal_(1.0, 0.02)
 	# m.bias.data.fill_(0)
+
+# weights initialization for resnet
+def weights_init_resnet(m):
+	for m in self.modules():
+		if isinstance(m, nn.Conv2d):
+			nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+		elif isinstance(m, nn.BatchNorm2d):
+			nn.init.constant_(m.weight, 1)
+			nn.init.constant_(m.bias, 0)
 
 def savebatchOutput(cla, loc, filenames, outputDir, epoch):
 	for i in range(len(filenames)):
@@ -77,7 +87,7 @@ class FileWriterThread(Thread):
 				self.queue.task_done()
 
 def parameters_to_vector(parameters):
-    vec = []
-    for param in parameters:
-        vec.append(param.grad.view(-1))
-    return torch.cat(vec)
+	vec = []
+	for param in parameters:
+		vec.append(param.grad.view(-1))
+	return torch.cat(vec)
