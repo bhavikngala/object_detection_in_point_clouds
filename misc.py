@@ -93,8 +93,12 @@ class FileWriterThread(Thread):
 			finally:
 				self.queue.task_done()
 
-def parameters_to_vector(parameters):
+def parameterNorm(parameters, p):
 	vec = []
 	for param in parameters:
-		vec.append(param.grad.view(-1))
-	return torch.cat(vec)
+		if p == 'grad':
+			vec.append(param.grad.view(-1))
+		elif p == 'weight':
+			vec.append(param.weight.view(-1))
+	param_norm = torch.cat(vec).norm(2)
+	return param_norm
