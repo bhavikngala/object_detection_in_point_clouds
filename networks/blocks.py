@@ -14,7 +14,7 @@ class Bottleneck_3_0(nn.Module):
 
 		# using pre-normalization and pre-activation
 		# TODO: switch stride=2 between conv1 and conv2 and check results
-		self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False)
+		self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False)
 		self.bn1 = nn.BatchNorm2d(out_channels)
 
 		self.conv2 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=3, stride=2, padding=1, bias=False)
@@ -47,7 +47,7 @@ class Bottleneck_6_0(nn.Module):
 
 		# using pre-normalization and pre-activation
 		# TODO: switch stride=2 between conv1 and conv2 and check results
-		self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False)
+		self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False)
 		self.bn1 = nn.BatchNorm2d(out_channels)
 
 		self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=2, padding=1, bias=False)
