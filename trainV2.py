@@ -9,7 +9,8 @@ import traceback
 from queue import Queue
 import argparse
 
-from networks.networks import PointCloudDetector as HawkEye
+from networks.networks import PointCloudDetector
+from networks.resnet import ResNet18
 from datautils.dataloader import *
 import config as cnf
 from lossUtils import computeLoss
@@ -28,6 +29,7 @@ parser.add_argument('-m', '--multi-gpu', action='store_true')
 parser.add_argument('--val', action='store_true')
 parser.add_argument('-c', '--clip', action='store_true')
 parser.add_argument('--clipvalue', type=float, default=0.25)
+parser.add_argument('--resnet18', action='store_true')
 args = parser.parse_args()
 
 torch.manual_seed(0)
@@ -66,7 +68,10 @@ carMean = torch.from_numpy(cnf.carMean)
 carSTD = torch.from_numpy(cnf.carSTD)
 
 # create detector object and intialize weights
-hawkEye = HawkEye(cnf.res_block_layers, cnf.up_sample_layers, cnf.deconv, carMean, carSTD).to(cnf.device)
+if args.resnet18:
+	hawkEye = ResNet18(mean=carMean, std=carSTD).to(cnf.device)
+else:
+	hawkEye = PointCloudDetector(cnf.res_block_layers, cnf.up_sample_layers, cnf.deconv, carMean, carSTD).to(cnf.device)
 hawkEye.apply(misc.weights_init_resnet)
 
 if args.multi_gpu:
