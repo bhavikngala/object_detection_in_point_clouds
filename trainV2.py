@@ -162,8 +162,8 @@ def train(epoch):
 			gradNorm = gradVec.norm(2)
 			misc.writeToFile(cnf.gradNormlog, cnf.normLogString.format(batchId+1, epoch+1, gradNorm))
 
-			if args.clip:
-				torch.nn.utils.clip_grad_norm_(hawkEye.parameters(), args.clip)
+			if args.clip and gradNorm > args.clipvalue:
+				torch.nn.utils.clip_grad_norm_(hawkEye.parameters(), args.clipvalue)
 			optimizer.step()
 			hawkEye.zero_grad()
 
