@@ -14,6 +14,14 @@ def weights_init(m):
 		m.weight.data.normal_(1.0, 0.02)
 	# m.bias.data.fill_(0)
 
+# identity weights initialization
+def weights_init_identity(m):
+	if isinstance(m, nn.Conv2d):
+		m.weight.data.copy_(torch.eye(m.weight.data.size()))
+	elif isinstance(m, nn.BatchNorm2d):
+		nn.init.constant_(m.weight, 1)
+		nn.init.constant_(m.bias, 0)
+
 # weights initialization for resnet
 def weights_init_resnet(m):
 	if isinstance(m, nn.Conv2d):

@@ -67,7 +67,7 @@ carSTD = torch.from_numpy(cnf.carSTD)
 
 # create detector object and intialize weights
 hawkEye = HawkEye(cnf.res_block_layers, cnf.up_sample_layers, cnf.deconv, carMean, carSTD).to(cnf.device)
-hawkEye.apply(misc.weights_init_resnet)
+hawkEye.apply(misc.weights_init_identity)
 
 if args.multi_gpu:
 	hawkEye = nn.DataParallel(hawkEye)
