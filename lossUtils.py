@@ -265,7 +265,7 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 
 		if numNegSamples1>0:
 			cla1 = cla1.view(lr, 1*zr)
-			loss, _ = focalLoss(cla1[b1][:,0], 0)
+			loss = focalLoss(cla1[b1][:,0], 0)
 
 			if claLoss is not None:
 				claLoss += loss
