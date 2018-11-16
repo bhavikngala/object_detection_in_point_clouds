@@ -673,7 +673,7 @@ def voxelNetAugScheme(lidar, labels, augData):
 
 	if augData and choice == 0:
 		# perturbation
-		lidar_center_gt_box3d = camera_to_lidar_box_1(gt_box3d)
+		lidar_center_gt_box3d = camera_to_lidar_box(gt_box3d)
 		lidar_corner_gt_box3d = center_to_corner_box3d(
 			lidar_center_gt_box3d, coordinate='lidar')
 
