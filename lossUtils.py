@@ -218,12 +218,12 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 		zr = zoomed0_3[i].size(0)
 
 		if zr == 1 and targets[i][0,0] == -1:
-			loss = focalLoss(cla[i].view(-1, 1), 0)
+			loss = focalLoss(cla[i].view(-1, 1), 0, reduction=None)
 			if claLoss is not None:
-				claLoss += loss
+				claLoss += torch.topk(loss, 10).sum()
 			else:
-				claLoss = loss
-			numNegSamples += lr
+				claLoss = torch.topk(loss, 10).sum()
+			numNegSamples += 10
 			continue
 
 		loc1 = loc[i].repeat(1, zr).view(-1, lc)
@@ -241,7 +241,7 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 		numPosSamples += numPosSamples1
 
 		if numPosSamples1>0:
-			loss = focalLoss(cla1[b], 1)
+			loss = focalLoss(cla1[b], 1, reduction='sum')
 			meanConfidence += cla1[b].sum()
 
 			if claLoss is not None:
@@ -265,12 +265,13 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 
 		if numNegSamples1>0:
 			cla1 = cla1.view(lr, 1*zr)
-			loss = focalLoss(cla1[b1][:,0], 0)
+			loss = focalLoss(cla1[b1][:,0], 0, reduction=None)
 
+			k = min(3*numPosSamples1, numNegSamples1)
 			if claLoss is not None:
-				claLoss += loss
+				claLoss += torch.topk(loss, k).sum()
 			else:
-				claLoss = loss
+				claLoss = torch.topk(loss, k).sum()
 
 		#***************NS******************
 	
@@ -278,7 +279,7 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 		meanConfidence /= numPosSamples
 	return claLoss, locLoss, iou, meanConfidence, numPosSamples, numNegSamples
 
-def focalLoss(p, t, reduction='sum'):
+def focalLoss(p, t, reduction=None):
 	if t == 1:
 		pt = p
 	else:
@@ -287,10 +288,10 @@ def focalLoss(p, t, reduction='sum'):
 	logpt = torch.log(pt)
 
 	if reduction == 'mean':
-		loss = cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
+		return cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
+	elif reduction == 'sum':
+		return cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).sum()
 	else:
-		loss = cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).sum()
-
-	return loss
+		return cnf.alpha*(-((1-pt)**cnf.gamma)*logpt)
 
 computeLoss = computeLoss5_1
