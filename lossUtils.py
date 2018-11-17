@@ -218,7 +218,7 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 		zr = zoomed0_3[i].size(0)
 
 		if zr == 1 and targets[i][0,0] == -1:
-			loss = focalLoss(cla[i].view(-1, 1), 0, reduction=None)
+			loss = focalLoss(cla[i].view(-1), 0, reduction=None)
 			if claLoss is not None:
 				claLoss += torch.topk(loss, 10)[0].sum()
 			else:
