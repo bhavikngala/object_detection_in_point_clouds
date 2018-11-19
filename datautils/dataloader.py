@@ -107,7 +107,8 @@ class LidarLoader_2(Dataset):
 			labels1 = np.zeros((labels.shape[0], 7),dtype=np.float32)
 		
 			labels1[:,1], labels1[:,2] = np.cos(labels[:,7]), np.sin(labels[:,7])
-			labels1[:,[0, 3, 4, 5, 6]] = labels[:,[0, 1, 2, 6, 5]] #class, x,y,l,w
+			labels1[:,[0, 3, 4]] = labels[:,[0, 1, 2]] #class, x,y,l,w
+			labels1[:, [5, 6]] = np.log(labels[:, [6, 5]])
 
 			if self.standarize:
 				labels1[:,1:] = labels1[:, 1:] - cnf.carMean
@@ -162,28 +163,6 @@ def collate_fn_2(batch):
 
 	return bev, labels1, filenames, z03_1, z12_1
 
-def collate_fn_2(batch):
-	bev, labels, filenames, z03, z12 = zip(*batch)
-	batchSize = len(filenames)
-
-	# Merge bev (from tuple of 3D tensor to 4D tensor).
-	bev = torch.stack(bev, 0)
-
-	# zero pad labels, zoom0_3, and zoom1_2 to make a tensor
-	l = [labels[i].size(0) for i in range(batchSize)]
-	m = max(l)
-
-	labels1 = torch.zeros((batchSize, m, labels[0].size(1)))
-	z03_1 = torch.zeros((batchSize, m, z03[0].size(1)))
-	z12_1 = torch.zeros((batchSize, m, z12[0].size(1)))
-
-	for i in range(batchSize):
-		r = labels[i].size(0)
-		labels1[i, :r, :] = labels[i]
-		z03_1[i, :r, :] = z03[i]
-		z12_1[i, :r, :] = z12[i]
-
-	return bev, labels1, filenames, z03_1, z12_1
 
 def collate_fn_3(batch):
 	bev, labels, filenames, z03, z12 = zip(*batch)
