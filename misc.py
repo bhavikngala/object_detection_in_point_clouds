@@ -82,13 +82,13 @@ class FileWriterThread(Thread):
 	def run(self):
 		while True:
 			try:
-				epoch, batchId, cl, ll, tl, ps, ns, iou, mc, lt, bt = self.queue.get()
+				epoch, batchId, cl, ll, tl, ps, ns, iou, mc, oamc, lt, bt = self.queue.get()
 				if cl is None:
 					ls = cnf.logString3.format(epoch, batchId, ps, ns, lt, bt)
 				elif ll is not None:
-					ls = cnf.logString1.format(epoch, batchId, cl, ll, tl, ps, ns, iou, mc, lt, bt)
+					ls = cnf.logString1.format(epoch, batchId, cl, ll, tl, ps, ns, iou, mc, oamc, lt, bt)
 				else:
-					ls = cnf.logString2.format(epoch, batchId, cl, tl, ps, ns, lt, bt)
+					ls = cnf.logString2.format(epoch, batchId, cl, tl, ps, ns, oamc, lt, bt)
 				writeToFile(self.filename, ls)
 			finally:
 				self.queue.task_done()
