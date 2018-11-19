@@ -9,10 +9,10 @@ import config as cnf
 def weights_init(m):
 	classname = m.__class__.__name__
 	if classname.find('Conv') != -1:
-		m.weight.data.normal_(0.0, 0.02)
+		m.weight.data.normal_(0.0, 0.001)
 	elif classname.find('BatchNorm') != -1:
 		m.weight.data.normal_(1.0, 0.02)
-	# m.bias.data.fill_(0)
+		m.bias.data.fill_(0)
 
 # identity weights initialization
 def weights_init_identity(m):

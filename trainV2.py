@@ -72,7 +72,7 @@ if args.resnet18:
 	hawkEye = ResNet18(mean=carMean, std=carSTD).to(cnf.device)
 else:
 	hawkEye = PointCloudDetector(cnf.res_block_layers, cnf.up_sample_layers, cnf.deconv, carMean, carSTD).to(cnf.device)
-hawkEye.apply(misc.weights_init_resnet)
+hawkEye.apply(misc.weights_init)
 
 if args.multi_gpu:
 	hawkEye = nn.DataParallel(hawkEye)
@@ -147,15 +147,15 @@ def train(epoch):
 			ll = None
 			# ls = cnf.logString3.format(epoch, batchId)
 		elif locLoss is not None:
-			trainLoss = claLoss/(cnf.batchSize*cnf.accumulationSteps) + locLoss/(cnf.batchSize*cnf.accumulationSteps)
+			trainLoss = claLoss + locLoss
 			tl = trainLoss.item()
-			cl = claLoss.item()/(cnf.batchSize*cnf.accumulationSteps)
-			ll = locLoss.item()/(cnf.batchSize*cnf.accumulationSteps)
+			cl = claLoss.item()
+			ll = locLoss.item()
 			# ls = cnf.logString1.format(epoch, batchId, claLoss.item(), locLoss.item(), trainLoss.item())
 		else:
-			trainLoss = claLoss/(cnf.batchSize*cnf.accumulationSteps)
+			trainLoss = claLoss
 			tl = trainLoss.item()
-			cl = claLoss.item()/(cnf.batchSize*cnf.accumulationSteps)
+			cl = claLoss.item()
 			ll = None
 			# ls = cnf.logString2.format(epoch, batchId, claLoss.item(), trainLoss.item())
 
@@ -224,15 +224,15 @@ def validation(epoch):
 			ll = None
 			# ls = cnf.logString3.format(epoch, batchId)
 		elif locLoss is not None:
-			trainLoss = claLoss/(cnf.batchSize*cnf.accumulationSteps) + locLoss/(cnf.batchSize*cnf.accumulationSteps)
+			trainLoss = claLoss + locLoss
 			tl = trainLoss.item()
-			cl = claLoss.item()/(cnf.batchSize*cnf.accumulationSteps)
-			ll = locLoss.item()/(cnf.batchSize*cnf.accumulationSteps)
+			cl = claLoss.item()
+			ll = locLoss.item()
 			# ls = cnf.logString1.format(epoch, batchId, claLoss.item(), locLoss.item(), trainLoss.item())
 		else:
-			trainLoss = claLoss/(cnf.batchSize*cnf.accumulationSteps)
+			trainLoss = claLoss
 			tl = trainLoss.item()
-			cl = claLoss.item()/(cnf.batchSize*cnf.accumulationSteps)
+			cl = claLoss.item()
 			ll = None
 			# ls = cnf.logString2.format(epoch, batchId, claLoss.item(), trainLoss.item())
 
