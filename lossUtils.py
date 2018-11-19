@@ -203,6 +203,8 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 	meanConfidence = 0
 	numPosSamples = 0
 	numNegSamples = 0
+	overallMeanConfidence = 0
+
 
 	if reshape:
 		# move the channel axis to the last dimension
@@ -218,12 +220,13 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 		zr = zoomed0_3[i].size(0)
 
 		if zr == 1 and targets[i][0,0] == -1:
-			loss = focalLoss(cla[i].view(-1), 0, reduction=None)
+			loss, oamc = focalLoss(cla[i].view(-1), 0, reduction='sum')
+			overallMeanConfidence += oamc.item()
 			if claLoss is not None:
-				claLoss += torch.topk(loss, 10)[0].sum()
+				claLoss += loss
 			else:
-				claLoss = torch.topk(loss, 10)[0].sum()
-			numNegSamples += 10
+				claLoss = loss
+			numNegSamples += lr
 			continue
 
 		loc1 = loc[i].repeat(1, zr).view(-1, lc)
@@ -241,9 +244,9 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 		numPosSamples += numPosSamples1
 
 		if numPosSamples1>0:
-			loss = focalLoss(cla1[b], 1, reduction='sum')
+			loss, oamc = focalLoss(cla1[b], 1, reduction='sum')
 			meanConfidence += cla1[b].sum()
-
+			overallMeanConfidence += oamc.item()
 			if claLoss is not None:
 				claLoss += loss
 			else:
@@ -265,33 +268,38 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 
 		if numNegSamples1>0:
 			cla1 = cla1.view(lr, 1*zr)
-			loss = focalLoss(cla1[b1][:,0], 0, reduction=None)
-
-			k = min(3*numPosSamples1, numNegSamples1)
+			loss, oamc = focalLoss(cla1[b1][:,0], 0, reduction='sum')
+			overallMeanConfidence += oamc.item()
+			
 			if claLoss is not None:
-				claLoss += torch.topk(loss, k)[0].sum()
+				claLoss += loss
 			else:
-				claLoss = torch.topk(loss, k)[0].sum()
+				claLoss = loss
 
 		#***************NS******************
 	
 	if numPosSamples>0:
 		meanConfidence /= numPosSamples
-	return claLoss, locLoss, iou, meanConfidence, numPosSamples, numNegSamples
+	if numPosSamples!=0 or numNegSamples!=0:
+		overallMeanConfidence /=(numPosSamples+numNegSamples)
+
+	return claLoss, locLoss, iou, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples
 
 def focalLoss(p, t, reduction=None):
 	if t == 1:
 		pt = p
+		alpha = cnf.alpha
 	else:
 		pt = 1 - p
+		alpha = 1 - cnf.alpha
 	pt.clamp_(1e-7, 1-1e-7)
 	logpt = torch.log(pt)
 
 	if reduction == 'mean':
-		return cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).mean()
+		return alpha*(-((1-pt)**cnf.gamma)*logpt).mean(), pt.sum()
 	elif reduction == 'sum':
-		return cnf.alpha*(-((1-pt)**cnf.gamma)*logpt).sum()
+		return alpha*(-((1-pt)**cnf.gamma)*logpt).sum(), pt.sum()
 	else:
-		return cnf.alpha*(-((1-pt)**cnf.gamma)*logpt)
+		return alpha*(-((1-pt)**cnf.gamma)*logpt). pt.sum()
 
 computeLoss = computeLoss5_1
