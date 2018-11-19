@@ -253,9 +253,9 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 				claLoss = loss
 
 			if locLoss is not None:
-				locLoss += F.smooth_l1_loss(loc1[b], targets_1[b][:,1:], reduction='sum')
+				locLoss += F.smooth_l1_loss(loc1[b], targets_1[b][:,1:], reduction='mean')
 			else:
-				locLoss = F.smooth_l1_loss(loc1[b], targets_1[b][:,1:], reduction='sum')
+				locLoss = F.smooth_l1_loss(loc1[b], targets_1[b][:,1:], reduction='mean')
 				
 		#***************PS******************
 
@@ -300,6 +300,6 @@ def focalLoss(p, t, reduction=None):
 	elif reduction == 'sum':
 		return alpha*(-((1-pt)**cnf.gamma)*logpt).sum(), pt.sum()
 	else:
-		return alpha*(-((1-pt)**cnf.gamma)*logpt). pt.sum()
+		return alpha*(-((1-pt)**cnf.gamma)*logpt), pt.sum()
 
 computeLoss = computeLoss5_1
