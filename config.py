@@ -61,11 +61,12 @@ deconv = [(1, 2, (1, 1), (1, 1)), # upsamole block 1
 # training parameters
 lr = 1e-4   # learning rate without step
 slr = 1e-2  # step learning rate
+decay = 0.0005 # weight decay parameter
 epochs = 200
 
 # gamma, alpha, epsilon for focal loss
 gamma = 2
-alpha = 0.95
+alpha = 0.999
 epsilon = 1e-5
 
 # select gpu device
@@ -99,5 +100,5 @@ logString2 = 'epoch: {:03d} | batch:{:04d} | cla loss: {:.8f} | loc loss: -.----
 logString3 = 'epoch: {:03d} | batch:{:04d} | cla loss: -.-------- | loc loss: -.--------| total loss: -.-------- | PS : {:07d} | NS : {:07d} | iou : -.---- | mc : -.---- | oamc : -.---- | lt : {:.4f} | bt : {:.4f} \n\n'
 normLogString = 'epoch: [{:04d}/{:03d}] | grad norm: {:.8f} | weight norm: {:.8f} \n\n'
 
-batchSize = 1
-accumulationSteps = 4.0
+batchSize = 4
+accumulationSteps = 1.0
