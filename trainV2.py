@@ -146,19 +146,19 @@ def train(epoch):
 			tl = None
 			cl = None
 			ll = None
-			# ls = cnf.logString3.format(epoch, batchId)
 		elif locLoss is not None:
 			trainLoss = claLoss + locLoss
 			tl = trainLoss.item()
 			cl = claLoss.item()
 			ll = locLoss.item()
-			# ls = cnf.logString1.format(epoch, batchId, claLoss.item(), locLoss.item(), trainLoss.item())
+			posClaLoss = posClaLoss.item()
+			negClaLoss = negClaLoss.item()
 		else:
 			trainLoss = claLoss
 			tl = trainLoss.item()
 			cl = claLoss.item()
 			ll = None
-			# ls = cnf.logString2.format(epoch, batchId, claLoss.item(), trainLoss.item())
+			negClaLoss = negClaLoss.item()
 
 		# trainLoss = claLoss+locLoss
 		if trainLoss is not None:
@@ -176,7 +176,7 @@ def train(epoch):
 			hawkEye.zero_grad()
 
 		ed1 = time.time()
-		queue.put((epoch+1, batchId+1, cl, negClaLoss.item(), posClaLoss.item(), ll, tl, int(ps), int(ns), md, meanConfidence, overallMeanConfidence, ed-st, ed1-st1))
+		queue.put((epoch+1, batchId+1, cl, negClaLoss, posClaLoss, ll, tl, int(ps), int(ns), md, meanConfidence, overallMeanConfidence, ed-st, ed1-st1))
 
 		del data
 		del target
@@ -224,22 +224,22 @@ def validation(epoch):
 			tl = None
 			cl = None
 			ll = None
-			# ls = cnf.logString3.format(epoch, batchId)
 		elif locLoss is not None:
 			trainLoss = claLoss + locLoss
 			tl = trainLoss.item()
 			cl = claLoss.item()
 			ll = locLoss.item()
-			# ls = cnf.logString1.format(epoch, batchId, claLoss.item(), locLoss.item(), trainLoss.item())
+			posClaLoss = posClaLoss.item()
+			negClaLoss = negClaLoss.item()
 		else:
 			trainLoss = claLoss
 			tl = trainLoss.item()
 			cl = claLoss.item()
 			ll = None
-			# ls = cnf.logString2.format(epoch, batchId, claLoss.item(), trainLoss.item())
+			negClaLoss = negClaLoss.item()
 
 		ed1 = time.time()
-		valqueue.put((epoch+1, batchId+1, cl, negClaLoss.item(), posClaLoss.item(), ll, tl, int(ps), int(ns), md, meanConfidence, overallMeanConfidence, ed-st, ed1-st1))
+		valqueue.put((epoch+1, batchId+1, cl, negClaLoss, posClaLoss, ll, tl, int(ps), int(ns), md, meanConfidence, overallMeanConfidence, ed-st, ed1-st1))
 
 		del data
 		del target
