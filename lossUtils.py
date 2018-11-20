@@ -220,7 +220,8 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 		zr = zoomed0_3[i].size(0)
 
 		if zr == 1 and targets[i][0,0] == -1:
-			loss, oamc = focalLoss(cla[i].view(-1), 0, reduction='mean')
+			# loss, oamc = focalLoss(cla[i].view(-1), 0, reduction='mean')
+			loss, oamc = logLoss(cla[i].view(-1), 0, reduction='sum')
 			overallMeanConfidence += oamc.item()
 			if claLoss is not None:
 				claLoss += loss
@@ -244,7 +245,8 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 		numPosSamples += numPosSamples1
 
 		if numPosSamples1>0:
-			loss, oamc = focalLoss(cla1[b], 1, reduction='mean')
+			# loss, oamc = focalLoss(cla1[b], 1, reduction='mean')
+			loss, oamc = logLoss(cla1[b], 1, reduction='sum')
 			meanConfidence += cla1[b].sum()
 			overallMeanConfidence += oamc.item()
 			if claLoss is not None:
@@ -253,9 +255,9 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 				claLoss = loss
 
 			if locLoss is not None:
-				locLoss += F.smooth_l1_loss(loc1[b], targets_1[b][:,1:], reduction='mean')
+				locLoss += F.smooth_l1_loss(loc1[b], targets_1[b][:,1:], reduction='sum')
 			else:
-				locLoss = F.smooth_l1_loss(loc1[b], targets_1[b][:,1:], reduction='mean')
+				locLoss = F.smooth_l1_loss(loc1[b], targets_1[b][:,1:], reduction='sum')
 				
 		#***************PS******************
 
@@ -268,7 +270,8 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 
 		if numNegSamples1>0:
 			cla1 = cla1.view(lr, 1*zr)
-			loss, oamc = focalLoss(cla1[b1][:,0], 0, reduction='mean')
+			# loss, oamc = focalLoss(cla1[b1][:,0], 0, reduction='mean')
+			loss, oamc = logLoss(cla1[b1][:,0], 0, reduction='sum')
 			overallMeanConfidence += oamc.item()
 			
 			if claLoss is not None:
@@ -301,5 +304,20 @@ def focalLoss(p, t, reduction=None):
 		return -alpha*(((1-pt)**cnf.gamma)*logpt).sum(), pt.sum()
 	else:
 		return -alpha*(((1-pt)**cnf.gamma)*logpt), pt.sum()
+
+def logLoss(p, t, reduction=None):
+	if t == 1:
+		pt = p
+	elif t == 0:
+		pt = 1-p
+	pt.clamp_(1e-7, 1)
+	logpt = torch.log(pt)
+
+	if reduction == 'mean':
+		return (-logpt).mean(), pt.sum()
+	elif reduction == 'sum':
+		return (-logpt).sum(), pt.sum()
+	else:
+		return -logpt, pt.sum()
 
 computeLoss = computeLoss5_1
