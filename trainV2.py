@@ -148,15 +148,15 @@ def train(epoch):
 			ll = None
 			# ls = cnf.logString3.format(epoch, batchId)
 		elif locLoss is not None:
-			trainLoss = (claLoss + locLoss)/ps
+			trainLoss = claLoss + locLoss
 			tl = trainLoss.item()
-			cl = claLoss.item()/ps
-			ll = locLoss.item()/ps
+			cl = claLoss.item()
+			ll = locLoss.item()
 			# ls = cnf.logString1.format(epoch, batchId, claLoss.item(), locLoss.item(), trainLoss.item())
 		else:
-			trainLoss = claLoss/ps
+			trainLoss = claLoss
 			tl = trainLoss.item()
-			cl = claLoss.item()/ps
+			cl = claLoss.item()
 			ll = None
 			# ls = cnf.logString2.format(epoch, batchId, claLoss.item(), trainLoss.item())
 

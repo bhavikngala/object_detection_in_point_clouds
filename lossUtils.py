@@ -404,6 +404,7 @@ def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 		posClaLoss /= numPosSamples
 		negClaLoss /= numNegSamples
 		claLoss = posClaLoss + negClaLoss
+		locLoss /= numPosSamples
 	elif numNegSamples > 0:
 		negClaLoss /= numNegSamples
 		claLoss = negClaLoss
