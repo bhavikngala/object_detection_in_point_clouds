@@ -222,7 +222,7 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 		if zr == 1 and targets[i][0,0] == -1:
 			# loss, oamc = focalLoss(cla[i].view(-1), 0, reduction='mean')
 			loss, oamc = logLoss(cla[i].view(-1), 0, reduction='None')
-			loss = torch.topk(loss, 5).sum()
+			loss = torch.topk(loss, 5)[0].sum()
 			overallMeanConfidence += oamc.item()
 			if claLoss is not None:
 				claLoss += loss
@@ -248,7 +248,7 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 		if numPosSamples1>0:
 			# loss, oamc = focalLoss(cla1[b], 1, reduction='mean')
 			loss, oamc = logLoss(cla1[b], 1, reduction='None')
-			loss = torch.topk(loss, 5).sum()
+			loss = torch.topk(loss, 5)[0].sum()
 			meanConfidence += cla1[b].sum()
 			overallMeanConfidence += oamc.item()
 			if claLoss is not None:
@@ -274,7 +274,7 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 			cla1 = cla1.view(lr, 1*zr)
 			# loss, oamc = focalLoss(cla1[b1][:,0], 0, reduction='mean')
 			loss, oamc = logLoss(cla1[b1][:,0], 0, reduction='None')
-			loss = torch.topk(loss, 5).sum()
+			loss = torch.topk(loss, 5)[0].sum()
 			overallMeanConfidence += oamc.item()
 			
 			if claLoss is not None:
