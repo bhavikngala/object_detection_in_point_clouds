@@ -404,9 +404,12 @@ def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 		negClaLoss /= numNegSamples
 		claLoss = posClaLoss + negClaLoss
 		locLoss /= numPosSamples
+		claLoss /= cnf.accumulationSteps
+		locLoss /= cnf.accumulationSteps
 	elif numNegSamples > 0:
 		negClaLoss /= numNegSamples
 		claLoss = negClaLoss
+		claLoss /= cnf.accumulationSteps
 
 	return claLoss, locLoss, posClaLoss, negClaLoss, md, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples
 
