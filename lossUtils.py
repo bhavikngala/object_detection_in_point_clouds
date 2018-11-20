@@ -332,8 +332,8 @@ def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 		zr = zoomed0_3[i].size(0)
 
 		if zr == 1 and targets[i][0,0] == -1:
-			# loss, oamc = focalLoss(cla[i].view(-1), 0, reduction='mean')
-			loss, oamc = logLoss(cla[i].view(-1), 0, reduction='sum')
+			loss, oamc = focalLoss(cla[i].view(-1), 0, reduction='sum')
+			# loss, oamc = logLoss(cla[i].view(-1), 0, reduction='sum')
 			overallMeanConfidence += oamc.item()
 			if negClaLoss is not None:
 				negClaLoss += cnf.beta1*loss
@@ -357,8 +357,8 @@ def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 		numPosSamples += numPosSamples1
 
 		if numPosSamples1>0:
-			# loss, oamc = focalLoss(cla1[b], 1, reduction='mean')
-			loss, oamc = logLoss(cla1[b], 1, reduction='sum')
+			loss, oamc = focalLoss(cla1[b], 1, reduction='sum')
+			# loss, oamc = logLoss(cla1[b], 1, reduction='sum')
 			meanConfidence += cla1[b].sum()
 			overallMeanConfidence += oamc.item()
 			if posClaLoss is not None:
@@ -383,9 +383,8 @@ def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 
 		if numNegSamples1>0:
 			cla1 = cla1.view(lr, 1*zr)
-			# loss, oamc = focalLoss(cla1[b1][:,0], 0, reduction='mean')
-			loss, oamc = logLoss(cla1[b1][:,0], 0, reduction=None)
-			loss = torch.topk(loss.view(-1), 5)[0].sum()
+			loss, oamc = focalLoss(cla1[b1][:,0], 0, reduction='sum')
+			# loss, oamc = logLoss(cla1[b1][:,0], 0, reduction='sum')
 			overallMeanConfidence += oamc.item()
 			
 			if negClaLoss is not None:
@@ -415,19 +414,17 @@ def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 def focalLoss(p, t, reduction=None):
 	if t == 1:
 		pt = p
-		alpha = cnf.alpha
 	else:
-		pt = 1 - p
-		alpha = 1 - cnf.alpha
+		pt = 1 - p 
 	pt.clamp_(1e-7, 1)
 	logpt = torch.log(pt)
 
 	if reduction == 'mean':
-		return -alpha*(((1-pt)**cnf.gamma)*logpt).mean(), pt.sum()
+		return -(((1-pt)**cnf.gamma)*logpt).mean(), pt.sum()
 	elif reduction == 'sum':
-		return -alpha*(((1-pt)**cnf.gamma)*logpt).sum(), pt.sum()
+		return -(((1-pt)**cnf.gamma)*logpt).sum(), pt.sum()
 	else:
-		return -alpha*(((1-pt)**cnf.gamma)*logpt), pt.sum()
+		return -(((1-pt)**cnf.gamma)*logpt), pt.sum()
 
 def logLoss(p, t, reduction=None):
 	if t == 1:
