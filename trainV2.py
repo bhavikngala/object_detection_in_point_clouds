@@ -138,7 +138,8 @@ def train(epoch):
 
 		# compute loss, gradient, and optimize
 		st = time.time()
-		claLoss, locLoss, iou, meanConfidence, overallMeanConfidence, ps, ns = computeLoss(cla, loc, targets, zoom0_3s, zoom1_2s)
+		claLoss, locLoss, posClaLoss, negClaLoss, iou, meanConfidence, overallMeanConfidence, ps, ns = \
+			computeLoss(cla, loc, targets, zoom0_3s, zoom1_2s)
 		ed = time.time()
 		if claLoss is None:
 			trainLoss = None
@@ -148,13 +149,13 @@ def train(epoch):
 			# ls = cnf.logString3.format(epoch, batchId)
 		elif locLoss is not None:
 			trainLoss = (claLoss + locLoss)/ps
-			tl = trainLoss.item()/ps
+			tl = trainLoss.item()
 			cl = claLoss.item()/ps
 			ll = locLoss.item()/ps
 			# ls = cnf.logString1.format(epoch, batchId, claLoss.item(), locLoss.item(), trainLoss.item())
 		else:
 			trainLoss = claLoss/ps
-			tl = trainLoss.item()/ps
+			tl = trainLoss.item()
 			cl = claLoss.item()/ps
 			ll = None
 			# ls = cnf.logString2.format(epoch, batchId, claLoss.item(), trainLoss.item())
@@ -175,7 +176,7 @@ def train(epoch):
 			hawkEye.zero_grad()
 
 		ed1 = time.time()
-		queue.put((epoch+1, batchId+1, cl, ll, tl, int(ps), int(ns), iou, meanConfidence, overallMeanConfidence, ed-st, ed1-st1))
+		queue.put((epoch+1, batchId+1, cl, negClaLoss.item(), posClaLoss.item(), ll, tl, int(ps), int(ns), iou, meanConfidence, overallMeanConfidence, ed-st, ed1-st1))
 
 		del data
 		del target
@@ -215,7 +216,8 @@ def validation(epoch):
 
 		# compute loss, gradient, and optimize
 		st = time.time()
-		claLoss, locLoss, iou, meanConfidence, overallMeanConfidence, ps, ns = computeLoss(cla, loc, targets, zoom0_3s, zoom1_2s)
+		claLoss, locLoss, posClaLoss, negClaLoss, iou, meanConfidence, overallMeanConfidence, ps, ns = \
+			computeLoss(cla, loc, targets, zoom0_3s, zoom1_2s)
 		ed = time.time()
 		if claLoss is None:
 			trainLoss = None
@@ -237,7 +239,7 @@ def validation(epoch):
 			# ls = cnf.logString2.format(epoch, batchId, claLoss.item(), trainLoss.item())
 
 		ed1 = time.time()
-		valqueue.put((epoch+1, batchId+1, cl, ll, tl, int(ps), int(ns), iou, meanConfidence, overallMeanConfidence, ed-st, ed1-st1))
+		valqueue.put((epoch+1, batchId+1, cl, negClaLoss.item(), posClaLoss.item(), ll, tl, int(ps), int(ns), iou, meanConfidence, overallMeanConfidence, ed-st, ed1-st1))
 
 		del data
 		del target
