@@ -164,7 +164,7 @@ def train(epoch):
 			trainLoss.backward()
 
 		# gradients are accumulated over cnf.accumulationSteps
-		if (batchId+1)%cnf.accumulationSteps == 0:
+		if trainLoss is not None and (batchId+1)%cnf.accumulationSteps == 0:
 			gradNorm = misc.parameterNorm(hawkEye.parameters(), 'grad')
 			weightNorm = misc.parameterNorm(hawkEye.parameters(), 'weight')
 			misc.writeToFile(cnf.gradNormlog, cnf.normLogString.format(batchId+1, epoch+1, gradNorm, weightNorm))
