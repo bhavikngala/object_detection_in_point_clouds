@@ -63,6 +63,16 @@ def computeIoU(matchedBoxes, targets):
 
 	return (intersectionArea/unionArea).mean().item()
 
+
+def computeDistanceBetCenters(matchedBoxes, targets):
+	'''
+	Computes mean distance between centers of matched boxes and targets
+	'''
+	d = (matchedBoxes[:,2]-targets[:,3]).pow(2) + (matchedBoxes[:,3]-targets[:,4]).pow(2)
+	d = d.pow(0.5)
+	return d.mean().item()
+
+
 def findInOutMask(loc, rectangle, inside=True):
 	# rectangle is array of 4 points of 2d bounding box
 	# find vectors of 2 adjacent sides
@@ -199,7 +209,7 @@ def findInOutMask_1(loc, rectangle, inside=True):
 def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 	claLoss = None
 	locLoss = None
-	iou = 0
+	md = 0
 	meanConfidence = 0
 	numPosSamples = 0
 	numNegSamples = 0
@@ -258,6 +268,7 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 				locLoss += F.smooth_l1_loss(loc1[b], targets_1[b][:,1:], reduction='sum')
 			else:
 				locLoss = F.smooth_l1_loss(loc1[b], targets_1[b][:,1:], reduction='sum')
+			md += computeDistanceBetCenters(loc1[b], targets_1[b])
 				
 		#***************PS******************
 
@@ -292,7 +303,7 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 		claLoss = None
 		locLoss = None
 
-	return claLoss, locLoss, iou, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples
+	return claLoss, locLoss, md, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples
 
 
 def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
@@ -300,7 +311,7 @@ def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 	negClaLoss = None
 	claLoss = None
 	locLoss = None
-	iou = 0
+	md = 0
 	meanConfidence = 0
 	numPosSamples = 0
 	numNegSamples = 0
@@ -359,6 +370,7 @@ def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 				locLoss += F.smooth_l1_loss(loc1[b], targets_1[b][:,1:], reduction='sum')
 			else:
 				locLoss = F.smooth_l1_loss(loc1[b], targets_1[b][:,1:], reduction='sum')
+			md += computeDistanceBetCenters(loc1[b], targets_1[b])
 				
 		#***************PS******************
 
@@ -396,7 +408,7 @@ def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 		negClaLoss /= numNegSamples
 		claLoss = negClaLoss
 
-	return claLoss, locLoss, posClaLoss, negClaLoss, iou, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples
+	return claLoss, locLoss, posClaLoss, negClaLoss, md, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples
 
 
 def focalLoss(p, t, reduction=None):
