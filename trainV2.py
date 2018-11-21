@@ -30,6 +30,7 @@ parser.add_argument('--val', action='store_true')
 parser.add_argument('-c', '--clip', action='store_true')
 parser.add_argument('--clipvalue', type=float, default=0.25)
 parser.add_argument('--resnet18', action='store_true')
+parser.add_argument('-s', '--standarize', action='store_true')
 args = parser.parse_args()
 
 torch.manual_seed(0)
@@ -53,19 +54,22 @@ if args.epochs:
 
 # data loaders
 train_loader = DataLoader(
-	LidarLoader_2(cnf.rootDir+'/train', cnf.objtype, args=args, train=True, standarize=False),
+	LidarLoader_2(cnf.rootDir+'/train', cnf.objtype, args=args, train=True, standarize=args.standarize),
 	batch_size = cnf.batchSize, shuffle=True, num_workers=0,
 	collate_fn=collate_fn_3, pin_memory=True
 )
 if args.val:
 	val_loader = DataLoader(
-		LidarLoader_2(cnf.rootDir+'/val', cnf.objtype, args=args, train=True, augData=False, standarize=False),
+		LidarLoader_2(cnf.rootDir+'/val', cnf.objtype, args=args, train=True, augData=False, standarize=args.standarize),
 		batch_size = cnf.batchSize, shuffle=True, num_workers=0,
 		collate_fn=collate_fn_3, pin_memory=True
 	)
 
-carMean = torch.from_numpy(cnf.carMean)
-carSTD = torch.from_numpy(cnf.carSTD)
+if args.standarize:
+	carMean = torch.from_numpy(cnf.carMean)
+	carSTD = torch.from_numpy(cnf.carSTD)
+else:
+	carMean, carSTD = None, None
 
 # create detector object and intialize weights
 if args.resnet18:
@@ -139,7 +143,7 @@ def train(epoch):
 		# compute loss, gradient, and optimize
 		st = time.time()
 		claLoss, locLoss, posClaLoss, negClaLoss, md, meanConfidence, overallMeanConfidence, ps, ns = \
-			computeLoss(cla, loc, targets, zoom0_3s, zoom1_2s)
+			computeLoss(cla, loc, targets, zoom0_3s, zoom1_2s, reshape=True)
 		ed = time.time()
 		if claLoss is None:
 			trainLoss = None
@@ -217,7 +221,7 @@ def validation(epoch):
 		# compute loss, gradient, and optimize
 		st = time.time()
 		claLoss, locLoss, posClaLoss, negClaLoss, md, meanConfidence, overallMeanConfidence, ps, ns = \
-			computeLoss(cla, loc, targets, zoom0_3s, zoom1_2s)
+			computeLoss(cla, loc, targets, zoom0_3s, zoom1_2s, reshape=True)
 		ed = time.time()
 		if claLoss is None:
 			trainLoss = None
