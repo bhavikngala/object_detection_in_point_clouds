@@ -35,7 +35,7 @@ class PointCloudDetector(nn.Module):
 		# self.bn_res_block4 = nn.BatchNorm2d(4 * res_block_layers[3])
 		
 		self.conv4 = nn.Conv2d(in_channels=4*res_block_layers[3], out_channels=196, kernel_size=1, bias=False)
-		self.bn4 = nn.BatchNorm2d(196)
+		# self.bn4 = nn.BatchNorm2d(196)
 
 		self.upsample1 = Upsample(in_channels = up_sample_layers[0], out_channels = 128, args = up_sample_deconv[0])
 		# self.bn_upsample1 = nn.BatchNorm2d(128)
@@ -44,16 +44,16 @@ class PointCloudDetector(nn.Module):
 		# self.bn_upsample2 = nn.BatchNorm2d(96)
 		
 		self.conv5 = nn.Conv2d(in_channels=96, out_channels=96, kernel_size=3, padding=1, bias=False)
-		self.bn5 = nn.BatchNorm2d(96)
+		# self.bn5 = nn.BatchNorm2d(96)
 		
 		self.conv6 = nn.Conv2d(in_channels=96, out_channels=96, kernel_size=3, padding=1, bias=False)
-		self.bn6 = nn.BatchNorm2d(96)
+		# self.bn6 = nn.BatchNorm2d(96)
 		
 		self.conv7 = nn.Conv2d(in_channels=96, out_channels=96, kernel_size=3, padding=1, bias=False)
-		self.bn7 = nn.BatchNorm2d(96)
+		# self.bn7 = nn.BatchNorm2d(96)
 		
 		self.conv8 = nn.Conv2d(in_channels=96, out_channels=96, kernel_size=3, padding=1, bias=False)
-		self.bn8 = nn.BatchNorm2d(96)
+		# self.bn8 = nn.BatchNorm2d(96)
 
 		# sigmoid activation
 		self.conv_cla = nn.Conv2d(in_channels=96, out_channels=1, kernel_size=3, padding=1, bias=True)
@@ -95,8 +95,8 @@ class PointCloudDetector(nn.Module):
 		# x = self.relu(x)
 
 		x = self.conv4(x)
-		x = self.bn4(x)
-		x = self.relu(x)
+		# x = self.bn4(x)
+		# x = self.relu(x)
 
 		x = self.upsample1(x, res_3)
 		# x = self.bn_upsample1(x)
@@ -107,19 +107,19 @@ class PointCloudDetector(nn.Module):
 		# x = self.relu(x)
 
 		x = self.conv5(x)
-		x = self.bn5(x)
+		# x = self.bn5(x)
 		x = self.relu(x)
 
 		x = self.conv6(x)
-		x = self.bn6(x)
+		# x = self.bn6(x)
 		x = self.relu(x)
 
 		x = self.conv7(x)
-		x = self.bn7(x)
+		# x = self.bn7(x)
 		x = self.relu(x)
 
 		x = self.conv8(x)
-		x = self.bn8(x)
+		# x = self.bn8(x)
 		x = self.relu(x)
 
 		cla = self.conv_cla(x)
