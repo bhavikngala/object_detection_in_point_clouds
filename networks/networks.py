@@ -20,7 +20,7 @@ class PointCloudDetector(nn.Module):
 		self.bn1 = nn.BatchNorm2d(32)
 
 		self.conv2 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1, bias=False)
-		self.bn2 = nn.BatchNorm2d(32)
+		# self.bn2 = nn.BatchNorm2d(32)
 
 		self.res_block1 = Bottleneck_3(in_channels = 32, out_channels=res_block_layers[0])
 		# self.bn_res_block1 = nn.BatchNorm2d(4 * res_block_layers[0])
@@ -75,8 +75,8 @@ class PointCloudDetector(nn.Module):
 		x = self.relu(x)
 
 		x = self.conv2(x)
-		x = self.bn2(x)
-		x = self.relu(x)
+		# x = self.bn2(x)
+		# x = self.relu(x)
 
 		x = self.res_block1(x)
 		# x = self.bn_res_block1(x)
