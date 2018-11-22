@@ -5,7 +5,7 @@ rootDir = './../data/KITTI_BEV'
 trainRootDir = './../data/preprocessed/train'
 
 gridConfig = {
-	'x':(0, 70),
+	'x':(0, 70.4),
 	'y':(-40, 40),
 	'z':(-2.5, 1),
 	'res':0.1
@@ -55,8 +55,8 @@ carSTD = carSTDLogWL
 
 res_block_layers = [24, 48, 64, 96]
 up_sample_layers = [(196, 256), (128, 192)]
-deconv = [(1, 2, (1, 1), (1, 1)), # upsamole block 1
-		  (1, 2, (1, 1), (1, 0))] # upsample block 2
+deconv = [(1, 2, 1, 1), # upsamole block 1
+		  (1, 2, 1, 1)] # upsample block 2
 
 # training parameters
 lr = 1e-4   # learning rate without step
