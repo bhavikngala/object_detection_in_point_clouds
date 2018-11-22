@@ -138,21 +138,22 @@ class Upsample_2(nn.Module):
 			bias=False,
 			dilation=dilation
 		)
-		self.bn_deconv1 = nn.BatchNorm2d(out_channels)
+		# self.bn_deconv1 = nn.BatchNorm2d(out_channels)
 
 		self.conv1 = nn.Conv2d(in_channels[1], out_channels, kernel_size=1, bias=False)
-		self.bn1 = nn.BatchNorm2d(out_channels)
+		# self.bn1 = nn.BatchNorm2d(out_channels)
 
-		self.relu = nn.ReLU(inplace=True)
+		# self.relu = nn.ReLU(inplace=True)
 
 	def forward(self, featureMapToUpsample, originalFeatureMap):
 		d = self.deconv1(featureMapToUpsample)
-		d = self.bn_deconv1(d)
+		# d = self.bn_deconv1(d)
 
 		res = self.conv1(originalFeatureMap)
-		res = self.bn1(res)
+		# res = self.bn1(res)
 
-		out = self.relu(d+res)
+		# out = self.relu(d+res)
+		out = d+res
 
 		return out
 
@@ -170,9 +171,9 @@ class UnStandarizeLayer(nn.Module):
 
 	def forward(self, X):
 		m, c, h, w = X.size()
-		h = X.permute(0, 2, 3, 1).contiguous().view(m, w*h, c)
-		h = h*self.std + self.mean
-		return h
+		X = X.permute(0, 2, 3, 1).contiguous().view(m, w*h, c)
+		X = X*self.std + self.mean
+		return X
 
 
 # for new variants of bottleneck change names here
