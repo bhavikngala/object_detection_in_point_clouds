@@ -104,7 +104,7 @@ def findInOutMask(loc, rectangle, inside=True):
 	if inside:
 		mask = (0<dot_AB_AM) & (dot_AB_AM<dot_AB_AB) & (0<dot_BC_BM) & (dot_BC_BM<dot_BC_BC)
 	else:
-		mask = ~((0<dot_AB_AM) & (dot_AB_AM<dot_AB_AB) & (0<dot_BC_BM) & (dot_BC_BM<dot_BC_BC))
+		mask = not ((0<dot_AB_AM) & (dot_AB_AM<dot_AB_AB) & (0<dot_BC_BM) & (dot_BC_BM<dot_BC_BC))
 	
 	return mask
 
@@ -202,7 +202,7 @@ def findInOutMask_1(loc, rectangle, inside=True):
 	if inside:
 		mask = (0<=dot_AB_AM) & (dot_AB_AM<=dot_AB_AB) & (0<=dot_BC_BM) & (dot_BC_BM<=dot_BC_BC)
 	else:
-		mask = ~((0<=dot_AB_AM) & (dot_AB_AM<=dot_AB_AB) & (0<=dot_BC_BM) & (dot_BC_BM<=dot_BC_BC))
+		mask = not ((0<=dot_AB_AM) & (dot_AB_AM<=dot_AB_AB) & (0<=dot_BC_BM) & (dot_BC_BM<=dot_BC_BC))
 	
 	return mask
 
