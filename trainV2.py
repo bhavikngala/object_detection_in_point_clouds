@@ -66,17 +66,17 @@ if args.val:
 	)
 
 if args.standarize:
+	carMean, carSTD = None, None
+else:
 	carMean = torch.from_numpy(cnf.carMean)
 	carSTD = torch.from_numpy(cnf.carSTD)
-else:
-	carMean, carSTD = None, None
 
 # create detector object and intialize weights
 if args.resnet18:
 	hawkEye = ResNet18(mean=carMean, std=carSTD).to(cnf.device)
 else:
 	hawkEye = PointCloudDetector(cnf.res_block_layers, cnf.up_sample_layers, cnf.deconv, carMean, carSTD).to(cnf.device)
-hawkEye.apply(misc.weights_init)
+# hawkEye.apply(misc.weights_init)
 
 if args.multi_gpu:
 	hawkEye = nn.DataParallel(hawkEye)
@@ -89,7 +89,7 @@ if args.step_lr:
 else:	
 	# optimizer = Adam(hawkEye.parameters(), lr=cnf.lr)
 	optimizer = SGD(hawkEye.parameters(), lr=cnf.lr, momentum=0.9, dampening=0, weight_decay=0, nesterov=False)
-reshapeFlag = not args.standarize
+reshapeFlag = args.standarize
 
 # status string writer thread and queue
 queue = Queue()
