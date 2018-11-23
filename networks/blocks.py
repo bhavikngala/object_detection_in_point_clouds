@@ -66,10 +66,10 @@ class Bottleneck_6_0(nn.Module):
 		self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=2, padding=1, bias=False)
 
 		self.bn3 = nn.BatchNorm2d(out_channels)
-		self.conv3 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False)
+		self.conv3 = nn.Conv2d(out_channels, out_channels, kernel_size=1, bias=False)
 
 		self.bn4 = nn.BatchNorm2d(out_channels)
-		self.conv4 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False)
+		self.conv4 = nn.Conv2d(out_channels, out_channels, kernel_size=1, bias=False)
 
 		# self.bn5 = nn.BatchNorm2d(out_channels*self.expansion)
 		self.bn5 = nn.BatchNorm2d(out_channels)
