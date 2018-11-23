@@ -31,6 +31,7 @@ parser.add_argument('-c', '--clip', action='store_true')
 parser.add_argument('--clipvalue', type=float, default=0.25)
 parser.add_argument('--resnet18', action='store_true')
 parser.add_argument('-s', '--standarize', action='store_true')
+parser.add_argument('-d', '--discard', action='store_true')
 args = parser.parse_args()
 
 torch.manual_seed(0)
@@ -143,7 +144,7 @@ def train(epoch):
 		# compute loss, gradient, and optimize
 		st = time.time()
 		claLoss, locLoss, posClaLoss, negClaLoss, md, meanConfidence, overallMeanConfidence, ps, ns = \
-			computeLoss(cla, loc, targets, zoom0_3s, zoom1_2s, reshape=args.standarize)
+			computeLoss(cla, loc, targets, zoom0_3s, zoom1_2s, reshape=args.standarize, discard=args.discard)
 		ed = time.time()
 		if claLoss is None:
 			trainLoss = None

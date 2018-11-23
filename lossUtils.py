@@ -70,7 +70,7 @@ def computeDistanceBetCenters(matchedBoxes, targets):
 	'''
 	d = (matchedBoxes[:,2]-targets[:,3]).pow(2) + (matchedBoxes[:,3]-targets[:,4]).pow(2)
 	d = d.pow(0.5)
-	return d.mean().item()
+	return d.sum().item()
 
 
 def findInOutMask(loc, rectangle, inside=True):
@@ -306,7 +306,7 @@ def computeLoss5_1(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 	return claLoss, locLoss, md, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples
 
 
-def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
+def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False, discard=False):
 	posClaLoss = None
 	negClaLoss = None
 	claLoss = None
@@ -332,14 +332,19 @@ def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 		zr = zoomed0_3[i].size(0)
 
 		if zr == 1 and targets[i][0,0] == -1:
-			loss, oamc = focalLoss(cla[i].view(-1), 0, reduction='sum')
-			# loss, oamc = logLoss(cla[i].view(-1), 0, reduction='sum')
+			if discard:
+				loss, oamc = focalLoss(cla[i].view(-1), 0, reduction=None)
+				loss = torch.topk(loss.view(-1), 10)[0].sum()
+				numNegSamples += 10
+			else:
+				loss, oamc = focalLoss(cla[i].view(-1), 0, reduction='sum')
+				numNegSamples += lr
+			
 			overallMeanConfidence += oamc.item()
 			if negClaLoss is not None:
 				negClaLoss += cnf.beta1*loss
 			else:
 				negClaLoss = cnf.beta1*loss
-			numNegSamples += lr
 			continue
 
 		loc1 = loc[i].repeat(1, zr).view(-1, lc)
@@ -358,7 +363,6 @@ def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 
 		if numPosSamples1>0:
 			loss, oamc = focalLoss(cla1[b], 1, reduction='sum')
-			# loss, oamc = logLoss(cla1[b], 1, reduction='sum')
 			meanConfidence += cla1[b].sum()
 			overallMeanConfidence += oamc.item()
 			if posClaLoss is not None:
@@ -379,14 +383,19 @@ def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 		b1 = findInOutMask_1(loc1, zoomed1_2_1, inside=False)
 		b1 = b1.view(lr, zr).sum(dim=-1)==zr
 		numNegSamples1 = b1.sum().item()
-		numNegSamples += numNegSamples1
 
 		if numNegSamples1>0:
 			cla1 = cla1.view(lr, 1*zr)
-			loss, oamc = focalLoss(cla1[b1][:,0], 0, reduction='sum')
-			# loss, oamc = logLoss(cla1[b1][:,0], 0, reduction='sum')
-			overallMeanConfidence += oamc.item()
+
+			if discard:
+				loss, oamc = focalLoss(cla1[b1][:,0], 0, reduction=None)
+				loss = torch.topk(loss.view(-1), 10)[0].sum()
+				numNegSamples += 10
+			else:
+				loss, oamc = focalLoss(cla1[b1][:,0], 0, reduction='sum')
+				numNegSamples += numNegSamples1
 			
+			overallMeanConfidence += oamc.item()
 			if negClaLoss is not None:
 				negClaLoss += cnf.beta1*loss
 			else:
@@ -396,6 +405,7 @@ def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 	
 	if numPosSamples>0:
 		meanConfidence /= numPosSamples
+		md /= numPosSamples
 	if numPosSamples!=0 or numNegSamples!=0:
 		overallMeanConfidence /=(numPosSamples+numNegSamples)
 
@@ -410,6 +420,10 @@ def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False):
 		negClaLoss /= numNegSamples
 		claLoss = negClaLoss
 		claLoss /= cnf.accumulationSteps
+
+	# discard loss if there are no positive samples
+	if numPosSamples==0:
+		claLoss = None
 
 	return claLoss, locLoss, posClaLoss, negClaLoss, md, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples
 
