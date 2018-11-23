@@ -89,7 +89,6 @@ if args.step_lr:
 else:	
 	# optimizer = Adam(hawkEye.parameters(), lr=cnf.lr)
 	optimizer = SGD(hawkEye.parameters(), lr=cnf.lr, momentum=0.9, dampening=0, weight_decay=0, nesterov=False)
-reshapeFlag = args.standarize
 
 # status string writer thread and queue
 queue = Queue()
@@ -144,7 +143,7 @@ def train(epoch):
 		# compute loss, gradient, and optimize
 		st = time.time()
 		claLoss, locLoss, posClaLoss, negClaLoss, md, meanConfidence, overallMeanConfidence, ps, ns = \
-			computeLoss(cla, loc, targets, zoom0_3s, zoom1_2s, reshape=reshapeFlag)
+			computeLoss(cla, loc, targets, zoom0_3s, zoom1_2s, reshape=args.standarize)
 		ed = time.time()
 		if claLoss is None:
 			trainLoss = None
@@ -222,7 +221,7 @@ def validation(epoch):
 		# compute loss, gradient, and optimize
 		st = time.time()
 		claLoss, locLoss, posClaLoss, negClaLoss, md, meanConfidence, overallMeanConfidence, ps, ns = \
-			computeLoss(cla, loc, targets, zoom0_3s, zoom1_2s, reshape=reshapeFlag)
+			computeLoss(cla, loc, targets, zoom0_3s, zoom1_2s, reshape=args.standarize)
 		ed = time.time()
 		if claLoss is None:
 			trainLoss = None
