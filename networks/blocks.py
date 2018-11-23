@@ -112,7 +112,7 @@ class Bottleneck_6_1(nn.Module):
 	expansion = 4
 
 	def __init__(self, in_channels, out_channels):
-		super(Bottleneck_6_0, self).__init__()
+		super(Bottleneck_6_1, self).__init__()
 
 		# using pre-normalization and pre-activation
 		# TODO: switch stride=2 between conv1 and conv2 and check results
@@ -233,6 +233,6 @@ class UnStandarizeLayer(nn.Module):
 
 # for new variants of bottleneck change names here
 Bottleneck_3 = Bottleneck_3_0
-Bottleneck_6 = Bottleneck_6_0
+Bottleneck_6 = Bottleneck_6_1
 Upsample = Upsample_2
 UnStandarizeLayer = UnStandarizeLayer
