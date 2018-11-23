@@ -142,12 +142,12 @@ class Upsample_2(nn.Module):
 			padding=padding,
 			output_padding=output_padding,
 			groups=1,
-			bias=False,
+			bias=True,
 			dilation=dilation
 		)
 		# self.bn_deconv1 = nn.BatchNorm2d(out_channels)
 
-		self.conv1 = nn.Conv2d(in_channels[1], out_channels, kernel_size=1, bias=False)
+		self.conv1 = nn.Conv2d(in_channels[1], out_channels, kernel_size=1, bias=True)
 		# self.bn1 = nn.BatchNorm2d(out_channels)
 
 		# self.relu = nn.ReLU(inplace=True)
