@@ -69,6 +69,9 @@ class PointCloudDetector(nn.Module):
 		else:
 			self.unstandarize = None
 
+		# initialization for each layer of network
+		self.layerInit()
+
 	def forward(self, x):
 		x = self.conv1(x)
 		x = self.bn1(x)
@@ -131,3 +134,48 @@ class PointCloudDetector(nn.Module):
 			loc = self.unstandarize(loc)
 
 		return cla, loc
+
+	def layerInit(self):
+		self.conv1.weight.data.normal_(0.0, 0.01)
+		self.bn1.weight.data.normal_(1.0, 0.02)
+		self.bn1.bias.data.fill_(0)
+		self.conv2.weight.data.normal_(0.0, 0.01)
+
+		self.res_block1.apply(resnetInit)
+		self.res_block2.apply(resnetInit)
+		self.res_block3.apply(resnetInit)
+		self.res_block4.apply(resnetInit)
+		self.upsample1.apply(upsampleInit)
+		self.upsample2.apply(upsampleInit)
+
+		self.conv5.weight.data.normal_(0.0, 0.01)
+		self.conv5.bias.data.fill_(0)
+		self.conv6.weight.data.normal_(0.0, 0.01)
+		self.conv6.bias.data.fill_(0)
+		self.conv7.weight.data.normal_(0.0, 0.01)
+		self.conv7.bias.data.fill_(0)
+		self.conv8.weight.data.normal_(0.0, 0.01)
+		self.conv8.bias.data.fill_(0)
+
+		self.conv_cla.weight.data.normal_(0.0, 0.01)
+		self.conv_cla.bias.data.fill_(torch.log(torch.tensor([(1-0.01)/0.01], dtype='float32')))
+
+		self.conv_loc.weight.data.normal_(0.0, 0.01)
+		self.conv_loc.bias.data.fill_(0)
+
+
+def resnetInit(m):
+	if isinstance(m, nn.Conv2d):
+		nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+	elif isinstance(m, nn.BatchNorm2d):
+		nn.init.constant_(m.weight, 1)
+		nn.init.constant_(m.bias, 0)
+
+
+def upsampleInit(m):
+	if isinstance(m, nn.Conv2d):
+		m.weight.data.normal_(0.0, 0.01)
+		m.bias.data.fill_(0)		
+	elif isinstance(m, nn.ConvTranspose2d):
+		m.weight.data.normal_(0.0, 0.01)
+		m.bias.data.fill_(0)
