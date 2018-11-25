@@ -64,7 +64,7 @@ slr = 1e-2  # step learning rate
 milestones1 = [150] # milestone for voxelnet
 milestones2 = [20, 30] # milestone for pixor
 momentum = 0.9
-decay = 0.0005 # weight decay parameter
+decay = 0.0001 # weight decay parameter
 epochs = 160
 
 # balancing pos-neg samples
