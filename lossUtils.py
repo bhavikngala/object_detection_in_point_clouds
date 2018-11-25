@@ -422,7 +422,7 @@ def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False, discard
 		claLoss /= cnf.accumulationSteps
 
 	# discard loss if there are no positive samples
-	if numPosSamples==0:
+	if discard and numPosSamples==0:
 		claLoss = None
 
 	return claLoss, locLoss, posClaLoss, negClaLoss, md, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples
