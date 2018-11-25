@@ -333,11 +333,11 @@ def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False, discard
 
 		if zr == 1 and targets[i][0,0] == -1:
 			if discard:
-				loss, oamc = focalLoss(cla[i].view(-1), 0, reduction=None, alpha=cnf.alpha, alpha=cnf.alpha)
+				loss, oamc = focalLoss(cla[i].view(-1), 0, reduction=None, alpha=cnf.alpha)
 				loss = torch.topk(loss.view(-1), 10)[0].sum()
 				numNegSamples += 10
 			else:
-				loss, oamc = focalLoss(cla[i].view(-1), 0, reduction='sum', alpha=cnf.alpha, alpha=cnf.alpha)
+				loss, oamc = focalLoss(cla[i].view(-1), 0, reduction='sum', alpha=cnf.alpha)
 				numNegSamples += lr
 			
 			overallMeanConfidence += oamc.item()
