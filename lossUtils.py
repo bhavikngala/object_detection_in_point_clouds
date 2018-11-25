@@ -333,18 +333,18 @@ def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False, discard
 
 		if zr == 1 and targets[i][0,0] == -1:
 			if discard:
-				loss, oamc = focalLoss(cla[i].view(-1), 0, reduction=None)
+				loss, oamc = focalLoss(cla[i].view(-1), 0, reduction=None, alpha=cnf.alpha, alpha=cnf.alpha)
 				loss = torch.topk(loss.view(-1), 10)[0].sum()
 				numNegSamples += 10
 			else:
-				loss, oamc = focalLoss(cla[i].view(-1), 0, reduction='sum')
+				loss, oamc = focalLoss(cla[i].view(-1), 0, reduction='sum', alpha=cnf.alpha, alpha=cnf.alpha)
 				numNegSamples += lr
 			
 			overallMeanConfidence += oamc.item()
 			if negClaLoss is not None:
-				negClaLoss += cnf.beta1*loss
+				negClaLoss += loss
 			else:
-				negClaLoss = cnf.beta1*loss
+				negClaLoss = loss
 			continue
 
 		loc1 = loc[i].repeat(1, zr).view(-1, lc)
@@ -362,13 +362,13 @@ def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False, discard
 		numPosSamples += numPosSamples1
 
 		if numPosSamples1>0:
-			loss, oamc = focalLoss(cla1[b], 1, reduction='sum')
+			loss, oamc = focalLoss(cla1[b], 1, reduction='sum', alpha=cnf.alpha)
 			meanConfidence += cla1[b].sum()
 			overallMeanConfidence += oamc.item()
 			if posClaLoss is not None:
-				posClaLoss += cnf.alpha1*loss
+				posClaLoss += loss
 			else:
-				posClaLoss = cnf.alpha1*loss
+				posClaLoss = loss
 
 			if locLoss is not None:
 				locLoss += F.smooth_l1_loss(loc1[b], targets_1[b][:,1:], reduction='sum')
@@ -388,18 +388,18 @@ def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False, discard
 			cla1 = cla1.view(lr, 1*zr)
 
 			if discard:
-				loss, oamc = focalLoss(cla1[b1][:,0], 0, reduction=None)
+				loss, oamc = focalLoss(cla1[b1][:,0], 0, reduction=None, alpha=cnf.alpha)
 				loss = torch.topk(loss.view(-1), 10)[0].sum()
 				numNegSamples += 10
 			else:
-				loss, oamc = focalLoss(cla1[b1][:,0], 0, reduction='sum')
+				loss, oamc = focalLoss(cla1[b1][:,0], 0, reduction='sum', alpha=cnf.alpha)
 				numNegSamples += numNegSamples1
 			
 			overallMeanConfidence += oamc.item()
 			if negClaLoss is not None:
-				negClaLoss += cnf.beta1*loss
+				negClaLoss += loss
 			else:
-				negClaLoss = cnf.beta1*loss
+				negClaLoss = loss
 
 		#***************NS******************
 	
@@ -428,13 +428,18 @@ def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, reshape=False, discard
 	return claLoss, locLoss, posClaLoss, negClaLoss, md, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples
 
 
-def focalLoss(p, t, reduction=None):
+def focalLoss(p, t, reduction=None, alpha = None):
 	if t == 1:
 		pt = p
 	else:
 		pt = 1 - p 
 	pt.clamp_(1e-7, 1)
+
 	logpt = torch.log(pt)
+	if alpha and t == 1:
+		logpt = alpha * logpt
+	elif alpha and t == 0:
+		logpt = (1-alpha) * logpt
 
 	if reduction == 'mean':
 		return -(((1-pt)**cnf.gamma)*logpt).mean(), pt.sum()
@@ -443,19 +448,5 @@ def focalLoss(p, t, reduction=None):
 	else:
 		return -(((1-pt)**cnf.gamma)*logpt), pt.sum()
 
-def logLoss(p, t, reduction=None):
-	if t == 1:
-		pt = p
-	elif t == 0:
-		pt = 1-p
-	pt.clamp_(1e-7, 1)
-	logpt = torch.log(pt)
-
-	if reduction == 'mean':
-		return (-logpt).mean(), pt.sum()
-	elif reduction == 'sum':
-		return (-logpt).sum(), pt.sum()
-	else:
-		return -logpt, pt.sum()
 
 computeLoss = computeLoss6
