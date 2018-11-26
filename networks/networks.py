@@ -158,7 +158,8 @@ class PointCloudDetector(nn.Module):
 		self.conv8.bias.data.fill_(0)
 
 		self.conv_cla.weight.data.normal_(0.0, 0.01)
-		self.conv_cla.bias.data.fill_(np.log((1-0.01)/0.01, dtype=np.float32))
+		t = torch.tensor((1-0.01)/0.01, dtype=torch.float32)
+		self.conv_cla.bias.data.fill_(t.log())
 
 		self.conv_loc.weight.data.normal_(0.0, 0.01)
 		self.conv_loc.bias.data.fill_(0)
