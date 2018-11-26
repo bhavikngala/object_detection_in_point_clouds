@@ -114,8 +114,8 @@ class LidarLoader_2(Dataset):
 			# labels1[:, [5, 6]] = np.log(labels[:, [6, 5]])
 
 			if self.standarize:
-				labels1[:,3] = (labels1[:,3]-cnf.x_min)/cnf.dl
-				labels1[:,4] = (labels1[:,4]-cnf.y_min)/cnf.dl
+				labels1[:,3] = (labels1[:,3]-cnf.x_min)/cnf.d_xy
+				labels1[:,4] = (labels1[:,4]-cnf.y_min)/cnf.d_xy
 				labels1[:,5] = labels1[:,5]/cnf.lgrid
 				labels1[:,6] = labels1[:,6]/cnf.wgrid
 
@@ -139,10 +139,10 @@ class LidarLoader_2(Dataset):
 
 		# standarize
 		if self.standarize:
-			z03[:,[0,2,4,6]] = (z03[:,[0,2,4,6]]-cnf.x_min)/cnf.dl
-			z03[:,[1,3,5,7]] = (z03[:,[1,3,5,7]]-cnf.y_min)/cnf.dl
-			z12[:,[0,2,4,6]] = (z12[:,[0,2,4,6]]-cnf.x_min)/cnf.dl
-			z12[:,[1,3,5,7]] = (z12[:,[1,3,5,7]]-cnf.y_min)/cnf.dl
+			z03[:,[0,2,4,6]] = (z03[:,[0,2,4,6]]-cnf.x_min)/cnf.d_xy
+			z03[:,[1,3,5,7]] = (z03[:,[1,3,5,7]]-cnf.y_min)/cnf.d_xy
+			z12[:,[0,2,4,6]] = (z12[:,[0,2,4,6]]-cnf.x_min)/cnf.d_xy
+			z12[:,[1,3,5,7]] = (z12[:,[1,3,5,7]]-cnf.y_min)/cnf.d_xy
 
 		return z03, z12
 
