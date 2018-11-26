@@ -147,8 +147,8 @@ class LidarLoader_2(Dataset):
 		return z03, z12
 
 	def getPointsInsideGrid(self, labels, grid=cnf.gridConfig):
-		x_r, y_r, z_r = gridConfig['x'], gridConfig['y'], gridConfig['z']
-		res = gridConfig['res']
+		x_r, y_r, z_r = grid['x'], grid['y'], grid['z']
+		res = grid['res']
 
 		mask = (labels[:,2]>x_r[0]) & (labels[:,2]<x_r[1]) & (labels[:,3]>y_r[0]) & (labels[:,1]<y_r[1]) & (labels[:,3]>z_r[0]) & (labels[:,3]<z_r[1])
 		if mask.sum() == 0:
