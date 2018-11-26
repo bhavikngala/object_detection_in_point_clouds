@@ -152,7 +152,7 @@ class LidarLoader_2(Dataset):
 
 		mask = (labels[:,2]>x_r[0]) & (labels[:,2]<x_r[1]) & (labels[:,3]>y_r[0]) & (labels[:,1]<y_r[1]) & (labels[:,3]>z_r[0]) & (labels[:,3]<z_r[1])
 		if mask.sum() == 0:
-			return _, True
+			return None, True
 		else:
 			return labels[mask], False
 
