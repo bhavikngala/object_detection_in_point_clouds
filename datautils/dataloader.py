@@ -82,6 +82,7 @@ class LidarLoader_2(Dataset):
 
 			if not labels:
 				noObjectLabels = True
+				labels = np.ones((1, 8), dtype=np.float32)*-1
 			else:
 				labels = np.array(labels, dtype=np.float32)	
 
@@ -103,7 +104,7 @@ class LidarLoader_2(Dataset):
 		if noObjectLabels:
 			z03 = np.ones((1, 8), dtype=np.float32)*-1
 			z12 = np.ones((1, 8), dtype=np.float32)*-1
-			labels1 = np.ones((1, 8), dtype=np.float32)*-1	
+			labels1 = np.ones((1, 7), dtype=np.float32)*-1	
 		else:
 			z03, z12 = self.getZoomedBoxes(labels)
 
