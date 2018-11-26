@@ -16,8 +16,8 @@ x_max = gridConfig['x'][1]
 y_min = gridConfig['y'][0]
 y_max = gridConfig['y'][1]
 
-lmax = x_max-x_min
-wmax = y_max-y_min
+lgrid = x_max-x_min
+wgrid = y_max-y_min
 
 d_xy = np.sqrt((x_max-x_min)**2 + (y_max-y_min)**2)
 
