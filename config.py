@@ -11,6 +11,16 @@ gridConfig = {
 	'res':0.1
 }
 
+x_min = gridConfig['x'][0]
+x_max = gridConfig['x'][1]
+y_min = gridConfig['y'][0]
+y_max = gridConfig['y'][1]
+
+lmax = x_max-x_min
+wmax = y_max-y_min
+
+d_xy = np.sqrt((x_max-x_min)**2 + (y_max-y_min)**2)
+
 Tr_velo_to_cam = np.array([
 		[7.49916597e-03, -9.99971248e-01, -8.65110297e-04, -6.71807577e-03],
 		[1.18652889e-02, 9.54520517e-04, -9.99910318e-01, -7.33152811e-02],
