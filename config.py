@@ -16,6 +16,11 @@ x_max = gridConfig['x'][1]
 y_min = gridConfig['y'][0]
 y_max = gridConfig['y'][1]
 
+d_x_min = -1.0
+d_x_max =  1.0
+d_y_min = -1.0
+d_y_max =  1.0
+
 lgrid = x_max-x_min
 wgrid = y_max-y_min
 
