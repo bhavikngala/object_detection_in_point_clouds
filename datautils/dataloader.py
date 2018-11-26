@@ -82,7 +82,6 @@ class LidarLoader_2(Dataset):
 
 			if not labels:
 				noObjectLabels = True
-				labels = np.ones((1, 8), dtype=np.float32) * -1
 			else:
 				labels = np.array(labels, dtype=np.float32)	
 
@@ -97,6 +96,10 @@ class LidarLoader_2(Dataset):
 
 		bev = lidarToBEV(lidarData, cnf.gridConfig)
 
+		# remove targets outside the grid
+		if not noObjectLabels:
+			labels, noObjectLabels = self.getPointsInsideGrid(labels)
+
 		if noObjectLabels:
 			z03 = np.ones((1, 8), dtype=np.float32)*-1
 			z12 = np.ones((1, 8), dtype=np.float32)*-1
@@ -107,12 +110,14 @@ class LidarLoader_2(Dataset):
 			labels1 = np.zeros((labels.shape[0], 7),dtype=np.float32)
 		
 			labels1[:,1], labels1[:,2] = np.cos(labels[:,7]), np.sin(labels[:,7])
-			labels1[:,[0, 3, 4]] = labels[:,[0, 1, 2]] #class, x,y,l,w
-			labels1[:, [5, 6]] = np.log(labels[:, [6, 5]])
+			labels1[:,[0, 3, 4, 5, 6]] = labels[:,[0, 1, 2, 6, 5]] #class,x,y,l,w
+			# labels1[:, [5, 6]] = np.log(labels[:, [6, 5]])
 
 			if self.standarize:
-				labels1[:,1:] = labels1[:, 1:] - cnf.carMean
-				labels1[:,1:] = labels1[:, 1:]/cnf.carSTD
+				labels1[:,3] = (labels1[:,3]-cnf.x_min)/cnf.dl
+				labels1[:,4] = (labels1[:,4]-cnf.y_min)/cnf.dl
+				labels1[:,5] = labels1[:,5]/cnf.lgrid
+				labels1[:,6] = labels1[:,6]/cnf.wgrid
 
 		return fnp(bev), fnp(labels1), labelfilename, fnp(z03), fnp(z12)
 
@@ -134,11 +139,22 @@ class LidarLoader_2(Dataset):
 
 		# standarize
 		if self.standarize:
-			z03 = (z03-cnf.zoom03Mean)/cnf.zoom03STD
-			z03 = (z12-cnf.zoom12Mean)/cnf.zoom12STD
+			z03[:,[0,2,4,6]] = (z03[:,[0,2,4,6]]-cnf.x_min)/cnf.dl
+			z03[:,[1,3,5,7]] = (z03[:,[1,3,5,7]]-cnf.y_min)/cnf.dl
+			z12[:,[0,2,4,6]] = (z12[:,[0,2,4,6]]-cnf.x_min)/cnf.dl
+			z12[:,[1,3,5,7]] = (z12[:,[1,3,5,7]]-cnf.y_min)/cnf.dl
 
-		return z03, z12 
+		return z03, z12
 
+	def getPointsInsideGrid(self, labels, grid=cnf.gridConfig):
+		x_r, y_r, z_r = gridConfig['x'], gridConfig['y'], gridConfig['z']
+	    res = gridConfig['res']
+
+	    mask = (labels[:,2]>x_r[0]) & (labels[:,2]<x_r[1]) & (labels[:,3]>y_r[0]) & (labels[:,1]<y_r[1]) & (labels[:,3]>z_r[0]) & (labels[:,3]<z_r[1])
+    	if mask.sum() == 0:
+    		return _, True
+    	else:
+    		return labels[mask], False
 
 def collate_fn_2(batch):
 	bev, labels, filenames, z03, z12 = zip(*batch)
