@@ -111,14 +111,12 @@ class LidarLoader_2(Dataset):
 			labels1 = np.zeros((labels.shape[0], 7),dtype=np.float32)
 		
 			labels1[:,1], labels1[:,2] = np.cos(labels[:,7]), np.sin(labels[:,7])
-			labels1[:,[0, 3, 4, 5, 6]] = labels[:,[0, 1, 2, 6, 5]] #class,x,y,l,w
-			# labels1[:, [5, 6]] = np.log(labels[:, [6, 5]])
+			labels1[:,[0, 3, 4]] = labels[:,[0, 1, 2]] #class,x,y
+			labels1[:, [5, 6]] = np.log(labels[:, [6, 5]]) # logl, logw
 
 			if self.standarize:
-				labels1[:,3] = ((labels1[:,3]-cnf.x_mean)/cnf.x_std)
-				labels1[:,4] = ((labels1[:,4]-cnf.y_mean)/cnf.y_std)
-				labels1[:,5] = labels1[:,5]/cnf.lgrid
-				labels1[:,6] = labels1[:,6]/cnf.wgrid
+				labels1[:,1:] = labels1[:,1:]-cnf.carMean
+				labels1[:,1:] = labels1[:,1:]/cnf.carSTD
 
 		return fnp(bev), fnp(labels1), labelfilename, fnp(z03), fnp(z12)
 
@@ -140,10 +138,8 @@ class LidarLoader_2(Dataset):
 
 		# standarize
 		if self.standarize:
-			z03[:,[0,2,4,6]] = ((z03[:,[0,2,4,6]]-cnf.x_mean)/cnf.x_std)
-			z03[:,[1,3,5,7]] = ((z03[:,[1,3,5,7]]-cnf.y_mean)/cnf.y_std)
-			z12[:,[0,2,4,6]] = ((z12[:,[0,2,4,6]]-cnf.x_mean)/cnf.x_std)
-			z12[:,[1,3,5,7]] = ((z12[:,[1,3,5,7]]-cnf.y_mean)/cnf.y_std)
+			z03 = (z03-cnf.zoom03Mean)/cnf.zoom03STD
+			z12 = (z12-cnf.zoom12Mean)/cnf.zoom12STD
 
 		return z03, z12
 
@@ -167,6 +163,10 @@ class LidarLoader_2(Dataset):
 		zb[:,[0,2,4,6]] = ((zb[:,[0,2,4,6]]-cnf.x_min)/(cnf.x_max-cnf.x_min))*(cnf.d_x_max-cnf.d_x_min)+cnf.d_x_min
 		zb[:,[1,3,5,7]] = ((zb[:,[1,3,5,7]]-cnf.y_min)/(cnf.y_max-cnf.y_min))*(cnf.d_y_max-cnf.d_y_min)+cnf.d_y_min
 		
+		# 2nd method
+		zb[:,[0,2,4,6]] = ((zb[:,[0,2,4,6]]-cnf.x_mean)/cnf.x_std)
+		zb[:,[1,3,5,7]] = ((zb[:,[1,3,5,7]]-cnf.y_mean)/cnf.y_std)
+
 def collate_fn_2(batch):
 	bev, labels, filenames, z03, z12 = zip(*batch)
 	batchSize = len(filenames)
