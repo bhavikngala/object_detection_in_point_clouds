@@ -16,6 +16,12 @@ x_max = gridConfig['x'][1]
 y_min = gridConfig['y'][0]
 y_max = gridConfig['y'][1]
 
+x_axis = np.arange(x_min, x_max, gridConfig['res'])
+y_axis = np.arange(y_min, y_max, gridConfig['res'])
+
+x_mean, x_std = x_axis.mean(), x_axis.std()
+y_mean, y_std = y_axis.mean(), y_axis.std()
+
 d_x_min = -1.0
 d_x_max =  1.0
 d_y_min = -1.0
