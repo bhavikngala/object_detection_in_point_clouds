@@ -110,7 +110,7 @@ def findInOutMask_1(loc, rectangle, inside=True):
 
 
 def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, args):
-	reshape = args.reshape
+	reshape = args.standarize
 	discard = args.discard
 	only_pos = args.only_pos
 
