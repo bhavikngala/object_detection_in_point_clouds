@@ -5,30 +5,6 @@ from threading import Thread
 from queue import Queue
 import config as cnf
 
-# custom weights initialization called on network
-def weights_init(m):
-	classname = m.__class__.__name__
-	if classname.find('Conv') != -1:
-		m.weight.data.normal_(0.0, 0.001)
-	elif classname.find('BatchNorm') != -1:
-		m.weight.data.normal_(1.0, 0.02)
-		m.bias.data.fill_(0)
-
-# identity weights initialization
-def weights_init_identity(m):
-	if isinstance(m, nn.Conv2d):
-		m.weight.data.copy_(torch.eye(m.weight.data.size()))
-	elif isinstance(m, nn.BatchNorm2d):
-		nn.init.constant_(m.weight, 1)
-		nn.init.constant_(m.bias, 0)
-
-# weights initialization for resnet
-def weights_init_resnet(m):
-	if isinstance(m, nn.Conv2d):
-		nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
-	elif isinstance(m, nn.BatchNorm2d):
-		nn.init.constant_(m.weight, 1)
-		nn.init.constant_(m.bias, 0)
 
 def savebatchOutput(cla, loc, filenames, outputDir, epoch):
 	for i in range(len(filenames)):
@@ -43,6 +19,7 @@ def savebatchOutput(cla, loc, filenames, outputDir, epoch):
 		torch.save(loc[i],
 			outputDir+'/'+str(epoch)+'/output/'+filename+'_loc.pt')
 
+
 def savebatchTarget(target, filenames, outputDir, epoch):
 	for i in range(len(filenames)):
 		filename = filenames[i]
@@ -54,9 +31,11 @@ def savebatchTarget(target, filenames, outputDir, epoch):
 		torch.save(target[i],
 			outputDir+'/'+str(epoch)+'/target/'+filename+'.pt')
 
+
 def writeToFile(filename, line):
 	with open(filename, 'a') as file:
 		file.write(line)
+
 
 class Logger():
 
@@ -72,6 +51,7 @@ class Logger():
 	def put(self, s):
 		self.queue.put(s)
 
+
 class FileWriterThread(Thread):
 
 	def __init__(self, queue, filename):
@@ -82,16 +62,17 @@ class FileWriterThread(Thread):
 	def run(self):
 		while True:
 			try:
-				epoch, batchId, cl, nsl, psl, ll, tl, ps, ns, md, mc, oamc, lt, bt = self.queue.get()
+				epoch, batchId, cl, nsl, psl, ll, tl, ps, ns, md, mc, oamc, lt, bt, zr = self.queue.get()
 				if cl is None:
-					ls = cnf.logString3.format(batchId, epoch, ps, ns, lt, bt)
+					ls = cnf.logString3.format(batchId, epoch, zr, ps, ns, lt, bt)
 				elif ll is not None:
-					ls = cnf.logString1.format(batchId, epoch, cl, nsl, psl, ll, tl, ps, ns, md, mc, oamc, lt, bt)
+					ls = cnf.logString1.format(batchId, epoch, cl, nsl, psl, ll, tl, zr, ps, ns, md, mc, oamc, lt, bt)
 				else:
-					ls = cnf.logString2.format(batchId, epoch, cl, nsl, tl, ps, ns, oamc, lt, bt)
+					ls = cnf.logString2.format(batchId, epoch, cl, nsl, tl, zr, ps, ns, oamc, lt, bt)
 				writeToFile(self.filename, ls)
 			finally:
 				self.queue.task_done()
+
 
 def parameterNorm(parameters, p):
 	vec = []

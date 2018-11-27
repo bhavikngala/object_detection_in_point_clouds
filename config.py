@@ -122,9 +122,9 @@ calTrain = './../data_object_calib/training/calib'
 calTest = './../data_object_calib/testing/calib'
 
 # string for log
-logString1 = 'epoch: [{:04d}/{:03d}] | cl : {:.8f} | nsl : {:.8f} | psl : {:.8f} | ll : {:.8f} | tl: {:.8f} | PS : {:07d} | NS : {:07d} | md : {:.4f} | mc : {:.4f} | oamc : {:.4f} | lt : {:.4f} | bt : {:.4f} \n\n'
-logString2 = 'epoch: [{:04d}/{:03d}] | cl : {:.8f} | nsl : {:.8f} | psl : -.-------- | ll : -.-------- | tl: {:.8f} | PS : {:07d} | NS : {:07d} | md : -.---- | mc : -.---- | oamc : {:.4f} | lt : {:.4f} | bt : {:.4f} \n\n'
-logString3 = 'epoch: [{:04d}/{:03d}] | cl : -.-------- | nsl : -.-------- | psl : -.-------- | ll : -.--------| tl: -.-------- | PS : {:07d} | NS : {:07d} | md : -.---- | mc : -.---- | oamc : -.---- | lt : {:.4f} | bt : {:.4f} \n\n'
+logString1 = 'epoch: [{:04d}/{:03d}] | cl : {:.8f} | nsl : {:.8f} | psl : {:.8f} | ll : {:.8f} | tl: {:.8f} | t : {:02d} | PS : [{:07d}/{:07d}] | md : {:.4f} | mc : {:.4f} | oamc : {:.4f} | lt : {:.4f} | bt : {:.4f} \n\n'
+logString2 = 'epoch: [{:04d}/{:03d}] | cl : {:.8f} | nsl : {:.8f} | psl : -.-------- | ll : -.-------- | tl: {:.8f} | t : {:02d} | PS : [{:07d}/{:07d}] | md : -.---- | mc : -.---- | oamc : {:.4f} | lt : {:.4f} | bt : {:.4f} \n\n'
+logString3 = 'epoch: [{:04d}/{:03d}] | cl : -.-------- | nsl : -.-------- | psl : -.-------- | ll : -.--------| tl: -.-------- | t : {:02d} | PS : [{:07d}/{:07d}] | md : -.---- | mc : -.---- | oamc : -.---- | lt : {:.4f} | bt : {:.4f} \n\n'
 normLogString = 'epoch: [{:04d}/{:03d}] | grad norm: {:.8f} | weight norm: {:.8f} \n\n'
 
 batchSize = 4

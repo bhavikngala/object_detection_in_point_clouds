@@ -138,6 +138,7 @@ def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, args):
 		zr = zoomed0_3[i].size(0)
 
 		if zr == 1 and targets[i][0,0] == -1:
+			zr = 0
 			if discard:
 				loss, oamc = focalLoss(cla[i].view(-1), 0, reduction=None, alpha=cnf.alpha)
 				loss = torch.topk(loss.view(-1), 10)[0].sum()
@@ -231,7 +232,7 @@ def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, args):
 	if only_pos and numPosSamples==0:
 		claLoss = None
 
-	return claLoss, locLoss, posClaLoss, negClaLoss, md, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples
+	return claLoss, locLoss, posClaLoss, negClaLoss, md, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples, zr
 
 
 def focalLoss(p, t, reduction=None, alpha = None):
