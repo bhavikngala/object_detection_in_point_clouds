@@ -37,10 +37,10 @@ class PointCloudDetector(nn.Module):
 		self.conv4 = nn.Conv2d(in_channels=4*res_block_layers[3], out_channels=196, kernel_size=1, bias=True)
 		# self.bn4 = nn.BatchNorm2d(196)
 
-		self.upsample1 = Upsample(in_channels = up_sample_layers[0], out_channels = 128, args = up_sample_deconv[0])
+		self.upsample1 = Upsample_2(in_channels = up_sample_layers[0], out_channels = 128, args = up_sample_deconv[0])
 		# self.bn_upsample1 = nn.BatchNorm2d(128)
 
-		self.upsample2 = Upsample(in_channels = up_sample_layers[1], out_channels = 96, args = up_sample_deconv[1])
+		self.upsample2 = Upsample_2(in_channels = up_sample_layers[1], out_channels = 96, args = up_sample_deconv[1])
 		# self.bn_upsample2 = nn.BatchNorm2d(96)
 		
 		self.conv5 = nn.Conv2d(in_channels=96, out_channels=96, kernel_size=3, padding=1, bias=True)
@@ -193,9 +193,9 @@ class PointCloudDetector2(nn.Module):
 		
 		self.conv4 = nn.Conv2d(in_channels=4*res_block_layers[3], out_channels=196, kernel_size=1, bias=True)
 		
-		self.upsample1 = Upsample(in_channels = up_sample_layers[0], out_channels = 128, args = up_sample_deconv[0])
+		self.upsample1 = Upsample_2(in_channels = up_sample_layers[0], out_channels = 128, args = up_sample_deconv[0])
 		
-		self.upsample2 = Upsample(in_channels = up_sample_layers[1], out_channels = 96, args = up_sample_deconv[1])
+		self.upsample2 = Upsample_2(in_channels = up_sample_layers[1], out_channels = 96, args = up_sample_deconv[1])
 		
 		self.conv5 = nn.Conv2d(in_channels=96, out_channels=96, kernel_size=3, padding=1, bias=True)
 		
