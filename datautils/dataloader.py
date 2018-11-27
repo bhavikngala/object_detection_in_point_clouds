@@ -147,7 +147,7 @@ class LidarLoader_2(Dataset):
 		x_r, y_r, z_r = grid['x'], grid['y'], grid['z']
 		res = grid['res']
 
-		mask = (labels[:,2]>x_r[0]) & (labels[:,2]<x_r[1]) & (labels[:,3]>y_r[0]) & (labels[:,1]<y_r[1]) & (labels[:,3]>z_r[0]) & (labels[:,3]<z_r[1])
+		mask = (labels[:,2]>=x_r[0]) & (labels[:,2]<=x_r[1]) & (labels[:,3]>=y_r[0]) & (labels[:,1]<=y_r[1]) & (labels[:,3]>=z_r[0]) & (labels[:,3]<=z_r[1])
 		if mask.sum() == 0:
 			return None, True
 		else:

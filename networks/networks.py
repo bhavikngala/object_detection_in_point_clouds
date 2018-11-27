@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from networks.blocks import *
 import numpy as np
+import config as cnf
 # resnet reference: https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
 
 class PointCloudDetector(nn.Module):
@@ -16,7 +17,7 @@ class PointCloudDetector(nn.Module):
 		# keep padding in mind since at all convolutions are "SAME"
 		# except for layers where downsampling happens
 
-		self.conv1 = nn.Conv2d(in_channels=36, out_channels=32, kernel_size=3, padding=1, bias=False)
+		self.conv1 = nn.Conv2d(in_channels=cnf.in_channels, out_channels=32, kernel_size=3, padding=1, bias=False)
 		self.bn1 = nn.BatchNorm2d(32)
 
 		self.conv2 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1, bias=False)
@@ -177,7 +178,7 @@ class PointCloudDetector2(nn.Module):
 		# keep padding in mind since at all convolutions are "SAME"
 		# except for layers where downsampling happens
 
-		self.conv1 = nn.Conv2d(in_channels=36, out_channels=32, kernel_size=3, padding=1, bias=False)
+		self.conv1 = nn.Conv2d(in_channels=cnf.in_channels, out_channels=32, kernel_size=3, padding=1, bias=False)
 		self.bn1 = nn.BatchNorm2d(32)
 
 		self.conv2 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1, bias=False)

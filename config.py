@@ -15,6 +15,8 @@ x_min = gridConfig['x'][0]
 x_max = gridConfig['x'][1]
 y_min = gridConfig['y'][0]
 y_max = gridConfig['y'][1]
+z_min = gridConfig['z'][0]
+z_max = gridConfig['z'][1]
 
 x_axis = np.arange(x_min, x_max, gridConfig['res'])
 y_axis = np.arange(y_min, y_max, gridConfig['res'])
@@ -31,6 +33,8 @@ lgrid = x_max-x_min
 wgrid = y_max-y_min
 
 d_xy = np.sqrt((x_max-x_min)**2 + (y_max-y_min)**2)
+
+in_channels = (z_max-z_min)/gridConfig['res']+1
 
 Tr_velo_to_cam = np.array([
 		[7.49916597e-03, -9.99971248e-01, -8.65110297e-04, -6.71807577e-03],
@@ -122,9 +126,9 @@ calTrain = './../data_object_calib/training/calib'
 calTest = './../data_object_calib/testing/calib'
 
 # string for log
-logString1 = 'epoch: [{:04d}/{:03d}] | cl : {:.8f} | nsl : {:.8f} | psl : {:.8f} | ll : {:.8f} | tl: {:.8f} | t : {:02d} | PS : [{:07d}/{:07d}] | md : {:.4f} | mc : {:.4f} | oamc : {:.4f} | lt : {:.4f} | bt : {:.4f} \n\n'
-logString2 = 'epoch: [{:04d}/{:03d}] | cl : {:.8f} | nsl : {:.8f} | psl : -.-------- | ll : -.-------- | tl: {:.8f} | t : {:02d} | PS : [{:07d}/{:07d}] | md : -.---- | mc : -.---- | oamc : {:.4f} | lt : {:.4f} | bt : {:.4f} \n\n'
-logString3 = 'epoch: [{:04d}/{:03d}] | cl : -.-------- | nsl : -.-------- | psl : -.-------- | ll : -.--------| tl: -.-------- | t : {:02d} | PS : [{:07d}/{:07d}] | md : -.---- | mc : -.---- | oamc : -.---- | lt : {:.4f} | bt : {:.4f} \n\n'
+logString1 = 'epoch: [{:04d}/{:03d}] | cl: {:.8f} | nsl: {:.8f} | psl: {:.8f} | ll: {:.8f} | tl: {:.8f} | t: {:02d} | PS: [{:07d}/{:07d}] | md: {:.4f} | mc: {:.4f} | oamc: {:.4f} | lt: {:.4f} | bt: {:.4f} \n\n'
+logString2 = 'epoch: [{:04d}/{:03d}] | cl: {:.8f} | nsl: {:.8f} | psl: -.-------- | ll: -.-------- | tl: {:.8f} | t: {:02d} | PS: [{:07d}/{:07d}] | md: -.---- | mc: -.---- | oamc: {:.4f} | lt: {:.4f} | bt: {:.4f} \n\n'
+logString3 = 'epoch: [{:04d}/{:03d}] | cl: -.-------- | nsl: -.-------- | psl: -.-------- | ll: -.--------| tl: -.-------- | t: {:02d} | PS: [{:07d}/{:07d}] | md: -.---- | mc: -.---- | oamc: -.---- | lt: {:.4f} | bt: {:.4f} \n\n'
 normLogString = 'epoch: [{:04d}/{:03d}] | grad norm: {:.8f} | weight norm: {:.8f} \n\n'
 
 batchSize = 4
