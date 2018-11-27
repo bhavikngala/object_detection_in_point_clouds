@@ -33,6 +33,7 @@ parser.add_argument('--resnet18', action='store_true')
 parser.add_argument('-s', '--standarize', action='store_true')
 parser.add_argument('-d', '--discard', action='store_true')
 parser.add_argument('-o', '--only-pos', action='store_true')
+parser.add_argument('--res', default=None)
 args = parser.parse_args()
 
 torch.manual_seed(0)
@@ -76,6 +77,8 @@ else:
 # create detector object and intialize weights
 if args.resnet18:
 	hawkEye = ResNet18(mean=carMean, std=carSTD).to(cnf.device)
+elif args.res == 'standard':
+	hawkEye = PointCloudDetector2(cnf.res_block_layers, cnf.up_sample_layers, cnf.deconv, carMean, carSTD).to(cnf.device)
 else:
 	hawkEye = PointCloudDetector(cnf.res_block_layers, cnf.up_sample_layers, cnf.deconv, carMean, carSTD).to(cnf.device)
 # hawkEye.apply(misc.weights_init)
