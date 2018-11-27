@@ -32,6 +32,7 @@ parser.add_argument('--clipvalue', type=float, default=0.25)
 parser.add_argument('--resnet18', action='store_true')
 parser.add_argument('-s', '--standarize', action='store_true')
 parser.add_argument('-d', '--discard', action='store_true')
+parser.add_argument('-o', '--only-pos', action='store_true')
 args = parser.parse_args()
 
 torch.manual_seed(0)
@@ -144,7 +145,7 @@ def train(epoch):
 		# compute loss, gradient, and optimize
 		st = time.time()
 		claLoss, locLoss, posClaLoss, negClaLoss, md, meanConfidence, overallMeanConfidence, ps, ns = \
-			computeLoss(cla, loc, targets, zoom0_3s, zoom1_2s, reshape=args.standarize, discard=args.discard)
+			computeLoss(cla, loc, targets, zoom0_3s, zoom1_2s, args)
 		ed = time.time()
 		if claLoss is None:
 			trainLoss = None
@@ -222,7 +223,7 @@ def validation(epoch):
 		# compute loss, gradient, and optimize
 		st = time.time()
 		claLoss, locLoss, posClaLoss, negClaLoss, md, meanConfidence, overallMeanConfidence, ps, ns = \
-			computeLoss(cla, loc, targets, zoom0_3s, zoom1_2s, reshape=args.standarize)
+			computeLoss(cla, loc, targets, zoom0_3s, zoom1_2s, args)
 		ed = time.time()
 		if claLoss is None:
 			trainLoss = None
@@ -270,7 +271,7 @@ if __name__ == '__main__':
 			misc.writeToFile(cnf.trainlog2, '~~~~~epoch ' + str(epoch) + ' end time taken: '+str(ed-st)+' secs~~~~\n')
 
 			# run validation every 10 epochs
-			if args.val:
+			if args.val and (epoch+1)%5==0:
 				validation(epoch)
 
 			if (epoch+1)%3 == 0:
