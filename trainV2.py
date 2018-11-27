@@ -56,13 +56,13 @@ if args.epochs:
 
 # data loaders
 train_loader = DataLoader(
-	LidarLoader_2(cnf.rootDir+'/train', cnf.objtype, args=args, train=True, standarize=args.standarize),
+	LidarLoader_2(cnf.rootDir+'/train', cnf.objtype, args=args, train=True),
 	batch_size = cnf.batchSize, shuffle=True, num_workers=0,
 	collate_fn=collate_fn_3, pin_memory=True
 )
 if args.val:
 	val_loader = DataLoader(
-		LidarLoader_2(cnf.rootDir+'/val', cnf.objtype, args=args, train=True, augData=False, standarize=args.standarize),
+		LidarLoader_2(cnf.rootDir+'/val', cnf.objtype, args=args, train=True, augData=False),
 		batch_size = cnf.batchSize, shuffle=True, num_workers=0,
 		collate_fn=collate_fn_3, pin_memory=True
 	)

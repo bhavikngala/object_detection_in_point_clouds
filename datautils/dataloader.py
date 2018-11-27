@@ -20,17 +20,17 @@ class LidarLoader_2(Dataset):
 	No augmentation is done, direct training on the train data
 	This model might overfit but we get a good point to start at
 	'''
-	def __init__(self, directory, objtype, args, train=True, augData=True, standarize=False):
+	def __init__(self, directory, objtype, args, train=True, augData=True):
 		# load train dataset or test dataset
 		self.train = train
 		self.directory = directory
 		self.objtype = objtype
 		self.augData = args.aug_data and augData
 		self.augScheme = args.aug_scheme
-		self.standarize = standarize
+		self.standarize = args.standarize
 
 		# read all the filenames in the directory
-		self.filenames = [join(directory, f) for f in listdir(directory) \
+		self.filenames = [join(diretory, f) for f in listdir(directory) \
 						  if isfile(join(directory, f))]
 
 		# shuffle filenames
