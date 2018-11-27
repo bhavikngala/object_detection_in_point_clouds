@@ -290,7 +290,7 @@ class Upsample_2(nn.Module):
 			: args - (dilation, stride, padding, output_padding) for deconv layer
 	'''
 	def __init__(self, in_channels, out_channels, args):
-		super(Upsample, self).__init__()
+		super(Upsample_2, self).__init__()
 
 		dilation, stride, padding, output_padding = args
 		self.deconv1 = nn.ConvTranspose2d(
