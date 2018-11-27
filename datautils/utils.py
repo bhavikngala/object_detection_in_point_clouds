@@ -16,7 +16,7 @@ def lidarToBEV(lidar, gridConfig=cnf.gridConfig):
 
     bev = np.zeros((int((z_r[1]-z_r[0])/res + 1), int((y_r[1]-y_r[0])/res), int((x_r[1]-x_r[0])/res)), dtype='float32')
 
-    mask = (lidar[:,0]>=x_r[0]) & (lidar[:,0]<=x_r[1]) & (lidar[:,1]>=y_r[0]) & (lidar[:,1]<=y_r[1]) & (lidar[:,2]>=z_r[0]) & (lidar[:,2]<=z_r[1])
+    mask = (lidar[:,0]>x_r[0]) & (lidar[:,0]<x_r[1]) & (lidar[:,1]>y_r[0]) & (lidar[:,1]<y_r[1]) & (lidar[:,2]>z_r[0]) & (lidar[:,2]<z_r[1])
     indices = lidar[mask][:,:3]/res
     ref = lidar[mask][:,3]/255.0
 
