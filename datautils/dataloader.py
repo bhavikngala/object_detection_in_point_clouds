@@ -30,7 +30,7 @@ class LidarLoader_2(Dataset):
 		self.standarize = args.standarize
 
 		# read all the filenames in the directory
-		self.filenames = [join(diretory, f) for f in listdir(directory) \
+		self.filenames = [join(directory, f) for f in listdir(directory) \
 						  if isfile(join(directory, f))]
 
 		# shuffle filenames
