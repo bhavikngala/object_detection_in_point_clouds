@@ -118,6 +118,7 @@ def train(epoch):
 	hawkEye.train()
 	# empty the gradient buffer
 	hawkEye.zero_grad()
+	trainLossNoneCount = 0
 
 	for batchId, batch_data in enumerate(train_loader):
 		st1 = time.time()
@@ -156,6 +157,7 @@ def train(epoch):
 			tl = None
 			cl = None
 			ll = None
+			trainLossNoneCount += 1
 		elif locLoss is not None:
 			trainLoss = claLoss + locLoss
 			tl = trainLoss.item()
@@ -175,7 +177,7 @@ def train(epoch):
 			trainLoss.backward()
 
 		# gradients are accumulated over cnf.accumulationSteps
-		if trainLoss is not None and (batchId+1)%cnf.accumulationSteps == 0:
+		if (batchId+1)%cnf.accumulationSteps == 0 and trainLossNoneCount < 4:
 			gradNorm = misc.parameterNorm(hawkEye.parameters(), 'grad')
 			weightNorm = misc.parameterNorm(hawkEye.parameters(), 'weight')
 			misc.writeToFile(cnf.gradNormlog, cnf.normLogString.format(batchId+1, epoch+1, gradNorm, weightNorm))
@@ -184,6 +186,7 @@ def train(epoch):
 				torch.nn.utils.clip_grad_norm_(hawkEye.parameters(), args.clipvalue)
 			optimizer.step()
 			hawkEye.zero_grad()
+			trainLossNoneCount = 0
 
 		ed1 = time.time()
 		queue.put((epoch+1, batchId+1, cl, negClaLoss, posClaLoss, ll, tl, int(ps), int(ns), md, meanConfidence, overallMeanConfidence, ed-st, ed1-st1, zr))
