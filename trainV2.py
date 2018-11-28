@@ -33,7 +33,7 @@ parser.add_argument('--resnet18', action='store_true', description='use standard
 parser.add_argument('-s', '--standarize', action='store_true', description='specify whether to standarize the target or not')
 parser.add_argument('-d', '--discard', action='store_true', description='used to perform negative hard mining, only consider top k negative samples')
 parser.add_argument('-o', '--only-pos', action='store_true', description='specify whether to consider batch with positive samples only during training')
-parser.add_argument('--norm-scheme', default=None, description='specify how to standarize/normalize target')
+parser.add_argument('--norm-scheme', default=None, description='specify how to standarize/normalize target; \'rg\':rescale grid; None: standarize')
 parser.add_argument('--res', default=None, description='use standard res block structure or pixor one')
 args = parser.parse_args()
 

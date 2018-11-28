@@ -28,6 +28,7 @@ class LidarLoader_2(Dataset):
 		self.augData = args.aug_data and augData
 		self.augScheme = args.aug_scheme
 		self.standarize = args.standarize
+		self.norm_scheme = args.norm_scheme
 
 		# read all the filenames in the directory
 		self.filenames = [join(directory, f) for f in listdir(directory) \
@@ -115,8 +116,7 @@ class LidarLoader_2(Dataset):
 			labels1[:, [5, 6]] = np.log(labels[:, [6, 5]]) # logl, logw
 
 			if self.standarize:
-				labels1[:,1:] = labels1[:,1:]-cnf.carMean
-				labels1[:,1:] = labels1[:,1:]/cnf.carSTD
+				labels1 = normalizeLabels(labels1, self.norm_scheme)
 
 		return fnp(bev), fnp(labels1), labelfilename, fnp(z03), fnp(z12)
 
@@ -138,8 +138,7 @@ class LidarLoader_2(Dataset):
 
 		# standarize
 		if self.standarize:
-			z03 = (z03-cnf.zoom03Mean)/cnf.zoom03STD
-			z12 = (z12-cnf.zoom12Mean)/cnf.zoom12STD
+			z03, z12 = self.normalizeZoomBoxes(z03, z12, self.norm_scheme)
 
 		return z03, z12
 
@@ -154,18 +153,29 @@ class LidarLoader_2(Dataset):
 			return labels[mask], False
 
 	def normalizeLabels(self, labels, normalizeType=None):
-		labels[:,3] = ((labels[:,3]-cnf.x_min)/(cnf.x_max-cnf.x_min))*(cnf.d_x_max-cnf.d_x_min)+cnf.d_x_min
-		labels[:,4] = ((labels[:,4]-cnf.y_min)/(cnf.y_max-cnf.y_min))*(cnf.d_y_max-cnf.d_y_min)+cnf.d_y_min
-		labels[:,5] = labels[:,5]/cnf.lgrid
-		labels[:,6] = labels[:,6]/cnf.wgrid
+		if normalizeType=='rg':
+			labels[:,3] = ((labels[:,3]-cnf.x_min)/(cnf.x_max-cnf.x_min))*(cnf.d_x_max-cnf.d_x_min)+cnf.d_x_min
+			labels[:,4] = ((labels[:,4]-cnf.y_min)/(cnf.y_max-cnf.y_min))*(cnf.d_y_max-cnf.d_y_min)+cnf.d_y_min
+			labels[:,5] = labels[:,5]/cnf.lgrid
+			labels[:,6] = labels[:,6]/cnf.wgrid
+		else:
+			labels[:,1:] = labels[:,1:]-cnf.carMean
+			labels[:,1:] = labels[:,1:]/cnf.carSTD
+		return labels
 
-	def normalizeZoomBoxes(self, zb, normalizeType=None):
-		zb[:,[0,2,4,6]] = ((zb[:,[0,2,4,6]]-cnf.x_min)/(cnf.x_max-cnf.x_min))*(cnf.d_x_max-cnf.d_x_min)+cnf.d_x_min
-		zb[:,[1,3,5,7]] = ((zb[:,[1,3,5,7]]-cnf.y_min)/(cnf.y_max-cnf.y_min))*(cnf.d_y_max-cnf.d_y_min)+cnf.d_y_min
-		
-		# 2nd method
-		zb[:,[0,2,4,6]] = ((zb[:,[0,2,4,6]]-cnf.x_mean)/cnf.x_std)
-		zb[:,[1,3,5,7]] = ((zb[:,[1,3,5,7]]-cnf.y_mean)/cnf.y_std)
+	def normalizeZoomBoxes(self, z03, z12, normalizeType=None):
+		if normalizeType=='rg':
+			z03[:,[0,2,4,6]] = ((z03[:,[0,2,4,6]]-cnf.x_min)/(cnf.x_max-cnf.x_min))*(cnf.d_x_max-cnf.d_x_min)+cnf.d_x_min
+			z03[:,[1,3,5,7]] = ((z03[:,[1,3,5,7]]-cnf.y_min)/(cnf.y_max-cnf.y_min))*(cnf.d_y_max-cnf.d_y_min)+cnf.d_y_min
+			z12[:,[0,2,4,6]] = ((z12[:,[0,2,4,6]]-cnf.x_min)/(cnf.x_max-cnf.x_min))*(cnf.d_x_max-cnf.d_x_min)+cnf.d_x_min
+			z12[:,[1,3,5,7]] = ((z12[:,[1,3,5,7]]-cnf.y_min)/(cnf.y_max-cnf.y_min))*(cnf.d_y_max-cnf.d_y_min)+cnf.d_y_min
+		else:
+			z03 = (z03-cnf.zoom03Mean)/cnf.zoom03STD
+			z12 = (z12-cnf.zoom12Mean)/cnf.zoom12STD
+		# # 2nd method
+		# zb[:,[0,2,4,6]] = ((zb[:,[0,2,4,6]]-cnf.x_mean)/cnf.x_std)
+		# zb[:,[1,3,5,7]] = ((zb[:,[1,3,5,7]]-cnf.y_mean)/cnf.y_std)
+		return z03, z12
 
 def collate_fn_2(batch):
 	bev, labels, filenames, z03, z12 = zip(*batch)
