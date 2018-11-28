@@ -158,7 +158,6 @@ def train(epoch):
 			tl = None
 			cl = None
 			ll = None
-			trainLossNoneCount += 1
 		elif locLoss is not None:
 			trainLoss = claLoss + locLoss
 			tl = trainLoss.item()
