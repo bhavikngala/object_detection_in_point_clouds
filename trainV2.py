@@ -119,7 +119,7 @@ def train(epoch):
 	hawkEye.train()
 	# empty the gradient buffer
 	hawkEye.zero_grad()
-	trainLossNoneCount = 0
+	gradPresent = False
 
 	for batchId, batch_data in enumerate(train_loader):
 		st1 = time.time()
@@ -166,19 +166,21 @@ def train(epoch):
 			ll = locLoss.item()
 			posClaLoss = posClaLoss.item()
 			negClaLoss = negClaLoss.item()
+			gradPresent = gradPresent | True
 		else:
 			trainLoss = claLoss
 			tl = trainLoss.item()
 			cl = claLoss.item()
 			ll = None
 			negClaLoss = negClaLoss.item()
+			gradPresent = gradPresent | True
 
 		# trainLoss = claLoss+locLoss
 		if trainLoss is not None:
 			trainLoss.backward()
 
 		# gradients are accumulated over cnf.accumulationSteps
-		if (batchId+1)%cnf.accumulationSteps == 0 and trainLossNoneCount < 4:
+		if (batchId+1)%cnf.accumulationSteps == 0 and gradPresent:
 			gradNorm = misc.parameterNorm(hawkEye.parameters(), 'grad')
 			weightNorm = misc.parameterNorm(hawkEye.parameters(), 'weight')
 			misc.writeToFile(cnf.gradNormlog, cnf.normLogString.format(batchId+1, epoch+1, gradNorm, weightNorm))
@@ -189,7 +191,7 @@ def train(epoch):
 			hawkEye.zero_grad()
 
 		if (batchId+1)%cnf.accumulationSteps == 0:
-			trainLossNoneCount = 0
+			gradPresent = False
 
 		ed1 = time.time()
 		queue.put((epoch+1, batchId+1, cl, negClaLoss, posClaLoss, ll, tl, int(ps), int(ns), md, meanConfidence, overallMeanConfidence, ed-st, ed1-st1, zr))
