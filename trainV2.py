@@ -186,6 +186,8 @@ def train(epoch):
 				torch.nn.utils.clip_grad_norm_(hawkEye.parameters(), args.clipvalue)
 			optimizer.step()
 			hawkEye.zero_grad()
+
+		if (batchId+1)%cnf.accumulationSteps == 0:
 			trainLossNoneCount = 0
 
 		ed1 = time.time()
