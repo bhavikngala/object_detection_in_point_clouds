@@ -116,7 +116,7 @@ class LidarLoader_2(Dataset):
 			labels1[:, [5, 6]] = np.log(labels[:, [6, 5]]) # logl, logw
 
 			if self.standarize:
-				labels1 = normalizeLabels(labels1, self.norm_scheme)
+				labels1 = self.normalizeLabels(labels1, self.norm_scheme)
 
 		return fnp(bev), fnp(labels1), labelfilename, fnp(z03), fnp(z12)
 
