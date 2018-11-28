@@ -35,6 +35,7 @@ parser.add_argument('-d', '--discard', action='store_true', help='used to perfor
 parser.add_argument('-o', '--only-pos', action='store_true', help='specify whether to consider batch with positive samples only during training')
 parser.add_argument('--norm-scheme', default=None, help='specify how to standarize/normalize target; \'rg\':rescale grid; None: standarize')
 parser.add_argument('--res', default=None, help='use standard res block structure or pixor one')
+parser.add_argument('--ignorebp', action='store_true', help='flag to ignore boundary pixels')
 args = parser.parse_args()
 
 torch.manual_seed(0)

@@ -29,6 +29,7 @@ class LidarLoader_2(Dataset):
 		self.augScheme = args.aug_scheme
 		self.standarize = args.standarize
 		self.norm_scheme = args.norm_scheme
+		self.ignorebp = args.ignorebp
 
 		# read all the filenames in the directory
 		self.filenames = [join(directory, f) for f in listdir(directory) \
@@ -128,19 +129,24 @@ class LidarLoader_2(Dataset):
 		returns corners of the zoomed rectangles
 		'''
 		# labels: class, x, y, z, h, w, l, r
-		l1 = np.copy(labels)
-		l2 = np.copy(labels)
-		l1[:, [5, 6]] = l1[:, [5, 6]]*0.3
-		l2[:, [5, 6]] = l2[:, [5, 6]]*1.2
+		if self.ignorebp:
+			l1 = np.copy(labels)
+			l2 = np.copy(labels)
+			l1[:, [5, 6]] = l1[:, [5, 6]]*0.3
+			l2[:, [5, 6]] = l2[:, [5, 6]]*1.2
 
-		z03 = ku.center_to_corner_box2d(l1[:,[1,2,5,6,7]]).reshape(labels.shape[0], 8)
-		z12 = ku.center_to_corner_box2d(l2[:,[1,2,5,6,7]]).reshape(labels.shape[0], 8)
+			z03 = ku.center_to_corner_box2d(l1[:,[1,2,5,6,7]]).reshape(labels.shape[0], 8)
+			z12 = ku.center_to_corner_box2d(l2[:,[1,2,5,6,7]]).reshape(labels.shape[0], 8)
 
-		# standarize
-		if self.standarize:
-			z03, z12 = self.normalizeZoomBoxes(z03, z12, self.norm_scheme)
+			# standarize
+			if self.standarize:
+				z03, z12 = self.normalizeZoomBoxes(z03, z12, self.norm_scheme)
 
-		return z03, z12
+			return z03, z12
+		else:
+			z = ku.center_to_corner_box2d(labels[:,[1,2,5,6,7]]).reshape(labels.shape[0], 8)
+			return z, z
+
 
 	def getPointsInsideGrid(self, labels, grid=cnf.gridConfig):
 		x_r, y_r, z_r = grid['x'], grid['y'], grid['z']
