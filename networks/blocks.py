@@ -83,7 +83,7 @@ class Bottleneck_3_1(nn.Module):
 		x = self.bn1(x)
 		x = self.relu(x)
 
-		x = self.conv2(self.relu(x))
+		x = self.conv2(x)
 		x = self.bn2(x)
 
 		out = x+res
@@ -198,9 +198,10 @@ class Bottleneck_6_1_0(nn.Module):
 		x = self.conv3(self.relu(x))
 		x = x + res
 		
-		res = self.bn4(x)
-		res = self.relu(res)
-		x = self.conv4(res)
+		res = x
+		x = self.bn4(x)
+		x = self.relu(x)
+		x = self.conv4(x)
 		x = self.bn5(x)
 		x = self.conv5(self.relu(x))
 
@@ -257,13 +258,12 @@ class Bottleneck_6_1_1(nn.Module):
 		x = self.bn2(x)
 		x = self.relu(x)
 
-		x = self.conv3(self.relu(x))
+		x = self.conv3(x)
 		x = self.bn3(x)
 		
 		x = x + res
-		x = self.relu(x)
-		
 		res = x
+		x = self.relu(x)
 
 		x = self.conv4(x)
 		x = self.bn4(x)
