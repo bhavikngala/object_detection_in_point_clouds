@@ -113,8 +113,7 @@ class LidarLoader_2(Dataset):
 			labels1 = np.zeros((labels.shape[0], 7),dtype=np.float32)
 		
 			labels1[:,1], labels1[:,2] = np.cos(labels[:,7]), np.sin(labels[:,7])
-			labels1[:,[0, 3, 4]] = labels[:,[0, 1, 2]] #class,x,y
-			labels1[:, [5, 6]] = np.log(labels[:, [6, 5]]) # logl, logw
+			labels1[:,[0, 3, 4, 5, 6]] = labels[:,[0, 1, 2, 6, 5]] #class,x,y,l,w
 
 			if self.standarize:
 				labels1 = self.normalizeLabels(labels1, self.norm_scheme)
@@ -144,8 +143,12 @@ class LidarLoader_2(Dataset):
 
 			return z03, z12
 		else:
-			z = ku.center_to_corner_box2d(labels[:,[1,2,5,6,7]]).reshape(labels.shape[0], 8)
-			return z, z
+			z1 = ku.center_to_corner_box2d(labels[:,[1,2,5,6,7]]).reshape(labels.shape[0], 8)
+			z2 = z1.copy()
+			# standarize
+			if self.standarize:
+				z1, z2 = self.normalizeZoomBoxes(z, z, self.norm_scheme)
+			return z1, z2
 
 
 	def getPointsInsideGrid(self, labels, grid=cnf.gridConfig):
@@ -164,7 +167,13 @@ class LidarLoader_2(Dataset):
 			labels[:,4] = ((labels[:,4]-cnf.y_min)/(cnf.y_max-cnf.y_min))*(cnf.d_y_max-cnf.d_y_min)+cnf.d_y_min
 			labels[:,5] = labels[:,5]/cnf.lgrid
 			labels[:,6] = labels[:,6]/cnf.wgrid
+		elif normalizeType == 'gridmean':
+			labels[:,3] = (labels[:,3]-cnf.x_mean)/cnf.x_std
+			labels[:,4] = (labels[:,4]-cnf.y_mean)/cnf.y_std
+			labels[:,5] = labels[:,5]/cnf.lgrid
+			labels[:,6] = labels[:,6]/cnf.wgrid
 		else:
+			labels[:, [5, 6]] = np.log(labels[:, [5, 6]])
 			labels[:,1:] = labels[:,1:]-cnf.carMean
 			labels[:,1:] = labels[:,1:]/cnf.carSTD
 		return labels
@@ -175,6 +184,11 @@ class LidarLoader_2(Dataset):
 			z03[:,[1,3,5,7]] = ((z03[:,[1,3,5,7]]-cnf.y_min)/(cnf.y_max-cnf.y_min))*(cnf.d_y_max-cnf.d_y_min)+cnf.d_y_min
 			z12[:,[0,2,4,6]] = ((z12[:,[0,2,4,6]]-cnf.x_min)/(cnf.x_max-cnf.x_min))*(cnf.d_x_max-cnf.d_x_min)+cnf.d_x_min
 			z12[:,[1,3,5,7]] = ((z12[:,[1,3,5,7]]-cnf.y_min)/(cnf.y_max-cnf.y_min))*(cnf.d_y_max-cnf.d_y_min)+cnf.d_y_min
+		elif normalizeType=='gridmean':
+			z03[:,[0,2,4,6]] = (z03[:,[0,2,4,6]]-cnf.x_mean)/(cnf.x_std)
+			z03[:,[1,3,5,7]] = (z03[:,[1,3,5,7]]-cnf.y_mean)/(cnf.y_std)
+			z12[:,[0,2,4,6]] = (z12[:,[0,2,4,6]]-cnf.x_mean)/(cnf.x_std)
+			z12[:,[1,3,5,7]] = (z12[:,[1,3,5,7]]-cnf.y_mean)/(cnf.y_std)
 		else:
 			z03 = (z03-cnf.zoom03Mean)/cnf.zoom03STD
 			z12 = (z12-cnf.zoom12Mean)/cnf.zoom12STD
