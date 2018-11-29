@@ -236,6 +236,108 @@ def computeLoss6(cla, loc, targets, zoomed0_3, zoomed1_2, args):
 	return claLoss, locLoss, posClaLoss, negClaLoss, md, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples, zr
 
 
+def computeLoss7(cla, loc, targetClas, targetLocs, zoomed0_3, zoomed1_2, args):
+	only_pos = args.only_pos
+
+	posClaLoss = None
+	negClaLoss = None
+	claLoss = None
+	locLoss = None
+	md = 0
+	meanConfidence = 0
+	numNegSamples = 0
+	numNegSamples = 0
+	overallMeanConfidence = 0
+
+	lm, lc, lh, lw = loc.size()
+	lr = lh*lw
+	loc = loc.permute(0, 2, 3, 1).contiguous()
+	cla = cla.permute(0, 2, 3, 1).contiguous()
+
+	for i in range(lm):
+		l = loc[i]
+		c = cla[i]
+		targetCla = targetClas[i]
+		targetLoc = targetLocs[i]
+
+		numTargetsInFrame = targetCla.sum().item()
+		numPosSamples += numTargetsInFrame
+
+		if numTargetsInFrame == 0:
+			loss, oamc = focalLoss(c, 0, reduction='sum', alpha=cnf.alpha)
+			numNegSamples += lr
+			
+			overallMeanConfidence += oamc.item()
+			
+			if negClaLoss is not None:
+				negClaLoss += loss
+			else:
+				negClaLoss = loss
+			continue
+
+		#***************PS******************
+		
+		b = c == 1
+		predL = l[b]
+		predC = c[b]
+		targetL = targetLoc[b]
+
+
+		loss, oamc = focalLoss(predC, 1, reduction='sum', alpha=cnf.alpha)
+		meanConfidence += cla1[b].sum()
+		overallMeanConfidence += oamc.item()
+		
+		if posClaLoss is not None:
+			posClaLoss += loss
+		else:
+			posClaLoss = loss
+
+		if locLoss is not None:
+			locLoss += F.smooth_l1_loss(predL, targetL, reduction='sum')
+		else:
+			locLoss = F.smooth_l1_loss(predL, targetL, reduction='sum')
+		# md += computeDistanceBetCenters(loc1[b], targets_1[b])
+				
+		#***************PS******************
+
+		#***************NS******************
+		
+		predC = c[~b]
+
+		loss, oamc = focalLoss(c, 0, reduction='sum', alpha=cnf.alpha)
+			
+		overallMeanConfidence += oamc.item()
+	
+		if negClaLoss is not None:
+			negClaLoss += loss
+		else:
+			negClaLoss = loss
+
+		#***************NS******************
+	
+	numNegSamples = lm*lr - numPosSamples
+	if numPosSamples>0:
+		meanConfidence /= numPosSamples
+		# md /= numPosSamples
+	if numPosSamples!=0 or numNegSamples!=0:
+		overallMeanConfidence /=(numPosSamples+numNegSamples)
+
+	if numPosSamples > 0 and numNegSamples > 0:
+		posClaLoss /= numPosSamples*cnf.accumulationSteps
+		negClaLoss /= numNegSamples*cnf.accumulationSteps
+		claLoss = posClaLoss + negClaLoss
+		locLoss /= numPosSamples*cnf.accumulationSteps
+	elif numNegSamples > 0:
+		negClaLoss /= numNegSamples*cnf.accumulationSteps
+		claLoss = negClaLoss
+
+	# discard loss if there are no positive samples
+	if only_pos and numPosSamples==0:
+		claLoss = None
+
+	return claLoss, locLoss, posClaLoss, negClaLoss, md, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples
+
+
 def focalLoss(p, t, reduction=None, alpha = None):
 	if t == 1:
 		pt = p
@@ -257,4 +359,4 @@ def focalLoss(p, t, reduction=None, alpha = None):
 		return -(((1-pt)**cnf.gamma)*logpt), pt.sum()
 
 
-computeLoss = computeLoss6
+computeLoss = computeLoss7
