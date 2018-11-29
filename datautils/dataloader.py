@@ -217,16 +217,16 @@ class LidarLoader_2(Dataset):
 			cl, cx, cy, cz, h, w, l, r = labels[i]
 
 			mask = (cx <= xx) & (cx > (xx-res*ds)) & \
-		           (cy >= yy) & (cy < (yy+res*ds))
+				   (cy >= yy) & (cy < (yy+res*ds))
 
 			gridX = xx[mask]
 			gridY = yy[mask]
 
 			dx = (cx-gridX)/gridX
-	        dy = (cy-gridY)/gridY
+			dy = (cy-gridY)/gridY
 
-	        t = np.array([np.cos(2*r), np.cos(2*r), \
-	                      dx, dy, l/lgrid, w/wgrid])
+			t = np.array([np.cos(2*r), np.cos(2*r), \
+						  dx, dy, l/lgrid, w/wgrid])
 			targetLoc[mask] = t
 
 			targetCla[mask] = 1.0
