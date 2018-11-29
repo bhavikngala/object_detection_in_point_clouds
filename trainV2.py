@@ -60,13 +60,13 @@ if args.epochs:
 # data loaders
 train_loader = DataLoader(
 	LidarLoader_2(cnf.rootDir+'/train', cnf.objtype, args=args, train=True),
-	batch_size = cnf.batchSize, shuffle=True, num_workers=0,
+	batch_size = cnf.batchSize, shuffle=True, num_workers=3,
 	collate_fn=collate_fn_3, pin_memory=True
 )
 if args.val:
 	val_loader = DataLoader(
 		LidarLoader_2(cnf.rootDir+'/val', cnf.objtype, args=args, train=True, augData=False),
-		batch_size = cnf.batchSize, shuffle=True, num_workers=0,
+		batch_size = cnf.batchSize, shuffle=True, num_workers=3,
 		collate_fn=collate_fn_3, pin_memory=True
 	)
 
@@ -128,8 +128,6 @@ def train(epoch):
 		
 		if data.size(0) < cnf.batchSize:
 			del data
-			del targetClas
-			del targetLocs
 			del targetLoc
 			del targetCla
 			continue
@@ -214,8 +212,6 @@ def validation(epoch):
 		
 		if data.size(0) < cnf.batchSize:
 			del data
-			del targetClas
-			del targetLocs
 			del targetLoc
 			del targetCla
 			continue
