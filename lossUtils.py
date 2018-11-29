@@ -265,8 +265,7 @@ def computeLoss7(cla, loc, targetClas, targetLocs, zoomed0_3, zoomed1_2, args):
 
 		if numTargetsInFrame == 0:
 			loss, oamc = focalLoss(c, 0, reduction='sum', alpha=cnf.alpha)
-			numNegSamples += lr
-			
+						
 			overallMeanConfidence += oamc.item()
 			
 			if negClaLoss is not None:
@@ -277,14 +276,13 @@ def computeLoss7(cla, loc, targetClas, targetLocs, zoomed0_3, zoomed1_2, args):
 
 		#***************PS******************
 		
-		b = c == 1
+		b = (targetCla == 1).squeeze()
 		predL = l[b]
 		predC = c[b]
 		targetL = targetLoc[b]
 
-
 		loss, oamc = focalLoss(predC, 1, reduction='sum', alpha=cnf.alpha)
-		meanConfidence += cla1[b].sum()
+		meanConfidence += predC.sum()
 		overallMeanConfidence += oamc.item()
 		
 		if posClaLoss is not None:
@@ -304,7 +302,7 @@ def computeLoss7(cla, loc, targetClas, targetLocs, zoomed0_3, zoomed1_2, args):
 		
 		predC = c[~b]
 
-		loss, oamc = focalLoss(c, 0, reduction='sum', alpha=cnf.alpha)
+		loss, oamc = focalLoss(predC, 0, reduction='sum', alpha=cnf.alpha)
 			
 		overallMeanConfidence += oamc.item()
 	
@@ -323,12 +321,12 @@ def computeLoss7(cla, loc, targetClas, targetLocs, zoomed0_3, zoomed1_2, args):
 		overallMeanConfidence /=(numPosSamples+numNegSamples)
 
 	if numPosSamples > 0 and numNegSamples > 0:
-		posClaLoss /= numPosSamples*cnf.accumulationSteps
-		negClaLoss /= numNegSamples*cnf.accumulationSteps
+		posClaLoss /= (numPosSamples*cnf.accumulationSteps)
+		negClaLoss /= (numNegSamples*cnf.accumulationSteps)
 		claLoss = posClaLoss + negClaLoss
-		locLoss /= numPosSamples*cnf.accumulationSteps
+		locLoss /= (numPosSamples*cnf.accumulationSteps)
 	elif numNegSamples > 0:
-		negClaLoss /= numNegSamples*cnf.accumulationSteps
+		negClaLoss /= (numNegSamples*cnf.accumulationSteps)
 		claLoss = negClaLoss
 
 	# discard loss if there are no positive samples
