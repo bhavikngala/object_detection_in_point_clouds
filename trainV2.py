@@ -124,14 +124,14 @@ def train(epoch):
 	for batchId, batch_data in enumerate(train_loader):
 		st1 = time.time()
 		
-		data, target, filenames, zoom0_3, zoom1_2 = batch_data
+		data, targetCla, targetLoc, filenames = batch_data
 		
 		if data.size(0) < cnf.batchSize:
 			del data
-			del target
-			del filenames
-			del zoom0_3
-			del zoom1_2
+			del targetClas
+			del targetLocs
+			del targetLoc
+			del targetCla
 			continue
 
 		data = data.cuda(non_blocking=True)
@@ -139,19 +139,21 @@ def train(epoch):
 		# pass data through network and predict
 		cla, loc = hawkEye(data)
 		
-		targets = []
-		zoom0_3s = []
-		zoom1_2s = []
+		targetClas = []
+		targetLocs = []
+		# zoom0_3s = []
+		# zoom1_2s = []
 
 		for i in range(cnf.batchSize):
-			targets.append(target[i].cuda(non_blocking=True))
-			zoom0_3s.append(zoom0_3[i].cuda(non_blocking=True))
-			zoom1_2s.append(zoom1_2[i].cuda(non_blocking=True))
+			targetClas.append(targetCla[i].cuda(non_blocking=True))
+			targetLocs.append(targetLoc[i].cuda(non_blocking=True))
+			# zoom0_3s.append(zoom0_3[i].cuda(non_blocking=True))
+			# zoom1_2s.append(zoom1_2[i].cuda(non_blocking=True))
 
 		# compute loss, gradient, and optimize
 		st = time.time()
 		claLoss, locLoss, posClaLoss, negClaLoss, md, meanConfidence, overallMeanConfidence, ps, ns, zr = \
-			computeLoss(cla, loc, targets, zoom0_3s, zoom1_2s, args)
+			computeLoss(cla, loc, targetClas, targetLocs, zoom0_3s=None, zoom1_2s=None, args=args)
 		ed = time.time()
 		if claLoss is None:
 			trainLoss = None
@@ -196,10 +198,11 @@ def train(epoch):
 		queue.put((epoch+1, batchId+1, cl, negClaLoss, posClaLoss, ll, tl, int(ps), int(ns), md, meanConfidence, overallMeanConfidence, ed-st, ed1-st1, zr))
 
 		del data
-		del target
+		del targetClas
+		del targetLocs
+		del targetLoc
+		del targetCla
 		del filenames
-		del zoom0_3
-		del zoom1_2
 
 def validation(epoch):
 	hawkEye.eval()
@@ -207,14 +210,14 @@ def validation(epoch):
 	for batchId, batch_data in enumerate(val_loader):
 		st1 = time.time()
 		
-		data, target, filenames, zoom0_3, zoom1_2 = batch_data
+		data, targetCla, targetLoc, filenames = batch_data
 		
 		if data.size(0) < cnf.batchSize:
 			del data
-			del target
-			del filenames
-			del zoom0_3
-			del zoom1_2
+			del targetClas
+			del targetLocs
+			del targetLoc
+			del targetCla
 			continue
 
 		data = data.cuda(non_blocking=True)
@@ -222,19 +225,21 @@ def validation(epoch):
 		# pass data through network and predict
 		cla, loc = hawkEye(data)
 		
-		targets = []
-		zoom0_3s = []
-		zoom1_2s = []
+		targetClas = []
+		targetLocs = []
+		# zoom0_3s = []
+		# zoom1_2s = []
 
 		for i in range(cnf.batchSize):
-			targets.append(target[i].cuda(non_blocking=True))
-			zoom0_3s.append(zoom0_3[i].cuda(non_blocking=True))
-			zoom1_2s.append(zoom1_2[i].cuda(non_blocking=True))
+			targetClas.append(targetCla[i].cuda(non_blocking=True))
+			targetLocs.append(targetLoc[i].cuda(non_blocking=True))
+			# zoom0_3s.append(zoom0_3[i].cuda(non_blocking=True))
+			# zoom1_2s.append(zoom1_2[i].cuda(non_blocking=True))
 
 		# compute loss, gradient, and optimize
 		st = time.time()
 		claLoss, locLoss, posClaLoss, negClaLoss, md, meanConfidence, overallMeanConfidence, ps, ns, zr = \
-			computeLoss(cla, loc, targets, zoom0_3s, zoom1_2s, args)
+			computeLoss(cla, loc, targetClas, targetLocs, zoom0_3s=None, zoom1_2s=None, args=args)
 		ed = time.time()
 		if claLoss is None:
 			trainLoss = None
@@ -259,10 +264,11 @@ def validation(epoch):
 		valqueue.put((epoch+1, batchId+1, cl, negClaLoss, posClaLoss, ll, tl, int(ps), int(ns), md, meanConfidence, overallMeanConfidence, ed-st, ed1-st1, zr))
 
 		del data
-		del target
+		del targetClas
+		del targetLocs
+		del targetLoc
+		del targetCla
 		del filenames
-		del zoom0_3
-		del zoom1_2
 
 if __name__ == '__main__':
 	# load model file if present

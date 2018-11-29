@@ -238,10 +238,10 @@ class LidarLoader_2(Dataset):
 
 
 def collate_fn_3(batch):
-	bev, labels, filenames, z03, z12 = zip(*batch)
+	bev, targetCla, targetLoc, filenames = zip(*batch)
 	batchSize = len(filenames)
 
 	# Merge bev (from tuple of 3D tensor to 4D tensor).
 	bev = torch.stack(bev, 0)
 
-	return bev, labels, filenames #, z03, z12
+	return bev, targetCla, targetLoc, filenames #, z03, z12
