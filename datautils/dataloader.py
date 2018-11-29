@@ -147,7 +147,7 @@ class LidarLoader_2(Dataset):
 			z2 = z1.copy()
 			# standarize
 			if self.standarize:
-				z1, z2 = self.normalizeZoomBoxes(z, z, self.norm_scheme)
+				z1, z2 = self.normalizeZoomBoxes(z1, z2, self.norm_scheme)
 			return z1, z2
 
 
