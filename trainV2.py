@@ -152,7 +152,7 @@ def train(epoch):
 
 		# compute loss, gradient, and optimize
 		st = time.time()
-		claLoss, locLoss, posClaLoss, negClaLoss, md, meanConfidence, overallMeanConfidence, ps, ns, zr = \
+		claLoss, locLoss, posClaLoss, negClaLoss, md, meanConfidence, overallMeanConfidence, ps, ns= \
 			computeLoss(cla, loc, targetClas, targetLocs, zoom0_3s=None, zoom1_2s=None, args=args)
 		ed = time.time()
 		if claLoss is None:
@@ -195,7 +195,7 @@ def train(epoch):
 			gradPresent = False
 
 		ed1 = time.time()
-		queue.put((epoch+1, batchId+1, cl, negClaLoss, posClaLoss, ll, tl, int(ps), int(ns), md, meanConfidence, overallMeanConfidence, ed-st, ed1-st1, zr))
+		queue.put((epoch+1, batchId+1, cl, negClaLoss, posClaLoss, ll, tl, int(ps), int(ns), md, meanConfidence, overallMeanConfidence, ed-st, ed1-st1))
 
 		del data
 		del targetClas
@@ -238,7 +238,7 @@ def validation(epoch):
 
 		# compute loss, gradient, and optimize
 		st = time.time()
-		claLoss, locLoss, posClaLoss, negClaLoss, md, meanConfidence, overallMeanConfidence, ps, ns, zr = \
+		claLoss, locLoss, posClaLoss, negClaLoss, md, meanConfidence, overallMeanConfidence, ps, ns = \
 			computeLoss(cla, loc, targetClas, targetLocs, zoom0_3s=None, zoom1_2s=None, args=args)
 		ed = time.time()
 		if claLoss is None:
@@ -261,7 +261,7 @@ def validation(epoch):
 			negClaLoss = negClaLoss.item()
 
 		ed1 = time.time()
-		valqueue.put((epoch+1, batchId+1, cl, negClaLoss, posClaLoss, ll, tl, int(ps), int(ns), md, meanConfidence, overallMeanConfidence, ed-st, ed1-st1, zr))
+		valqueue.put((epoch+1, batchId+1, cl, negClaLoss, posClaLoss, ll, tl, int(ps), int(ns), md, meanConfidence, overallMeanConfidence, ed-st, ed1-st1))
 
 		del data
 		del targetClas
