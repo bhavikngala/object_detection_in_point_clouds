@@ -84,7 +84,8 @@ class LidarLoader_2(Dataset):
 
 			if not labels:
 				noObjectLabels = True
-				labels = np.ones((1, 8), dtype=np.float32)*-1
+				# labels = np.ones((1, 8), dtype=np.float32)*-1
+				labels = np.array([-1.0], dtype=np.float32)
 			else:
 				labels = np.array(labels, dtype=np.float32)	
 
@@ -104,21 +105,17 @@ class LidarLoader_2(Dataset):
 			labels, noObjectLabels = self.getPointsInsideGrid(labels)
 
 		if noObjectLabels:
-			z03 = np.ones((1, 8), dtype=np.float32)*-1
-			z12 = np.ones((1, 8), dtype=np.float32)*-1
-			labels1 = np.ones((1, 7), dtype=np.float32)*-1	
+			# z03 = np.ones((1, 8), dtype=np.float32)*-1
+			# z12 = np.ones((1, 8), dtype=np.float32)*-1
+			# labels1 = np.ones((1, 7), dtype=np.float32)*-1
+			labels1 = np.array([-1.0], dtype=np.float32)
+			targetCla = np.zeros((cnf.r, cnf.c), dtype=np.floa)
 		else:
-			z03, z12 = self.getZoomedBoxes(labels)
+			# z03, z12 = self.getZoomedBoxes(labels)
 
-			labels1 = np.zeros((labels.shape[0], 7),dtype=np.float32)
-		
-			labels1[:,1], labels1[:,2] = np.cos(labels[:,7]), np.sin(labels[:,7])
-			labels1[:,[0, 3, 4, 5, 6]] = labels[:,[0, 1, 2, 6, 5]] #class,x,y,l,w
+			targetCla, targetLoc = self.encodeBoundingBoxes(labels)
 
-			if self.standarize:
-				labels1 = self.normalizeLabels(labels1, self.norm_scheme)
-
-		return fnp(bev), fnp(labels1), labelfilename, fnp(z03), fnp(z12)
+		return fnp(bev), fnp(targetCla), fnp(targetLoc), labelfilename #, fnp(z03), fnp(z12)
 
 	def __len__(self):
 		return len(self.filenames)
@@ -197,28 +194,47 @@ class LidarLoader_2(Dataset):
 		# zb[:,[1,3,5,7]] = ((zb[:,[1,3,5,7]]-cnf.y_mean)/cnf.y_std)
 		return z03, z12
 
-def collate_fn_2(batch):
-	bev, labels, filenames, z03, z12 = zip(*batch)
-	batchSize = len(filenames)
+	def encodeBoundingBoxes(self, labels):
+		'''
+		Encode bounding boxes as YOLO style offsets
+		'''
+		x_r, y_r, z_r = cnf.gridConfig['x'], cnf.gridConfig['y'], cnf.gridConfig['z']
+		res = cnf.gridConfig['res']
+		ds = cnf.downsamplingFactor
+		x = np.arange(x_r[1], x_r[0], -res*ds, dtype=np.float32)
+		y = np.arange(y_r[0],y_r[1], res*ds, dtype=np.float32)
+		xx, yy = np.meshgrid(x, y)
 
-	# Merge bev (from tuple of 3D tensor to 4D tensor).
-	bev = torch.stack(bev, 0)
+		r = int((y_r[1]-y_r[0])/(res*ds))
+		c = int((x_r[1]-x_r[0])/(res*ds))
+		targetCla = np.zeros((r, c), dtype=np.float32)
+		targetLoc = np.zeros((r, c, 6), dtype=np.float32)
 
-	# zero pad labels, zoom0_3, and zoom1_2 to make a tensor
-	l = [labels[i].size(0) for i in range(batchSize)]
-	m = max(l)
+		# r1, c1 = labels.shape
+		# labels = labels.repeat(r*c, axis=0).repeat(r1, r, c, c1)
 
-	labels1 = torch.zeros((batchSize, m, labels[0].size(1)))
-	z03_1 = torch.zeros((batchSize, m, z03[0].size(1)))
-	z12_1 = torch.zeros((batchSize, m, z12[0].size(1)))
+		for i in range(labels.shape[0]):
+			cl, cx, cy, cz, h, w, l, r = labels[i]
 
-	for i in range(batchSize):
-		r = labels[i].size(0)
-		labels1[i, :r, :] = labels[i]
-		z03_1[i, :r, :] = z03[i]
-		z12_1[i, :r, :] = z12[i]
+			mask = (cx <= xx) & (cx > (xx-res*ds)) & \
+		           (cy >= yy) & (cy < (yy+res*ds))
 
-	return bev, labels1, filenames, z03_1, z12_1
+			gridX = xx[mask]
+			gridY = yy[mask]
+
+			dx = (cx-gridX)/gridX
+	        dy = (cy-gridY)/gridY
+
+	        t = np.array([np.cos(2*r), np.cos(2*r), \
+	                      dx, dy, l/lgrid, w/wgrid])
+			targetLoc[mask] = t
+
+			targetCla[mask] = 1.0
+
+		if targetCla.sum() == 0:
+			targetLoc = np.array([-1.0], dtype=np.float32)
+
+		return targetCla, targetLoc
 
 
 def collate_fn_3(batch):
@@ -228,4 +244,4 @@ def collate_fn_3(batch):
 	# Merge bev (from tuple of 3D tensor to 4D tensor).
 	bev = torch.stack(bev, 0)
 
-	return bev, labels, filenames, z03, z12
+	return bev, labels, filenames #, z03, z12

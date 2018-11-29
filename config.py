@@ -36,6 +36,10 @@ d_xy = np.sqrt((x_max-x_min)**2 + (y_max-y_min)**2)
 
 in_channels = (z_max-z_min)/gridConfig['res']+1
 
+downsamplingFactor = 4
+r = int((y_max-y_min)/(gridConfig['res']*ds))
+c = int((x_max-x_min)/(gridConfig['res']*ds))
+
 Tr_velo_to_cam = np.array([
 		[7.49916597e-03, -9.99971248e-01, -8.65110297e-04, -6.71807577e-03],
 		[1.18652889e-02, 9.54520517e-04, -9.99910318e-01, -7.33152811e-02],
