@@ -84,8 +84,8 @@ class LidarLoader_2(Dataset):
 
 			if not labels:
 				noObjectLabels = True
-				# labels = np.ones((1, 8), dtype=np.float32)*-1
-				labels = np.array([-1.0], dtype=np.float32)
+				labels = np.zeros((1, 8), dtype=np.float32)
+				# labels = np.array([-1.0], dtype=np.float32)
 			else:
 				labels = np.array(labels, dtype=np.float32)	
 
@@ -109,7 +109,7 @@ class LidarLoader_2(Dataset):
 			# z12 = np.ones((1, 8), dtype=np.float32)*-1
 			# labels1 = np.ones((1, 7), dtype=np.float32)*-1
 			labels1 = np.array([-1.0], dtype=np.float32)
-			targetCla = np.zeros((cnf.r, cnf.c), dtype=np.floa)
+			targetCla = np.zeros((cnf.r, cnf.c), dtype=np.float32)
 		else:
 			# z03, z12 = self.getZoomedBoxes(labels)
 
@@ -226,7 +226,7 @@ class LidarLoader_2(Dataset):
 			dy = (cy-gridY)/gridY
 
 			t = np.array([np.cos(2*r), np.cos(2*r), \
-						  dx, dy, l/lgrid, w/wgrid])
+						  dx, dy, l/cnf.lgrid, w/cnf.wgrid])
 			targetLoc[mask] = t
 
 			targetCla[mask] = 1.0

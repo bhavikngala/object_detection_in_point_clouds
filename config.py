@@ -34,7 +34,7 @@ wgrid = y_max-y_min
 
 d_xy = np.sqrt((x_max-x_min)**2 + (y_max-y_min)**2)
 
-in_channels = (z_max-z_min)/gridConfig['res']+1
+in_channels = int((z_max-z_min)/gridConfig['res']+1)
 
 downsamplingFactor = 4
 r = int((y_max-y_min)/(gridConfig['res']*downsamplingFactor))
