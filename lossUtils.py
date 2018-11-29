@@ -245,7 +245,7 @@ def computeLoss7(cla, loc, targetClas, targetLocs, zoomed0_3, zoomed1_2, args):
 	locLoss = None
 	md = 0
 	meanConfidence = 0
-	numNegSamples = 0
+	numPosSamples = 0
 	numNegSamples = 0
 	overallMeanConfidence = 0
 

@@ -30,7 +30,7 @@ parser.add_argument('--val', action='store_true', help='evaluate on validation s
 parser.add_argument('-c', '--clip', action='store_true', help='whether to clip gradients or not')
 parser.add_argument('--clipvalue', type=float, default=0.25, help='gradient norm value threshold for clipping')
 parser.add_argument('--resnet18', action='store_true', help='use standard resent 18 as backbone')
-parser.add_argument('-s', '--standarize', action='store_true', help='specify whether to standarize the target or not')
+# parser.add_argument('-s', '--standarize', action='store_true', help='specify whether to standarize the target or not')
 parser.add_argument('-d', '--discard', action='store_true', help='used to perform negative hard mining, only consider top k negative samples')
 parser.add_argument('-o', '--only-pos', action='store_true', help='specify whether to consider batch with positive samples only during training')
 parser.add_argument('--norm-scheme', default=None, help='specify how to standarize/normalize target; \'rg\':rescale grid; None: standarize')
@@ -70,19 +70,19 @@ if args.val:
 		collate_fn=collate_fn_3, pin_memory=True
 	)
 
-if args.standarize:
-	carMean, carSTD = None, None
-else:
-	carMean = torch.from_numpy(cnf.carMean)
-	carSTD = torch.from_numpy(cnf.carSTD)
+# if args.standarize:
+# 	carMean, carSTD = None, None
+# else:
+# 	carMean = torch.from_numpy(cnf.carMean)
+# 	carSTD = torch.from_numpy(cnf.carSTD)
 
 # create detector object and intialize weights
 if args.resnet18:
-	hawkEye = ResNet18(mean=carMean, std=carSTD).to(cnf.device)
+	hawkEye = ResNet18().to(cnf.device)
 elif args.res == 'standard':
-	hawkEye = PointCloudDetector2(cnf.res_block_layers, cnf.up_sample_layers, cnf.deconv, carMean, carSTD).to(cnf.device)
+	hawkEye = PointCloudDetector2(cnf.res_block_layers, cnf.up_sample_layers, cnf.deconv).to(cnf.device)
 else:
-	hawkEye = PointCloudDetector(cnf.res_block_layers, cnf.up_sample_layers, cnf.deconv, carMean, carSTD).to(cnf.device)
+	hawkEye = PointCloudDetector(cnf.res_block_layers, cnf.up_sample_layers, cnf.deconv).to(cnf.device)
 # hawkEye.apply(misc.weights_init)
 
 if args.multi_gpu:
@@ -153,7 +153,7 @@ def train(epoch):
 		# compute loss, gradient, and optimize
 		st = time.time()
 		claLoss, locLoss, posClaLoss, negClaLoss, md, meanConfidence, overallMeanConfidence, ps, ns= \
-			computeLoss(cla, loc, targetClas, targetLocs, zoom0_3s=None, zoom1_2s=None, args=args)
+			computeLoss(cla, loc, targetClas, targetLocs, None, None, args=args)
 		ed = time.time()
 		if claLoss is None:
 			trainLoss = None
@@ -239,7 +239,7 @@ def validation(epoch):
 		# compute loss, gradient, and optimize
 		st = time.time()
 		claLoss, locLoss, posClaLoss, negClaLoss, md, meanConfidence, overallMeanConfidence, ps, ns = \
-			computeLoss(cla, loc, targetClas, targetLocs, zoom0_3s=None, zoom1_2s=None, args=args)
+			computeLoss(cla, loc, targetClas, targetLocs, None, None, args=args)
 		ed = time.time()
 		if claLoss is None:
 			trainLoss = None

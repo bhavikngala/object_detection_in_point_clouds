@@ -27,7 +27,7 @@ class LidarLoader_2(Dataset):
 		self.objtype = objtype
 		self.augData = args.aug_data and augData
 		self.augScheme = args.aug_scheme
-		self.standarize = args.standarize
+		# self.standarize = args.standarize
 		self.norm_scheme = args.norm_scheme
 		self.ignorebp = args.ignorebp
 
@@ -108,7 +108,7 @@ class LidarLoader_2(Dataset):
 			# z03 = np.ones((1, 8), dtype=np.float32)*-1
 			# z12 = np.ones((1, 8), dtype=np.float32)*-1
 			# labels1 = np.ones((1, 7), dtype=np.float32)*-1
-			labels1 = np.array([-1.0], dtype=np.float32)
+			targetLoc = np.array([-1.0], dtype=np.float32)
 			targetCla = np.zeros((cnf.r, cnf.c), dtype=np.float32)
 		else:
 			# z03, z12 = self.getZoomedBoxes(labels)
@@ -135,16 +135,16 @@ class LidarLoader_2(Dataset):
 			z12 = ku.center_to_corner_box2d(l2[:,[1,2,5,6,7]]).reshape(labels.shape[0], 8)
 
 			# standarize
-			if self.standarize:
-				z03, z12 = self.normalizeZoomBoxes(z03, z12, self.norm_scheme)
+			# if self.standarize:
+				# z03, z12 = self.normalizeZoomBoxes(z03, z12, self.norm_scheme)
 
 			return z03, z12
 		else:
 			z1 = ku.center_to_corner_box2d(labels[:,[1,2,5,6,7]]).reshape(labels.shape[0], 8)
 			z2 = z1.copy()
 			# standarize
-			if self.standarize:
-				z1, z2 = self.normalizeZoomBoxes(z1, z2, self.norm_scheme)
+			# if self.standarize:
+				# z1, z2 = self.normalizeZoomBoxes(z1, z2, self.norm_scheme)
 			return z1, z2
 
 
