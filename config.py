@@ -72,8 +72,8 @@ zoom03STD = np.array([[16.30122, 8.321556, 16.322311, 8.354368, 16.341236, 8.359
 zoom12Mean = np.array([[27.634792, 1.5734423, 27.475872, 3.102446, 28.973452, 3.2641282, 29.13241, 1.7351091]], dtype=np.float32)
 zoom12STD = np.array([[16.25314, 8.273551, 16.331024, 8.418133, 16.41331, 8.425362, 16.318035, 8.317054]], dtype=np.float32)
 
-carMeanLogWL = np.array([[0, 0, 28.304243, 2.4187818, 1.3506572, 0.48570955]], dtype=np.float32)
-carSTDLogWL = np.array([[1, 1, 16.32045, 8.339981, 0.1121646, 0.06327728]], dtype=np.float32)
+carMeanLogWL = np.array([ 0.5629,  0.5629, -0.0128, 42.0976, -2.8969, -3.8956], dtype=np.float32)
+carSTDLogWL = np.array([ 0.7674,   0.7674,   0.0143, 268.0167,   0.1028,   0.0597], dtype=np.float32)
 
 carMean = carMeanLogWL
 carSTD = carSTDLogWL

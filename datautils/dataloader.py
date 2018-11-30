@@ -27,7 +27,7 @@ class LidarLoader_2(Dataset):
 		self.objtype = objtype
 		self.augData = args.aug_data and augData
 		self.augScheme = args.aug_scheme
-		# self.standarize = args.standarize
+		self.standarize = args.standarize
 		self.norm_scheme = args.norm_scheme
 		self.ignorebp = args.ignorebp
 
@@ -226,7 +226,12 @@ class LidarLoader_2(Dataset):
 			dy = (cy-gridY)/gridY
 
 			t = np.array([np.cos(2*r), np.cos(2*r), \
-						  dx, dy, l/cnf.lgrid, w/cnf.wgrid])
+						  dx, dy, \
+						  np.log(l/cnf.lgrid), np.log(w/cnf.wgrid)])
+
+			if self.standarize:
+				t = (t-cnf.carMean)/cnf.carSTD
+
 			targetLoc[mask] = t
 
 			targetCla[mask] = 1.0
