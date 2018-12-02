@@ -53,10 +53,11 @@ class LidarLoader_2(Dataset):
 		if self.train:
 			labels, noObjectLabels = self.readLabels(self.directory+'/labels/'+labelfilename+'.txt')
 			calibDict = self.read_calib_file(self.calibDir+'/'+labelfilename+'.txt' )
-			self.V2C = calibDict['Tr_velo_to_cam'].reshape([3,4])
-			self.R0 = calibDict['R0_rect'].reshape([3,3])
+			self.V2C = calibDict['Tr_velo_to_cam'].reshape([3,4]).astype(np.float32)
+			self.R0 = calibDict['R0_rect'].reshape([3,3]).astype(np.float32)
 			self.C2V = self.inverse_rigid_trans(self.V2C)
-			labels[:,[1, 2, 3]] = self.project_rect_to_velo(labels[:,[1, 2, 3]]) # convert rect cam to velo cord
+			if not noObjectLabels:
+				labels[:,[1, 2, 3]] = self.project_rect_to_velo(labels[:,[1, 2, 3]]) # convert rect cam to velo cord
 
 		# augment data
 		if self.train:
@@ -90,11 +91,10 @@ class LidarLoader_2(Dataset):
 		lines = np.array(lines)
 		lines = lines[lines[:,0]==self.objtype]
 		if lines.shape[0] == 0:
-			return np.zeros((1, 8)), True
+			return np.zeros((1, 8), dtype=np.float32), True
 		else:
 			lines[:,0] = 1.0
-			lines.astype(np.float32)
-			return lines[:,[0, 11, 12 ,13, 8, 9, 10, 14]], False
+			return lines[:,[0, 11, 12 ,13, 8, 9, 10, 14]].astype(np.float32), False
 
 	def read_calib_file(self, filepath):
 		''' Read in a calibration file and parse into a dictionary.
