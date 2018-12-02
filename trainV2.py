@@ -11,7 +11,7 @@ import argparse
 
 from networks.networks import PointCloudDetector
 from networks.resnet import ResNet18
-from datautils.dataloader import *
+from datautils.dataloader_v2 import *
 import config as cnf
 from lossUtils import computeLoss
 import misc
@@ -30,7 +30,7 @@ parser.add_argument('--val', action='store_true', help='evaluate on validation s
 parser.add_argument('-c', '--clip', action='store_true', help='whether to clip gradients or not')
 parser.add_argument('--clipvalue', type=float, default=0.25, help='gradient norm value threshold for clipping')
 parser.add_argument('--resnet18', action='store_true', help='use standard resent 18 as backbone')
-# parser.add_argument('-s', '--standarize', action='store_true', help='specify whether to standarize the target or not')
+parser.add_argument('-s', '--standarize', action='store_true', help='specify whether to standarize the target or not')
 parser.add_argument('-d', '--discard', action='store_true', help='used to perform negative hard mining, only consider top k negative samples')
 parser.add_argument('-o', '--only-pos', action='store_true', help='specify whether to consider batch with positive samples only during training')
 parser.add_argument('--norm-scheme', default=None, help='specify how to standarize/normalize target; \'rg\':rescale grid; None: standarize')
