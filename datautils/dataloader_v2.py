@@ -51,11 +51,11 @@ class LidarLoader_2(Dataset):
 		labels = []
 		noObjectLabels = False
 		if self.train:
-			labels, noObjectLabels = self.readLabels(self.directory+'/'+labelfilename+'.txt')
+			labels, noObjectLabels = self.readLabels(self.directory+'/labels/'+labelfilename+'.txt')
 			calibDict = self.read_calib_file(self.calibDir+'/'+labelfilename+'.txt' )
-			self.V2C = calibDict['Tr_velo_to_cam']
-			self.R0 = calibDict['R0_rect']
-			self.C2V = self.inverse_rigid_trans(calibDict['Tr_velo_to_cam'])
+			self.V2C = calibDict['Tr_velo_to_cam'].reshape([3,4])
+			self.R0 = calibDict['R0_rect'].reshape([3,3])
+			self.C2V = self.inverse_rigid_trans(self.V2C)
 			labels[:,[1, 2, 3]] = self.project_rect_to_velo(labels[:,[1, 2, 3]]) # convert rect cam to velo cord
 
 		# augment data
@@ -138,7 +138,7 @@ class LidarLoader_2(Dataset):
 		pts_3d_hom = np.hstack((pts_3d, np.ones((n,1))))
 		return pts_3d_hom
 
-	def inverse_rigid_trans(Tr):
+	def inverse_rigid_trans(self, Tr):
 		''' Inverse a rigid body transform matrix (3x4 as [R|t])
 			[R'|-R't; 0|1]
 		'''
