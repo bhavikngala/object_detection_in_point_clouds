@@ -59,22 +59,16 @@ if args.epochs:
 
 # data loaders
 train_loader = DataLoader(
-	LidarLoader_2(cnf.rootDir+'/train', cnf.objtype, args=args, train=True),
+	LidarLoader_2(cnf.rootDir+'/train', cnf.calTrain, cnf.objtype, args=args, train=True),
 	batch_size = cnf.batchSize, shuffle=True, num_workers=3,
 	collate_fn=collate_fn_3, pin_memory=True
 )
 if args.val:
 	val_loader = DataLoader(
-		LidarLoader_2(cnf.rootDir+'/val', cnf.objtype, args=args, train=True, augData=False),
+		LidarLoader_2(cnf.rootDir+'/val', cnf.calTrain, cnf.objtype, args=args, train=True, augData=False),
 		batch_size = cnf.batchSize, shuffle=True, num_workers=3,
 		collate_fn=collate_fn_3, pin_memory=True
 	)
-
-# if args.standarize:
-# 	carMean, carSTD = None, None
-# else:
-# 	carMean = torch.from_numpy(cnf.carMean)
-# 	carSTD = torch.from_numpy(cnf.carSTD)
 
 # create detector object and intialize weights
 if args.resnet18:
@@ -83,18 +77,15 @@ elif args.res == 'standard':
 	hawkEye = PointCloudDetector2(cnf.res_block_layers, cnf.up_sample_layers, cnf.deconv).to(cnf.device)
 else:
 	hawkEye = PointCloudDetector(cnf.res_block_layers, cnf.up_sample_layers, cnf.deconv).to(cnf.device)
-# hawkEye.apply(misc.weights_init)
 
 if args.multi_gpu:
 	hawkEye = nn.DataParallel(hawkEye)
 
 # network optimization method
 if args.step_lr:
-	# optimizer = Adam(hawkEye.parameters(), lr=cnf.slr)
 	optimizer = SGD(hawkEye.parameters(), lr=cnf.slr, momentum=0.9, dampening=0, weight_decay=cnf.decay, nesterov=False)
 	scheduler = MultiStepLR(optimizer, milestones=cnf.milestones, gamma=0.1)
-else:	
-	# optimizer = Adam(hawkEye.parameters(), lr=cnf.lr)
+else:
 	optimizer = SGD(hawkEye.parameters(), lr=cnf.lr, momentum=0.9, dampening=0, weight_decay=cnf.decay, nesterov=False)
 
 # status string writer thread and queue
@@ -121,6 +112,13 @@ def train(epoch):
 	hawkEye.zero_grad()
 	gradPresent = False
 
+	# epochPS = 0
+	# epochNS = 0
+	# epochMC = 0
+	# epochOAMC = 0
+	# epochCL = 0
+	# epochTL = 0
+
 	for batchId, batch_data in enumerate(train_loader):
 		st1 = time.time()
 		
@@ -139,14 +137,10 @@ def train(epoch):
 		
 		targetClas = []
 		targetLocs = []
-		# zoom0_3s = []
-		# zoom1_2s = []
 
 		for i in range(cnf.batchSize):
 			targetClas.append(targetCla[i].cuda(non_blocking=True))
 			targetLocs.append(targetLoc[i].cuda(non_blocking=True))
-			# zoom0_3s.append(zoom0_3[i].cuda(non_blocking=True))
-			# zoom1_2s.append(zoom1_2[i].cuda(non_blocking=True))
 
 		# compute loss, gradient, and optimize
 		st = time.time()
@@ -223,14 +217,10 @@ def validation(epoch):
 		
 		targetClas = []
 		targetLocs = []
-		# zoom0_3s = []
-		# zoom1_2s = []
 
 		for i in range(cnf.batchSize):
 			targetClas.append(targetCla[i].cuda(non_blocking=True))
 			targetLocs.append(targetLoc[i].cuda(non_blocking=True))
-			# zoom0_3s.append(zoom0_3[i].cuda(non_blocking=True))
-			# zoom1_2s.append(zoom1_2[i].cuda(non_blocking=True))
 
 		# compute loss, gradient, and optimize
 		st = time.time()
@@ -265,6 +255,7 @@ def validation(epoch):
 		del targetLoc
 		del targetCla
 		del filenames
+
 
 if __name__ == '__main__':
 	# load model file if present
