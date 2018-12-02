@@ -16,10 +16,11 @@ import config as cnf
 
 class LidarLoader_2(Dataset):
 
-	def __init__(self, directory, objtype, args, train=True, augData=True):
+	def __init__(self, directory, calibDir, objtype, args, train=True, augData=True):
 		# load train dataset or test dataset
 		self.train = train
 		self.directory = directory
+		self.calibDir = calibDir
 		self.objtype = objtype
 		self.augData = args.aug_data and augData
 		self.augScheme = args.aug_scheme
@@ -83,7 +84,7 @@ class LidarLoader_2(Dataset):
 	def __len__(self):
 		return len(self.filenames)
 
-	def readLabels(label_filename):
+	def readLabels(self, label_filename):
 		# return class, x, y, z, w, h , l, r
 		lines = [line.rstrip().lower().split() for line in open(label_filename)]
 		lines = np.array(lines)
