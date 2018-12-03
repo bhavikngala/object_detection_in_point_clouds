@@ -168,7 +168,7 @@ class LidarLoader_2(Dataset):
 		res = cnf.gridConfig['res']
 		ds = cnf.downsamplingFactor
 		x = np.arange(x_r[1], x_r[0], -res*ds, dtype=np.float32)
-		y = np.arange(y_r[0]-y_r[0],y_r[1]-y_r[0], res*ds, dtype=np.float32) #shifting y origin
+		y = np.arange(y_r[0]-y_r[0]+res*ds,y_r[1]-y_r[0]+res*ds, res*ds, dtype=np.float32) #shifting y origin
 		xx, yy = np.meshgrid(x, y)
 
 		r = int((y_r[1]-y_r[0])/(res*ds))
@@ -182,7 +182,7 @@ class LidarLoader_2(Dataset):
 			cy = cy-y_r[0]#shifting y origin
 
 			mask = (cx <= xx) & (cx > (xx-res*ds)) & \
-				   (cy > yy) & (cy <= (yy+res*ds))
+				   (cy >= yy-res*ds)&(cy < yy)
 
 			gridX = xx[mask]
 			gridY = yy[mask]
