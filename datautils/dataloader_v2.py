@@ -176,6 +176,7 @@ class LidarLoader_2(Dataset):
 		targetCla = np.zeros((r, c), dtype=np.float32)
 		targetLoc = np.zeros((r, c, 6), dtype=np.float32)
 
+		numEncodedTargets = 0
 		for i in range(labels.shape[0]):
 			cl, cx, cy, cz, H, W, L, r = labels[i]
 
@@ -187,6 +188,10 @@ class LidarLoader_2(Dataset):
 
 			dx = (cx-gridX)/gridX
 			dy = (cy-gridY)/gridY
+
+			if dy>1 or dy<-1:
+				continue
+
 			l, w = np.log(L/cnf.lgrid), np.log(W/cnf.wgrid)
 
 			t = np.array([np.cos(2*r), np.sin(2*r), \
@@ -200,7 +205,12 @@ class LidarLoader_2(Dataset):
 
 			targetCla[mask] = 1.0
 
+			numEncodedTargets += 0
+
 		if targetCla.sum() == 0:
+			targetLoc = np.array([-1.0], dtype=np.float32)
+		if numEncodedTargets == 0:
+			targetCla = np.zeros((r, c), dtype=np.float32)
 			targetLoc = np.array([-1.0], dtype=np.float32)
 
 		return targetCla, targetLoc
