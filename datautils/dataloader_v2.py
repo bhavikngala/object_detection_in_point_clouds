@@ -168,7 +168,7 @@ class LidarLoader_2(Dataset):
 		res = cnf.gridConfig['res']
 		ds = cnf.downsamplingFactor
 		x = np.arange(x_r[1], x_r[0], -res*ds, dtype=np.float32)
-		y = np.arange(y_r[0],y_r[1], res*ds, dtype=np.float32)
+		y = np.arange(y_r[0]-y_r[0],y_r[1]-y_r[0], res*ds, dtype=np.float32) #shifting y origin
 		xx, yy = np.meshgrid(x, y)
 
 		r = int((y_r[1]-y_r[0])/(res*ds))
@@ -179,18 +179,16 @@ class LidarLoader_2(Dataset):
 		numEncodedTargets = 0
 		for i in range(labels.shape[0]):
 			cl, cx, cy, cz, H, W, L, r = labels[i]
+			cy = cy-y_r[0]#shifting y origin
 
 			mask = (cx <= xx) & (cx > (xx-res*ds)) & \
-				   (cy >= yy) & (cy < (yy+res*ds))
+				   (cy > yy) & (cy <= (yy+res*ds))
 
 			gridX = xx[mask]
 			gridY = yy[mask]
 
 			dx = (cx-gridX)/gridX
 			dy = (cy-gridY)/gridY
-
-			if dy>1 or dy<-1:
-				continue
 
 			l, w = np.log(L/cnf.lgrid), np.log(W/cnf.wgrid)
 
@@ -205,12 +203,7 @@ class LidarLoader_2(Dataset):
 
 			targetCla[mask] = 1.0
 
-			numEncodedTargets += 0
-
 		if targetCla.sum() == 0:
-			targetLoc = np.array([-1.0], dtype=np.float32)
-		if numEncodedTargets == 0:
-			targetCla = np.zeros((r, c), dtype=np.float32)
 			targetLoc = np.array([-1.0], dtype=np.float32)
 
 		return targetCla, targetLoc
