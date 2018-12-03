@@ -76,7 +76,8 @@ def lidarToBEV(lidar, gridConfig=cnf.gridConfig):
     width   = Yn - Y0
     channel = Zn - Z0  + 1
     # print('height,width,channel=%d,%d,%d'%(height,width,channel))
-    top = np.zeros(shape=(height,width,channel), dtype=np.float32)
+    # top = np.zeros(shape=(height,width,channel), dtype=np.float32)
+    top = np.zeros(shape=(channel,width,height), dtype=np.float32)
     # print(top.shape)
 
     
@@ -96,9 +97,9 @@ def lidarToBEV(lidar, gridConfig=cnf.gridConfig):
             if  count==0 : continue
             xx = -y
 
-            top[yy,xx,Zn] = min(1, np.log(count+1)/math.log(32))
+            top[Zn,xx,yy] = min(1, np.log(count+1)/math.log(32))
             max_height_point = np.argmax(quantized_xy[:,2])
-            top[yy,xx,Zn]=quantized_xy[max_height_point, 3]
+            top[Zn,xx,yy]=quantized_xy[max_height_point, 3]
             
             for z in range(Zn):
                 iz = np.where ((quantized_xy[:,2]>=z) & (quantized_xy[:,2]<=z+1))
@@ -109,7 +110,7 @@ def lidarToBEV(lidar, gridConfig=cnf.gridConfig):
                 #height per slice
                 max_height = max(0,np.max(quantized_xyz[:,2])-z)
                 # print('max ht is ',max_height)
-                top[yy,xx,zz]=max_height
+                top[zz,xx,yy]=max_height
                 # print(quantized_xyz)
     # top = top.permute(2,1,0)
     return top
