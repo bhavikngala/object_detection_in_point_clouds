@@ -64,9 +64,10 @@ P2_inv = np.linalg.pinv(P2)
 
 objtype = 'car'
 
-carMeanLogWL = np.array([-0.5783, -0.0371, -0.0116, 25.1296, -2.9034, -3.8962], dtype=np.float32)
-carSTDLogWL = np.array([0.7345, 0.3532, 0.0160, 207.0052, 0.1119, 0.0628], dtype=np.float32)
-
+# carMeanLogWL = np.array([-0.5783, -0.0371, -0.0116, 25.1296, -2.9034, -3.8962], dtype=np.float32)
+# carSTDLogWL = np.array([0.7345, 0.3532, 0.0160, 207.0052, 0.1119, 0.0628], dtype=np.float32)
+carMeanLogWL = np.array([-0.5783, -0.0371, -0.0116, -0.0049, -2.9034, -3.8962], dtype=np.float32)
+carSTDLogWL = np.array([0.7345, 0.3532, 0.0160, 0.0059, 0.1119, 0.0628], dtype=np.float32)
 carMean = carMeanLogWL
 carSTD = carSTDLogWL
 
@@ -127,5 +128,5 @@ logString2 = 'epoch: [{:04d}/{:03d}] | cl: {:.8f} | nsl: {:.8f} | psl: -.-------
 logString3 = 'epoch: [{:04d}/{:03d}] | cl: -.-------- | nsl: -.-------- | psl: -.-------- | ll: -.--------| tl: -.-------- | PS: [{:07d}/{:07d}] | md: -.---- | mc: -.---- | oamc: -.---- | lt: {:.4f} | bt: {:.4f} \n\n'
 normLogString = 'epoch: [{:04d}/{:03d}] | grad norm: {:.8f} | weight norm: {:.8f} \n\n'
 
-batchSize = 4
+batchSize = 2
 accumulationSteps = 4.0
