@@ -171,7 +171,11 @@ class LidarLoader_2(Dataset):
 		res = cnf.gridConfig['res']
 		ds = cnf.downsamplingFactor
 		x = np.arange(x_r[1], x_r[0], -res*ds, dtype=np.float32)
+
 		y = np.arange(y_r[0]-y_r[0]+res*ds,y_r[1]-y_r[0]+res*ds, res*ds, dtype=np.float32) #shifting y origin
+		if self.parameterization=='voxelnet':
+			y = np.arange(y_r[0]-y_r[0],y_r[1]-y_r[0], res*ds, dtype=np.float32) #shifting y origin
+		
 		xx, yy = np.meshgrid(x, y)
 		diagx = cnf.diagx
 		diagy = cnf.diagy
@@ -186,7 +190,10 @@ class LidarLoader_2(Dataset):
 		numEncodedTargets = 0
 		for i in range(labels.shape[0]):
 			cl, cx, cy, cz, H, W, L, r = labels[i]
-			cy = cy-y_r[0]#shifting y origin
+			if self.parameterization == 'voxelnet':
+				cy = cy
+			else:
+				cy = cy-y_r[0]#shifting y origin
 
 			mask = (cx <= xx) & (cx > (xx-res*ds)) & \
 				   (cy >= yy-res*ds)&(cy < yy)
