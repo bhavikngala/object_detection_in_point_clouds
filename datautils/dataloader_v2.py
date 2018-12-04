@@ -69,8 +69,7 @@ class LidarLoader_2(Dataset):
 			# 	labels[:,1:] = ku.camera_to_lidar_box(labels[:,1:])
 
 		bev = lidarToBEV(lidarData, cnf.gridConfig)
-		bev = fnp(bev).permute(2,1,0)
-
+	
 		# remove targets outside the grid
 		if not noObjectLabels:
 			labels, noObjectLabels = self.getPointsInsideGrid(labels)
