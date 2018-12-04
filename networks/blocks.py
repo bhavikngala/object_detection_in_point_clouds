@@ -56,10 +56,10 @@ class Bottleneck_3_1(nn.Module):
 
 		# using pre-normalization and pre-activation
 		# TODO: switch stride=2 between conv1 and conv2 and check results
-		self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, bias=False)
+		self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=2, padding=1, bias=False)
 		self.bn1 = nn.BatchNorm2d(out_channels)
 
-		self.conv2 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=3, stride=2, padding=1, bias=False)
+		self.conv2 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=3, padding=1, bias=False)
 		self.bn2 = nn.BatchNorm2d(out_channels*self.expansion)
 
 		self.conv1_skip = nn.Conv2d(in_channels, out_channels*self.expansion, kernel_size=1, stride=2, bias=False)
@@ -290,13 +290,13 @@ class Bottleneck_6_1_1(nn.Module):
 		self.conv3 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=1, bias=False)
 		self.bn3 = nn.BatchNorm2d(out_channels*self.expansion)
 
-		self.conv1_skip = nn.Conv2d(in_channels, out_channels*self.expansion, kernel_size=1, stride=2, bias=False)
-		self.bn1_skip = nn.BatchNorm2d(out_channels*self.expansion)
+		self.conv1_skip = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=2, bias=False)
+		self.bn1_skip = nn.BatchNorm2d(out_channels)
 
-		self.conv4 = nn.Conv2d(out_channels*self.expansion, out_channels*self.expansion, kernel_size=1, bias=False)
-		self.bn4 = nn.BatchNorm2d(out_channels*self.expansion)
+		self.conv4 = nn.Conv2d(out_channels, out_channels, kernel_size=1, bias=False)
+		self.bn4 = nn.BatchNorm2d(out_channels)
 
-		self.conv5 = nn.Conv2d(out_channels*self.expansion, out_channels*self.expansion, kernel_size=1, bias=False)
+		self.conv5 = nn.Conv2d(out_channels, out_channels, kernel_size=1, bias=False)
 		self.bn5 = nn.BatchNorm2d(out_channels*self.expansion)
 
 		self.relu = nn.ReLU(inplace=True)
@@ -311,6 +311,7 @@ class Bottleneck_6_1_1(nn.Module):
 	def forward(self, x):
 		res = self.conv1_skip(x)
 		res = self.bn1_skip(res)
+		res = self.relu(res)
 
 		x = self.conv1(x)
 		x = self.bn1(x)
@@ -323,16 +324,12 @@ class Bottleneck_6_1_1(nn.Module):
 		x = self.conv3(x)
 		x = self.bn3(x)
 		
-		x = x + res
-		res = x
-		x = self.relu(x)
-
-		x = self.conv4(x)
-		x = self.bn4(x)
-		x = self.relu(x)
+		res = self.conv4(res)
+		res = self.bn4(res)
+		res = self.relu(res)
 		
-		x = self.conv5(x)
-		x = self.bn5(x)
+		res = self.conv5(res)
+		res = self.bn5(res)
 
 		out = x+res
 		out = self.relu(out)

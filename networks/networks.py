@@ -173,7 +173,7 @@ class PointCloudDetector2(nn.Module):
 	# up_sample_deconv = tuplr of (dilation, stride, padding, output_padding) for deconvolution in upsampling
 	def __init__(self, res_block_layers, up_sample_layers, up_sample_deconv, mean=None, std=None):
 
-		super(PointCloudDetector, self).__init__()
+		super(PointCloudDetector2, self).__init__()
 
 		# keep padding in mind since at all convolutions are "SAME"
 		# except for layers where downsampling happens
