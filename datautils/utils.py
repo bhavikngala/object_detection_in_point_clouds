@@ -1,15 +1,15 @@
 import numpy as np
 import math
 import config as cnf
-'''
+
 def lidarToBEV(lidar, gridConfig=cnf.gridConfig):
-    \'''
+    '''
     Converts lidar data to Bird's Eye View as defined in PIXOR paper
     Arguments:
         lidar: LiDAR data - x, y, z, reflectance
         gridConfig: physical dimension range of the Region of interest
         and resolution of the grid
-    \'''
+    '''
 
     # ranges of length, width, height; and resolution value
     x_r, y_r, z_r = gridConfig['x'], gridConfig['y'], gridConfig['z']
@@ -114,6 +114,7 @@ def lidarToBEV(lidar, gridConfig=cnf.gridConfig):
                 # print(quantized_xyz)
     # top = top.permute(2,1,0)
     return top
+    '''
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt

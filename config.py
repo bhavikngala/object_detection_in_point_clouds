@@ -83,7 +83,7 @@ deconv = [(1, 2, 1, 1), # upsamole block 1
 # training parameters
 lr = 1e-4   # learning rate without step
 slr = 1e-2  # step learning rate
-milestones = [40, 45] # milestone for pixor
+milestones = [30, 45] # milestone for pixor
 momentum = 0.9
 decay = 0.0001 # weight decay parameter
 epochs = 50
@@ -128,5 +128,5 @@ logString2 = 'epoch: [{:04d}/{:03d}] | cl: {:.8f} | nsl: {:.8f} | psl: -.-------
 logString3 = 'epoch: [{:04d}/{:03d}] | cl: -.-------- | nsl: -.-------- | psl: -.-------- | ll: -.--------| tl: -.-------- | PS: [{:07d}/{:07d}] | md: -.---- | mc: -.---- | oamc: -.---- | lt: {:.4f} | bt: {:.4f} \n\n'
 normLogString = 'epoch: [{:04d}/{:03d}] | grad norm: {:.8f} | weight norm: {:.8f} \n\n'
 
-batchSize = 2
+batchSize = 4
 accumulationSteps = 4.0
