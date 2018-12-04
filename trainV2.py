@@ -9,7 +9,7 @@ import traceback
 from queue import Queue
 import argparse
 
-from networks.networks import PointCloudDetector
+from networks.networks import *
 from networks.resnet import ResNet18
 from datautils.dataloader_v2 import *
 import config as cnf
@@ -36,6 +36,7 @@ parser.add_argument('-o', '--only-pos', action='store_true', help='specify wheth
 parser.add_argument('--norm-scheme', default=None, help='specify how to standarize/normalize target; \'rg\':rescale grid; None: standarize')
 parser.add_argument('--res', default=None, help='use standard res block structure or pixor one')
 parser.add_argument('--ignorebp', action='store_true', help='flag to ignore boundary pixels')
+parser.add_argument('--parameterization', default=None, help='method or target parameterization')
 args = parser.parse_args()
 
 torch.manual_seed(0)
@@ -158,18 +159,17 @@ def train(epoch):
 			ll = locLoss.item()
 			posClaLoss = posClaLoss.item()
 			negClaLoss = negClaLoss.item()
-			gradPresent = gradPresent | True
 		else:
 			trainLoss = claLoss
 			tl = trainLoss.item()
 			cl = claLoss.item()
 			ll = None
 			negClaLoss = negClaLoss.item()
-			gradPresent = gradPresent | True
 
 		# trainLoss = claLoss+locLoss
 		if trainLoss is not None:
 			trainLoss.backward()
+			gradPresent = gradPresent | True
 
 		# gradients are accumulated over cnf.accumulationSteps
 		if (batchId+1)%cnf.accumulationSteps == 0 and gradPresent:

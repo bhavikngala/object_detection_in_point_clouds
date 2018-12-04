@@ -24,9 +24,12 @@ class LidarLoader_2(Dataset):
 		self.objtype = objtype
 		self.augData = args.aug_data and augData
 		self.augScheme = args.aug_scheme
-		self.standarize = args.standarize
 		self.norm_scheme = args.norm_scheme
 		self.ignorebp = args.ignorebp
+		self.targetParameterization = args.parameterization
+		self.standarize = args.standarize
+		if self.targetParameterization is not None:
+			self.standarize = False
 
 		self.V2C = None
 		self.C2V = None
@@ -170,6 +173,10 @@ class LidarLoader_2(Dataset):
 		x = np.arange(x_r[1], x_r[0], -res*ds, dtype=np.float32)
 		y = np.arange(y_r[0]-y_r[0]+res*ds,y_r[1]-y_r[0]+res*ds, res*ds, dtype=np.float32) #shifting y origin
 		xx, yy = np.meshgrid(x, y)
+		diagx = cnf.diagx
+		diagy = cnf.diagy
+		la = cnf.la
+		wa = cnf.wa
 
 		r = int((y_r[1]-y_r[0])/(res*ds))
 		c = int((x_r[1]-x_r[0])/(res*ds))
@@ -187,10 +194,15 @@ class LidarLoader_2(Dataset):
 			gridX = xx[mask]
 			gridY = yy[mask]
 
-			dx = (cx-gridX)/gridX
-			dy = (cy-gridY)/gridY
+			if self.targetParameterization == 'voxelnet':
+				dx = (cx-gridX)/(diagx)
+				dy = (cy-gridY)/(diagy)
+				l, w = np.log(L/la), np.log(W/wa)
+			else:
+				dx = (cx-gridX)/gridX
+				dy = (cy-gridY)/gridY
 
-			l, w = np.log(L/cnf.lgrid), np.log(W/cnf.wgrid)
+				l, w = np.log(L/cnf.lgrid), np.log(W/cnf.wgrid)
 
 			t = np.array([np.cos(2*r), np.sin(2*r), \
 						  dx, dy, \

@@ -32,6 +32,11 @@ d_y_max =  1.0
 lgrid = x_max-x_min
 wgrid = y_max-y_min
 
+diagx = np.sqrt(0.4**2 + 0.4**2)
+diagy = np.sqrt(0.4**2 + 0.4**2)
+la = 0.4
+wa = 0.4
+
 d_xy = np.sqrt((x_max-x_min)**2 + (y_max-y_min)**2)
 
 in_channels = int((z_max-z_min)/gridConfig['res']+1)
