@@ -15,10 +15,10 @@ class Bottleneck_3_0(nn.Module):
 		# using pre-normalization and pre-activation
 		# TODO: switch stride=2 between conv1 and conv2 and check results
 		self.bn1 = nn.BatchNorm2d(in_channels)
-		self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, bias=False)
+		self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=2, padding=1, bias=False)
 
 		self.bn2 = nn.BatchNorm2d(out_channels)
-		self.conv2 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=3, stride=2, padding=1, bias=False)
+		self.conv2 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=3, padding=1, bias=False)
 
 		self.conv1_skip = nn.Conv2d(in_channels, out_channels*self.expansion, kernel_size=1, stride=2, bias=False)
 		
@@ -204,6 +204,68 @@ class Bottleneck_6_1_0(nn.Module):
 		x = self.conv4(x)
 		x = self.bn5(x)
 		x = self.conv5(self.relu(x))
+
+		out = x+res
+
+		return out
+
+
+class Bottleneck_6_1_0_1(nn.Module):
+	'''
+	-->C->C->C--
+	|->C->C->C-+->
+	'''
+	expansion = 4
+
+	def __init__(self, in_channels, out_channels):
+		super(Bottleneck_6_1_0, self).__init__()
+
+		# using pre-normalization and pre-activation
+		# TODO: switch stride=2 between conv1 and conv2 and check results
+		# self.bn1 = nn.BatchNorm2d(out_channels)
+		self.bn1 = nn.BatchNorm2d(in_channels)
+		self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=2, bias=False)
+
+		self.bn2 = nn.BatchNorm2d(out_channels)
+		self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1, bias=False)
+
+		self.bn3 = nn.BatchNorm2d(out_channels)
+		self.conv3 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=1, bias=False)
+
+		self.conv1_skip = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=2, bias=False)
+		
+		self.bn4 = nn.BatchNorm2d(out_channels)
+		self.conv4 = nn.Conv2d(out_channels, out_channels, kernel_size=1, bias=False)
+
+		self.bn5 = nn.BatchNorm2d(out_channels)
+		self.conv5 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=1, bias=False)
+
+		self.relu = nn.ReLU(inplace=True)
+
+		for m in self.modules():
+			if isinstance(m, nn.Conv2d):
+				nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+			elif isinstance(m, nn.BatchNorm2d):
+				nn.init.constant_(m.weight, 1)
+				nn.init.constant_(m.bias, 0)
+
+	def forward(self, x):
+		x = self.bn1(x)
+		x = self.relu(x)
+		# res = self.bn1_skip(res)
+		res = self.conv1_skip(x)
+
+		x = self.conv1(x)
+		x = self.bn2(x)
+		x = self.conv2(self.relu(x))
+		x = self.bn3(x)
+		x = self.conv3(self.relu(x))
+
+		res = self.bn4(res)
+		res = self.relu(res)
+		res = self.conv4(res)
+		res = self.bn5(res)
+		res = self.conv5(self.relu(res))
 
 		out = x+res
 
