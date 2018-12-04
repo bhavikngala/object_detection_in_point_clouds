@@ -218,7 +218,7 @@ class Bottleneck_6_1_0_1(nn.Module):
 	expansion = 4
 
 	def __init__(self, in_channels, out_channels):
-		super(Bottleneck_6_1_0, self).__init__()
+		super(Bottleneck_6_1_0_1, self).__init__()
 
 		# using pre-normalization and pre-activation
 		# TODO: switch stride=2 between conv1 and conv2 and check results
