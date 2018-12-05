@@ -174,7 +174,7 @@ class LidarLoader_2(Dataset):
 
 		y = np.arange(y_r[0]-y_r[0]+res*ds,y_r[1]-y_r[0]+res*ds, res*ds, dtype=np.float32) #shifting y origin
 		if self.targetParameterization=='voxelnet':
-			y = np.arange(y_r[0]-y_r[0],y_r[1]-y_r[0], res*ds, dtype=np.float32) #shifting y origin
+			y = np.arange(y_r[0],y_r[1], res*ds, dtype=np.float32)
 		
 		xx, yy = np.meshgrid(x, y)
 		diagx = cnf.diagx
@@ -214,6 +214,7 @@ class LidarLoader_2(Dataset):
 			t = np.array([np.cos(2*r), np.sin(2*r), \
 						  dx, dy, \
 						  l, w])
+			print(t)
 
 			if self.standarize:
 				t = (t-cnf.carMean)/cnf.carSTD

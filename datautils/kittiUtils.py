@@ -673,7 +673,8 @@ def voxelNetAugScheme(lidar, labels, augData):
 
 	if augData and choice == 0:
 		# perturbation
-		lidar_center_gt_box3d = camera_to_lidar_box(gt_box3d)
+		# lidar_center_gt_box3d = camera_to_lidar_box(gt_box3d)
+		lidar_center_gt_box3d = gt_box3d
 		lidar_corner_gt_box3d = center_to_corner_box3d(
 			lidar_center_gt_box3d, coordinate='lidar')
 
@@ -725,17 +726,20 @@ def voxelNetAugScheme(lidar, labels, augData):
 		# global rotation
 		angle = np.random.uniform(-np.pi / 4, np.pi / 4)
 		lidar[:, 0:3] = point_transform(lidar[:, 0:3], 0, 0, 0, rz=angle)
-		lidar_center_gt_box3d = camera_to_lidar_box(gt_box3d)
+		# lidar_center_gt_box3d = camera_to_lidar_box(gt_box3d)
+		lidar_center_gt_box3d = gt_box3d
 		lidar_center_gt_box3d = box_transform(lidar_center_gt_box3d, 0, 0, 0, r=angle, coordinate='lidar')
 	
 	elif augData and choice == 2:
 		# global scaling
 		factor = np.random.uniform(0.95, 1.05)
 		lidar[:, 0:3] = lidar[:, 0:3] * factor
-		lidar_center_gt_box3d = camera_to_lidar_box(gt_box3d)
+		# lidar_center_gt_box3d = camera_to_lidar_box(gt_box3d)
+		lidar_center_gt_box3d = gt_box3d
 		lidar_center_gt_box3d[:, 0:6] = lidar_center_gt_box3d[:, 0:6] * factor
 	else:
-		lidar_center_gt_box3d = camera_to_lidar_box(gt_box3d)
+		# lidar_center_gt_box3d = camera_to_lidar_box(gt_box3d)
+		lidar_center_gt_box3d = gt_box3d
 
 	return lidar, lidar_center_gt_box3d
 
