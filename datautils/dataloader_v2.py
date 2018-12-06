@@ -215,7 +215,9 @@ class LidarLoader_2(Dataset):
 						  dx[0], dy[0], \
 						  l, w])
 
-			if self.standarize:
+			if self.standarize and self.parameterization=='voxelnet':
+				t = (t-cnf.carMeanV)/cnf.carSTDV
+			elif self.standarize:
 				t = (t-cnf.carMean)/cnf.carSTD
 
 			targetLoc[mask] = t

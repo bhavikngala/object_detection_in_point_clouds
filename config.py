@@ -73,6 +73,8 @@ objtype = 'car'
 # carSTDLogWL = np.array([0.7345, 0.3532, 0.0160, 207.0052, 0.1119, 0.0628], dtype=np.float32)
 carMeanLogWL = np.array([-0.5783, -0.0371, -0.0116, -0.0049, -2.9034, -3.8962], dtype=np.float32)
 carSTDLogWL = np.array([0.7345, 0.3532, 0.0160, 0.0059, 0.1119, 0.0628], dtype=np.float32)
+carMeanV = np.array([-0.5783, -0.0371, -0.3530, -0.3511,  2.2671,  1.4021], dtype=np.float32)
+carSTDV = np.array([0.7345, 0.3532, 0.2045, 0.2046, 0.1119, 0.0628], dtype = np.float32)
 carMean = carMeanLogWL
 carSTD = carSTDLogWL
 
@@ -88,10 +90,10 @@ deconv = [(1, 2, 1, 1), # upsamole block 1
 # training parameters
 lr = 1e-4   # learning rate without step
 slr = 1e-2  # step learning rate
-milestones = [30, 45] # milestone for pixor
+milestones = [150, 175] # milestone for pixor
 momentum = 0.9
 decay = 0.0001 # weight decay parameter
-epochs = 50
+epochs = 200
 
 # balancing pos-neg samples
 alpha1 = 1.5
@@ -133,5 +135,5 @@ logString2 = 'epoch: [{:04d}/{:03d}] | cl: {:.8f} | nsl: {:.8f} | psl: -.-------
 logString3 = 'epoch: [{:04d}/{:03d}] | cl: -.-------- | nsl: -.-------- | psl: -.-------- | ll: -.--------| tl: -.-------- | PS: [{:07d}/{:07d}] | md: -.---- | mc: -.---- | oamc: -.---- | lt: {:.4f} | bt: {:.4f} \n\n'
 normLogString = 'epoch: [{:04d}/{:03d}] | grad norm: {:.8f} | weight norm: {:.8f} \n\n'
 
-batchSize = 4
-accumulationSteps = 4.0
+batchSize = 16
+accumulationSteps = 1.0
