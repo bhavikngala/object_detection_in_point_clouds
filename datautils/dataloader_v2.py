@@ -28,8 +28,6 @@ class LidarLoader_2(Dataset):
 		self.ignorebp = args.ignorebp
 		self.targetParameterization = args.parameterization
 		self.standarize = args.standarize
-		if self.targetParameterization is not None:
-			self.standarize = False
 
 		self.V2C = None
 		self.C2V = None
