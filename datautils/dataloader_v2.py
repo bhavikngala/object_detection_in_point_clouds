@@ -208,6 +208,8 @@ class LidarLoader_2(Dataset):
 				dy = (cy-gridY)/gridY
 
 				l, w = np.log(L/cnf.lgrid), np.log(W/cnf.wgrid)
+			if dx.shape[0] == 0:
+				continue
 
 			t = np.array([np.cos(2*r), np.sin(2*r), \
 						  dx[0], dy[0], \
