@@ -48,18 +48,29 @@ def angle_in_limit(angle):
 	return angle
 
 
-def camera_to_lidar(x, y, z):
+def camera_to_lidar(x, y, z, V2C=None,R0=None,P2=None):
 	p = np.array([x, y, z, 1])
-	p = np.matmul(cnf.R0_inv, p)
-	p = np.matmul(cnf.Tr_velo_to_cam_inv, p)
+	if V2C is None or R0 is None:
+		p = np.matmul(cnf.R0_inv, p)
+		p = np.matmul(cnf.Tr_velo_to_cam_inv, p)
+	else:
+		R0_i = np.zeros((4,4))
+		R0_i[:3,:3] = R0
+		R0_i[3,3] = 1
+		p = np.matmul(np.linalg.inv(R0_i), p)
+		p = np.matmul(inverse_rigid_trans(V2C), p)
 	p = p[0:3]
 	return tuple(p)
 
 
-def lidar_to_camera(x, y, z):
+def lidar_to_camera(x, y, z,V2C=None, R0=None, P2=None):
 	p = np.array([x, y, z, 1])
-	p = np.matmul(cnf.Tr_velo_to_cam, p)
-	p = np.matmul(cnf.R0, p)
+	if V2C is None or R0 is None:
+		p = np.matmul(cnf.Tr_velo_to_cam, p)
+		p = np.matmul(cnf.R0, p)
+	else:
+		p = np.matmul(V2C, p)
+		p = np.matmul(R0, p)
 	p = p[0:3]
 	return tuple(p)
 
@@ -75,36 +86,40 @@ def camera_to_lidar_point(points):
 	return points.reshape(-1, 3)
 
 
-def lidar_to_camera_point(points):
+def lidar_to_camera_point(points, V2C=None, R0=None):
 	# (N, 3) -> (N, 3)
 	N = points.shape[0]
 	points = np.hstack([points, np.ones((N, 1))]).T
 
-	points = np.matmul(cnf.Tr_velo_to_cam, points)
-	points = np.matmul(cnf.R0, points).T
+	if V2C is None or R0 is None:
+		points = np.matmul(cnf.Tr_velo_to_cam, points)
+		points = np.matmul(cnf.R0, points).T
+	else:
+		points = np.matmul(V2C, points)
+		points = np.matmul(R0, points).T
 	points = points[:, 0:3]
 	return points.reshape(-1, 3)
 
 
-def camera_to_lidar_box(boxes):
+def camera_to_lidar_box(boxes,V2C=None, R0=None, P2=None):
 	# (N, 7) -> (N, 7) x,y,z,h,w,l,r
 	ret = []
 	for box in boxes:
 		x, y, z, h, w, l, ry = box
 		(x, y, z), h, w, l, rz = camera_to_lidar(
-			x, y, z), h, w, l, -ry - np.pi / 2
+			x, y, z,V2C=V2C, R0=R0, P2=P2), h, w, l, -ry - np.pi / 2
 		rz = angle_in_limit(rz)
 		ret.append([x, y, z, h, w, l, rz])
 	return np.array(ret).reshape(-1, 7)
 
 
-def lidar_to_camera_box(boxes):
+def lidar_to_camera_box(boxes,V2C=None, R0=None, P2=None):
 	# (N, 7) -> (N, 7) x,y,z,h,w,l,r
 	ret = []
 	for box in boxes:
 		x, y, z, h, w, l, rz = box
 		(x, y, z), h, w, l, ry = lidar_to_camera(
-			x, y, z), h, w, l, -rz - np.pi / 2
+			x, y, z,V2C=V2C, R0=R0, P2=P2), h, w, l, -rz - np.pi / 2
 		ry = angle_in_limit(ry)
 		ret.append([x, y, z, h, w, l, ry])
 	return np.array(ret).reshape(-1, 7)
@@ -277,7 +292,7 @@ def corner_to_center_box3d(boxes_corner, coordinate='camera'):
 
 
 # this just for visulize and testing
-def lidar_box3d_to_camera_box(boxes3d, cal_projection=False):
+def lidar_box3d_to_camera_box(boxes3d, cal_projection=False, V2C=None, R0=None, P2=None):
 	# (N, 7) -> (N, 4)/(N, 8, 2)  x,y,z,h,w,l,rz -> x1,y1,x2,y2/8*(x, y)
 	num = len(boxes3d)
 	boxes2d = np.zeros((num, 4), dtype=np.int32)
@@ -287,9 +302,12 @@ def lidar_box3d_to_camera_box(boxes3d, cal_projection=False):
 
 	for n in range(num):
 		box3d = lidar_boxes3d_corner[n]
-		box3d = lidar_to_camera_point(box3d)
+		box3d = lidar_to_camera_point(box3d, V2C=V2C, R0=R0)
 		points = np.hstack((box3d, np.ones((8, 1)))).T  # (8, 4) -> (4, 8)
-		points = np.matmul(cnf.P2, points).T
+		if P2 is None:
+			points = np.matmul(cnf.P2, points).T
+		else:
+			points = np.matmul(P2, points).T
 		points[:, 0] /= points[:, 2]
 		points[:, 1] /= points[:, 2]
 
@@ -328,15 +346,16 @@ def lidar_to_bird_view_img(lidar, factor=1):
 
 
 def draw_lidar_box3d_on_image(img, boxes3d, scores, gt_boxes3d=np.array([]),
-							  color=(0, 255, 255), gt_color=(255, 0, 255), thickness=1):
+							  color=(0, 255, 255), gt_color=(255, 0, 255), thickness=1,
+							  V2C=None, R0=None,P2=None):
 	# Input:
 	#   img: (h, w, 3)
 	#   boxes3d (N, 7) [x, y, z, h, w, l, r]
 	#   scores
 	#   gt_boxes3d (N, 7) [x, y, z, h, w, l, r]
 	img = img.copy()
-	projections = lidar_box3d_to_camera_box(boxes3d, cal_projection=True)
-	gt_projections = lidar_box3d_to_camera_box(gt_boxes3d, cal_projection=True)
+	projections = lidar_box3d_to_camera_box(boxes3d, cal_projection=True, V2C=V2C, R0=R0, P2=P2)
+	gt_projections = lidar_box3d_to_camera_box(gt_boxes3d, cal_projection=True, V2C=V2C, R0=R0, P2=P2)
 
 	# draw projections
 	for qs in projections:
@@ -448,7 +467,7 @@ def label_to_gt_box3d(labels, cls='Car', coordinate='camera'):
 	return boxes3d
 
 
-def box3d_to_label(batch_box3d, batch_cls, batch_score=[], coordinate='camera'):
+def box3d_to_label(batch_box3d, batch_cls, batch_score=[], coordinate='camera', V2C=None, R0=None, P2=None):
 	# Input:
 	#   (N, N', 7) x y z h w l r
 	#   (N, N')
@@ -465,12 +484,13 @@ def box3d_to_label(batch_box3d, batch_cls, batch_score=[], coordinate='camera'):
 				if coordinate == 'camera':
 					box3d = box
 					box2d = lidar_box3d_to_camera_box(
-						camera_to_lidar_box(box[np.newaxis, :].astype(np.float32)), cal_projection=False)[0]
+						camera_to_lidar_box(box[np.newaxis, :].astype(np.float32),V2C=V2C, R0=R0, P2=P2),
+											cal_projection=False,V2C=V2C, R0=R0, P2=P2)[0]
 				else:
 					box3d = lidar_to_camera_box(
-						box[np.newaxis, :].astype(np.float32))[0]
+						box[np.newaxis, :].astype(np.float32),V2C=V2C, R0=R0, P2=P2)[0]
 					box2d = lidar_box3d_to_camera_box(
-						box[np.newaxis, :].astype(np.float32), cal_projection=False)[0]
+						box[np.newaxis, :].astype(np.float32), cal_projection=False,V2C=V2C, R0=R0, P2=P2)[0]
 				x, y, z, h, w, l, r = box3d
 				box3d = [h, w, l, x, y, z, r]
 				label.append(template.format(
@@ -484,16 +504,49 @@ def box3d_to_label(batch_box3d, batch_cls, batch_score=[], coordinate='camera'):
 				if coordinate == 'camera':
 					box3d = box
 					box2d = lidar_box3d_to_camera_box(
-						camera_to_lidar_box(box[np.newaxis, :].astype(np.float32)), cal_projection=False)[0]
+						camera_to_lidar_box(box[np.newaxis, :].astype(np.float32),V2C=V2C, R0=R0, P2=P2), cal_projection=False,V2C=V2C, R0=R0, P2=P2)[0]
 				else:
 					box3d = lidar_to_camera_box(
-						box[np.newaxis, :].astype(np.float32))[0]
+						box[np.newaxis, :].astype(np.float32),V2C=V2C, R0=R0, P2=P2)[0]
 					box2d = lidar_box3d_to_camera_box(
-						box[np.newaxis, :].astype(np.float32), cal_projection=False)[0]
+						box[np.newaxis, :].astype(np.float32), cal_projection=False,V2C=V2C, R0=R0, P2=P2)[0]
 				x, y, z, h, w, l, r = box3d
 				box3d = [h, w, l, x, y, z, r]
 				label.append(template.format(cls, 0, 0, 0, *box2d, *box3d))
 			batch_label.append(label)
+
+	return np.array(batch_label)
+
+
+def box3d_to_label_1(boxes, cls, scores=[], coordinate='camera', V2C=None, R0=None, P2=None):
+	# Input:
+	#   (N, N', 7) x y z h w l r
+	#   (N, N')
+	#   cls: (N, N') 'Car' or 'Pedestrain' or 'Cyclist'
+	#   coordinate(input): 'camera' or 'lidar'
+	# Output:
+	#   label: (N, N') N batches and N lines
+	batch_label = []
+	if scores:
+		template = '{} ' + ' '.join(['{:.4f}' for i in range(15)]) + '\n'
+		
+		label = []
+		for box, score in zip(boxes, scores):
+			if coordinate == 'camera':
+				box3d = box
+				box2d = lidar_box3d_to_camera_box(
+					camera_to_lidar_box(box[np.newaxis, :].astype(np.float32),V2C=V2C, R0=R0, P2=P2),
+										cal_projection=False,V2C=V2C, R0=R0, P2=P2)[0]
+			else:
+				box3d = lidar_to_camera_box(
+					box[np.newaxis, :].astype(np.float32),V2C=V2C, R0=R0, P2=P2)[0]
+				box2d = lidar_box3d_to_camera_box(
+					box[np.newaxis, :].astype(np.float32), cal_projection=False,V2C=V2C, R0=R0, P2=P2)[0]
+			x, y, z, h, w, l, r = box3d
+			box3d = [h, w, l, x, y, z, r]
+			label.append(template.format(
+				cls, 0, 0, 0, *box2d, *box3d, float(score)))
+		batch_label.append(label)
 
 	return np.array(batch_label)
 
@@ -773,3 +826,12 @@ def pixorAugScheme(lidar, labels, augData):
 		lidar_center_gt_box3d = camera_to_lidar_box(gt_box3d)
 
 	return lidar, lidar_center_gt_box3d
+
+def inverse_rigid_trans(Tr):
+	''' Inverse a rigid body transform matrix (3x4 as [R|t])
+		[R'|-R't; 0|1]
+	'''
+	inv_Tr = np.zeros_like(Tr) # 3x4
+	inv_Tr[0:3,0:3] = np.transpose(Tr[0:3,0:3])
+	inv_Tr[0:3,3] = np.dot(-np.transpose(Tr[0:3,0:3]), Tr[0:3,3])
+	return inv_Tr
