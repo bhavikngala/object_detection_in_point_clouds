@@ -44,7 +44,6 @@ class LidarLoader_2(Dataset):
 	def __getitem__(self, index):
 		filename = self.filenames[index]
 		labelfilename = filename.split('/')[-1][:-4]
-
 		# read bev
 		lidarData = np.fromfile(filename, dtype=np.float32).reshape(-1, 4)
 
@@ -215,7 +214,7 @@ class LidarLoader_2(Dataset):
 						  dx[0], dy[0], \
 						  l, w])
 
-			if self.standarize and self.parameterization=='voxelnet':
+			if self.standarize and self.targetParameterization=='voxelnet':
 				t = (t-cnf.carMeanV)/cnf.carSTDV
 			elif self.standarize:
 				t = (t-cnf.carMean)/cnf.carSTD
