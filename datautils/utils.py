@@ -1,3 +1,5 @@
+import torch
+
 import numpy as np
 import math
 import config as cnf
@@ -32,89 +34,66 @@ def lidarToBEV(lidar, gridConfig=cnf.gridConfig):
     bev[-1, -indices[:, 1]-int(y_r[0]/res), indices[:, 0]] = ref
 
     return bev
-'''
-def lidarToBEV(lidar, gridConfig=cnf.gridConfig):
-    x_r, y_r, z_r = gridConfig['x'], gridConfig['y'], gridConfig['z']
-    res = gridConfig['res']
-
-    idx = np.where (lidar[:,0]>x_r[0])
-    lidar = lidar[idx]
-    idx = np.where (lidar[:,0]<x_r[1])
-    lidar = lidar[idx]
-
-    idx = np.where (lidar[:,1]>y_r[0])
-    lidar = lidar[idx]
-    idx = np.where (lidar[:,1]<y_r[1])
-    lidar = lidar[idx]
-
-    idx = np.where (lidar[:,2]>z_r[0])
-    lidar = lidar[idx]
-    idx = np.where (lidar[:,2]<z_r[1])
-    lidar = lidar[idx]
 
 
+class TargetParameterization():
 
-    pxs=lidar[:,0]
-    pys=lidar[:,1]
-    pzs=lidar[:,2]
-    prs=lidar[:,3]
-    
-    qxs=((pxs-x_r[0])//res).astype(np.int32)
-    qys=((pys-y_r[0])//res).astype(np.int32)
-    #qzs=((pzs-TOP_Z_MIN)//TOP_Z_DIVISION).astype(np.int32)
-    qzs=((pzs-z_r[0])/res).astype(np.int32)
-    quantized = np.dstack((qxs,qys,qzs,prs)).squeeze()
-    # print(quantized.shape)
-    
-    X0, Xn = 0, int((x_r[1]-x_r[0])//res)
-    Y0, Yn = 0, int((y_r[1]-y_r[0])//res)+1
-    Z0, Zn = 0, int((z_r[1]-z_r[0])/res)
-    # print(Xn)
-    # print(Yn)
-    # print(Zn)
-    height  = Xn - X0
-    width   = Yn - Y0
-    channel = Zn - Z0  + 1
-    # print('height,width,channel=%d,%d,%d'%(height,width,channel))
-    # top = np.zeros(shape=(height,width,channel), dtype=np.float32)
-    top = np.zeros(shape=(channel,width,height), dtype=np.float32)
-    # print(top.shape)
+    def __init__(self, gridConfig, gridL, gridW, downSamplingFactor=4, device=None):
+        self.xRange = gridConfig['x']
+        self.yRange = gridConfig['y']
+        self.zRange = gridConfig['z']
+        self.res = gridConfig['res']
+        self.outputGridRes = self.res*downSamplingFactor
+        self.gridL = gridL
+        self.gridW = gridW
+        self.device = device
 
-    
-    # print(quantized)
-    # if 1:  #new method
-    for x in range(Xn):
-        ix  = np.where(quantized[:,0]==x)
-        # print(ix)
-        quantized_x = quantized[ix]
-        if len(quantized_x) == 0 : continue
-        yy = -x
+        self.yy, self.xx = torch.meshdrig(
+                [torch.arange(self.yRange[0], self.yRange[1], self.outputGridRes, dtype=torch.float32, device=device),
+                 torch.arange(self.xRange[1], self.xRange[0], -self.outputGridRes, dtype=torch.float32, device=device)])
+        self.yy = self.yy - self.yRange[0]
 
-        for y in range(Yn):
-            iy  = np.where(quantized_x[:,1]==y)
-            quantized_xy = quantized_x[iy]
-            count = len(quantized_xy)
-            if  count==0 : continue
-            xx = -y
 
-            top[Zn,xx,yy] = min(1, np.log(count+1)/math.log(32))
-            max_height_point = np.argmax(quantized_xy[:,2])
-            top[Zn,xx,yy]=quantized_xy[max_height_point, 3]
+    def encodeLabelToYolo(labels):
+        r, c = self.xx.size()
+        targetClass = torch.zeros((r, c), dtype=torch.float32, device=self.device)
+        targetLoc = torch.zeros((r, c, 6), dtype=torch.float32, device=self.device)
+
+        for i in range(labels.size(0)):
+            c, cx, cy, cz, H, W, L, r = labels[i,:]
+
+            mask = (cx <= self.xx) & (cx > (self.xx - self.outputGridRes)) & \
+                   (cy >= self.yy) & (cy < (self.yy + self.outputGridRes))
             
-            for z in range(Zn):
-                iz = np.where ((quantized_xy[:,2]>=z) & (quantized_xy[:,2]<=z+1))
-                quantized_xyz = quantized_xy[iz]
-                if len(quantized_xyz) == 0 : continue
-                zz = z
+            if mask.sum()==1:
+                gridX = self.xx[mask]
+                gridY = self.yy[mask]
 
-                #height per slice
-                max_height = max(0,np.max(quantized_xyz[:,2])-z)
-                # print('max ht is ',max_height)
-                top[zz,xx,yy]=max_height
-                # print(quantized_xyz)
-    # top = top.permute(2,1,0)
-    return top
-    '''
+                targetLoc[mask][0] = torch.cos(2*r)
+                targetLoc[mask][1] = torch.sin(2*r)
+                targetLoc[mask][2] = gridX - cx
+                targetLoc[mask][3] = cy - gridY
+                targetLoc[mask][4] = torch.log(L/self.gridL)
+                targetLos[mask][5] = torch.log(W/self.gridW)
+                targetClass[mask] = 1.0
+
+        if targetClass.sum() > 0:
+            return targetClass, targetLoc
+        else:
+            return targetClass, None
+
+        
+
+    def decodeYoloToLabel(networkOutput):
+        networkOutput[:,:,0] = torch.atan2(networkOutput[:,:,1],networkOutput[:,:,0])/2
+        networkOutput[:,:,1] = torch.atan2(networkOutput[:,:,1],networkOutput[:,:,0])/2
+        networkOutput[:,:,2] = networkOutput[:,:,2] + self.xx
+        networkOutput[:,:,3] = networkOutput[:,:,3] + self.yy + self.yRange[0]
+        networkOutput[:,:,4] = torch.exp(networkOutput[:,:,4]) * self.gridL
+        networkOutput[:,:,5] = torch.exp(networkOutput[:,:,5]) * self.gridW
+
+        return networkOutput
+
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
