@@ -47,7 +47,7 @@ class TargetParameterization():
         self.gridW = gridW
         self.device = device
 
-        self.yy, self.xx = torch.meshdrig(
+        self.yy, self.xx = torch.meshgrid(
                 [torch.arange(self.yRange[0], self.yRange[1], self.outputGridRes, dtype=torch.float32, device=device),
                  torch.arange(self.xRange[1], self.xRange[0], -self.outputGridRes, dtype=torch.float32, device=device)])
         self.yy = self.yy - self.yRange[0]

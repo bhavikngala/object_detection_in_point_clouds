@@ -18,7 +18,7 @@ class KittiDataset(Dataset):
 		self.directory = cnf.rootDir
 		self.innerFolder = 'testing' if dataSetType=='test' else 'training'
 		
-		if dataSetType=='test'
+		if dataSetType=='test':
 			splitFile = cnf.testFile
 		elif dataSetType=='train':
 			splitFile = cnf.trainSplitFile
@@ -79,7 +79,7 @@ class KittiDataset(Dataset):
 				targetLoc = np.array([-1.],dtype=np.float32)
 		bev = utils.lidarToBEV(lidarData, self.gridConfig)
 
-		return fnp(bev), fnp(targetClass), fnp(targetLoc), filename
+		return fnp(bev), targetClass, targetLoc, filename
 
 
 	def formatLabelsToUseCase(self, labels):
