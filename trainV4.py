@@ -1,35 +1,29 @@
 import torch
-from torch.optim import Adam, SGD
-from torch.optim.lr_scheduler import MultiStepLR
 from torch.utils.data import DataLoader
 
 
 import datautils.dataloader_v3 as dataloader
 import config as cnf
 import misc
+import networks.networks as networks
+import model_groomers as mg
 
 
-class ModelTrainer():
-	loader = None
-	epochs = None
+class CustomGroomer(mg.ModelTrainer):
 
 	def train(self):
 		if self.loader is None:
 			print('No data to train on!!!')
 			quit()
 
+		n = 0
 		for epoch in range(self.epochs):
 			for batchId, data in enumerate(self.loader):
 				lidar, targetClass, targetLoc, filenames = data
+				n += len(filenames)
+				print(filenames)
 
-	def logStatus(self):
-		pass
-
-	def setDataloader(self, dataloader):
-		self.loader = dataloader
-
-	def setEpochs(self, epochs):
-		self.epochs = epochs
+		print('num samples:', n)
 
 
 def main():
@@ -43,9 +37,18 @@ def main():
 		collate_fn=dataloader.customCollateFunction, pin_memory=True
 	)
 
-	modelTrainer = ModelTrainer()
+	# define model
+	model = networks.PointCloudDetector2(
+		cnf.res_block_layers,
+		cnf.up_sample_layers,
+		cnf.deconv)
+
+	modelTrainer = CustomGroomer()
 	modelTrainer.setDataloader(trainLoader)
-	modelTrainer.setEpochs(1)
+	modelTrainer.setEpochs(cnf.epochs)
+	modelTrainer.setModel(model)
+	modelTrainer.setOptimizer('sgd', cnf.slr, cnf.momentum, cnf.decay)
+	modelTrainer.setLRScheduler(cnf.lrDecay, cnf.milestones)
 	modelTrainer.train()
 
 
