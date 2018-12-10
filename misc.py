@@ -1,35 +1,9 @@
 import torch
-import torch.nn as nn
 import os
 from threading import Thread
 from queue import Queue
+import argparse
 import config as cnf
-
-
-def savebatchOutput(cla, loc, filenames, outputDir, epoch):
-	for i in range(len(filenames)):
-		filename = filenames[i]
-
-		# make directory if it doesnt exists
-		if not os.path.exists(outputDir+'/'+str(epoch)+'/output'):
-			os.makedirs(outputDir+'/'+str(epoch)+'/output')
-
-		torch.save(cla[i],
-			outputDir+'/'+str(epoch)+'/output/'+filename+'_cla.pt')
-		torch.save(loc[i],
-			outputDir+'/'+str(epoch)+'/output/'+filename+'_loc.pt')
-
-
-def savebatchTarget(target, filenames, outputDir, epoch):
-	for i in range(len(filenames)):
-		filename = filenames[i]
-
-		# make directory if it doesnt exists
-		if not os.path.exists(outputDir+'/'+str(epoch)+'/target'):
-			os.makedirs(outputDir+'/'+str(epoch)+'/target')
-
-		torch.save(target[i],
-			outputDir+'/'+str(epoch)+'/target/'+filename+'.pt')
 
 
 def writeToFile(filename, line):
@@ -83,3 +57,10 @@ def parameterNorm(parameters, p):
 			vec.append(param.view(-1))
 	param_norm = torch.cat(vec).norm(2)
 	return param_norm
+
+
+def getArgumentParser():
+	parser = argparse.ArgumentParser(description='Train network')
+	args = parser.parse_args()
+
+	return args

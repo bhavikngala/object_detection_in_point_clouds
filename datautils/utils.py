@@ -2,9 +2,8 @@ import torch
 
 import numpy as np
 import math
-import config as cnf
 
-def lidarToBEV(lidar, gridConfig=cnf.gridConfig):
+def lidarToBEV(lidar, gridConfig):
     '''
     Converts lidar data to Bird's Eye View as defined in PIXOR paper
     Arguments:
@@ -55,6 +54,7 @@ class TargetParameterization():
 
 
     def encodeLabelToYolo(labels):
+        # labels -> c, cx, cy, cz, H, W, L, r
         r, c = self.xx.size()
         targetClass = torch.zeros((r, c), dtype=torch.float32, device=self.device)
         targetLoc = torch.zeros((r, c, 6), dtype=torch.float32, device=self.device)
@@ -64,7 +64,9 @@ class TargetParameterization():
 
             mask = (cx <= self.xx) & (cx > (self.xx - self.outputGridRes)) & \
                    (cy >= self.yy) & (cy < (self.yy + self.outputGridRes))
-            
+            if mask.sum()>1:
+                print('cx:',cx,'cy:',cy)
+
             if mask.sum()==1:
                 gridX = self.xx[mask]
                 gridY = self.yy[mask]
@@ -77,11 +79,7 @@ class TargetParameterization():
                 targetLos[mask][5] = torch.log(W/self.gridW)
                 targetClass[mask] = 1.0
 
-        if targetClass.sum() > 0:
-            return targetClass, targetLoc
-        else:
-            return targetClass, None
-
+        return targetClass, targetLoc
         
 
     def decodeYoloToLabel(networkOutput):
