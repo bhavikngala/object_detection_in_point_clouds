@@ -18,7 +18,14 @@ class KittiDataset(Dataset):
 		self.directory = cnf.rootDir
 		self.innerFolder = 'testing' if dataSetType=='test' else 'training'
 		
-		with open('./'+self.innerFolder+'.txt', 'r') as f:
+		if dataSetType=='test'
+			splitFile = cnf.testFile
+		elif dataSetType=='train':
+			splitFile = cnf.trainSplitFile
+		else:
+			splitFile = cnf.valSplitFile
+
+		with open(splitFile, 'r') as f:
 			self.filenames = [line.strip() for line in f.readlines()]
 
 		self.calibDir = cnf.calTest if dataSetType=='test' else cnf.calTrain

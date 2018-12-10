@@ -3,6 +3,9 @@ import numpy as np
 
 rootDir = './../data/'
 trainRootDir = './../data/preprocessed/train'
+trainSplitFile = './datautils/set_split_files/train.txt'
+valSplitFile = './datautils/set_split_files/val.txt'
+testFile = './datautils/set_split_files/test.txt'
 
 gridConfig = {
 	'x':(0, 70.4),
