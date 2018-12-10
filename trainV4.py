@@ -40,7 +40,7 @@ def main():
 	trainLoader = DataLoader(
 		dataloader.KittiDataset(cnf, args, 'train'),
 		batch_size = cnf.batchSize, shuffle=True, num_workers=3,
-		collate_fn=collate_fn_3, pin_memory=True
+		collate_fn=dataloader.customCollateFunction, pin_memory=True
 	)
 
 	modelTrainer = ModelTrainer()
