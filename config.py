@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-rootDir = './../data/KITTI_BEV'
+rootDir = './../data/'
 trainRootDir = './../data/preprocessed/train'
 
 gridConfig = {
@@ -135,5 +135,5 @@ logString2 = 'epoch: [{:04d}/{:03d}] | cl: {:.8f} | nsl: {:.8f} | psl: -.-------
 logString3 = 'epoch: [{:04d}/{:03d}] | cl: -.-------- | nsl: -.-------- | psl: -.-------- | ll: -.--------| tl: -.-------- | PS: [{:07d}/{:07d}] | md: -.---- | mc: -.---- | oamc: -.---- | lt: {:.4f} | bt: {:.4f} \n\n'
 normLogString = 'epoch: [{:04d}/{:03d}] | grad norm: {:.8f} | weight norm: {:.8f} \n\n'
 
-batchSize = 16
+batchSize = 4
 accumulationSteps = 1.0

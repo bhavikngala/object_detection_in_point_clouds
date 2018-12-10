@@ -16,7 +16,7 @@ class KittiDataset(Dataset):
 
 	def __init__(self, cnf, args, dataSetType):
 		self.directory = cnf.rootDir
-		self.innerFolder = 'test' if dataSetType=='test' else 'train'
+		self.innerFolder = 'testing' if dataSetType=='test' else 'training'
 		
 		with open('./'+self.innerFolder+'.txt', 'r') as f:
 			self.filenames = [line.strip() for line in f.readlines()]
@@ -24,8 +24,8 @@ class KittiDataset(Dataset):
 		self.calibDir = cnf.calTest if dataSetType=='test' else cnf.calTrain
 		self.lidarDir = cnf.rootDir
 		
-		self.dirList = [os.path.join(self.lidarDir,self.innerFolder),
-						os.path.join(self.lidarDir,self.innerFolder,'labels'),
+		self.dirList = [os.path.join(self.lidarDir,self.innerFolder, 'velodyne'),
+						os.path.join(self.lidarDir,self.innerFolder,'label_2'),
 						self.calibDir,
 						None]
 
