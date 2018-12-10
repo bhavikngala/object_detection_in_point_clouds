@@ -66,7 +66,7 @@ class ProjectKittiToDifferentCoordinateSystems():
 		self.P2 = calibDict['P2'].reshape([3,4])
 		self.R0 = calibDict['R0_rect'].reshape([3,3])
 		self.V2C = calibDict['Tr_velo_to_cam'].reshape([3,4])
-		self.C2V = inverse_rigid_trans(V2C)
+		self.C2V = inverse_rigid_trans(self.V2C)
 
 	def clearCalibrationMatrices(self):
 		self.P2 = None

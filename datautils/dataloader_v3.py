@@ -75,9 +75,9 @@ class KittiDataset(Dataset):
 				# target parameterization
 				targetClass, targetLoc = self.targetParamObject.encodeLabelToYolo(labels[:,[0,11,12,13,8,9,10,14]])
 			else:
-				targetClass = np.zeros((r,c),dtype=np.float32)
+				targetClass = np.zeros((self.r,self.c),dtype=np.float32)
 				targetLoc = np.array([-1.],dtype=np.float32)
-		bev = utils.lidarToBEV(lidarData, self.gridConfig)
+		bev = utils.lidarToBEV(lidarData, self.grid)
 
 		return fnp(bev), targetClass, targetLoc, filename
 
