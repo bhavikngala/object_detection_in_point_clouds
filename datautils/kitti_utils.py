@@ -63,9 +63,9 @@ class ProjectKittiToDifferentCoordinateSystems():
 		self.C2V = None
 
 	def setCalibrationMatrices(self, calibDict):
-		self.P2 = calibDict['P2'].np.reshape(self.P, [3,4])
-		self.R0 = calibDict['R0_rect'].np.reshape(self.R0,[3,3])
-		self.V2C = calibDict['Tr_velo_to_cam'].np.reshape(self.V2C, [3,4])
+		self.P2 = calibDict['P2'].reshape(self.P, [3,4])
+		self.R0 = calibDict['R0_rect'].reshape(self.R0,[3,3])
+		self.V2C = calibDict['Tr_velo_to_cam'].reshape(self.V2C, [3,4])
 		self.C2V = inverse_rigid_trans(V2C)
 
 	def clearCalibrationMatrices(self):
