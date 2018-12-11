@@ -45,7 +45,7 @@ class KittiDataset(Dataset):
 			gridL=cnf.lgrid,
 			gridW=cnf.wgrid,
 			downSamplingFactor=cnf.downsamplingFactor,
-			device=cnf.device)
+			device=None)
 		self.kittiReaderObject = KittiReader(self.dirList)
 		self.projectionObject = ProjectKittiToDifferentCoordinateSystems()
 		self.r = cnf.r
@@ -69,24 +69,25 @@ class KittiDataset(Dataset):
 			labels = self.formatLabelsToUseCase(labels)
 			if labels is not None: # if labels with required objects are present
 				# project cam to velodyne
-				labels[:,[11, 12, 13]] = self.projectionObject.project_rect_to_velo(self, labels[:,[11, 12, 13]])
+				labels[:,[11, 12, 13]] = self.projectionObject.project_rect_to_velo(labels[:,[11, 12, 13]])
 				labels = self.getLabelsInsideGrid(labels)
 			if labels is not None: # if required objects are inside grid
 				# target parameterization
+				labels = fnp(labels)
 				targetClass, targetLoc = self.targetParamObject.encodeLabelToYolo(labels[:,[0,11,12,13,8,9,10,14]])
 			else:
-				targetClass = np.zeros((self.r,self.c),dtype=np.float32)
-				targetLoc = np.array([-1.],dtype=np.float32)
+				targetClass = torch.zeros((self.r, self.c), dtype=torch.float32)
+				targetLoc = torch.tensor([-1.], dtype=torch.float32)
 		bev = utils.lidarToBEV(lidarData, self.grid)
 
-		return fnp(bev), fnp(targetClass), fnp(targetLoc), filename
+		return fnp(bev), targetClass, targetLoc, filename
 
 
 	def formatLabelsToUseCase(self, labels):
-		labels = labels[labels[:0]==self.objectType]
+		labels = labels[labels[:,0]==self.objectType]
 		if labels.shape[0] == 0:
 			return None
-		labels[:,0] = 1.0
+		labels[:,0] = '1.0'
 		labels = labels.astype(np.float32)
 		return labels
 

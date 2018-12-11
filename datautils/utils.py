@@ -53,36 +53,34 @@ class TargetParameterization():
         self.yy = self.yy - self.yRange[0]
 
 
-    def encodeLabelToYolo(labels):
+    def encodeLabelToYolo(self, labels):
         # labels -> c, cx, cy, cz, H, W, L, r
         r, c = self.xx.size()
         targetClass = torch.zeros((r, c), dtype=torch.float32, device=self.device)
         targetLoc = torch.zeros((r, c, 6), dtype=torch.float32, device=self.device)
 
-        for i in range(labels.size(0)):
+        for i in range(labels.shape[0]):
             c, cx, cy, cz, H, W, L, r = labels[i,:]
 
             mask = (cx <= self.xx) & (cx > (self.xx - self.outputGridRes)) & \
                    (cy >= self.yy) & (cy < (self.yy + self.outputGridRes))
-            if mask.sum()>1:
-                print('cx:',cx,'cy:',cy)
 
             if mask.sum()==1:
                 gridX = self.xx[mask]
                 gridY = self.yy[mask]
-
-                targetLoc[mask][0] = torch.cos(2*r)
-                targetLoc[mask][1] = torch.sin(2*r)
-                targetLoc[mask][2] = gridX - cx
-                targetLoc[mask][3] = cy - gridY
-                targetLoc[mask][4] = torch.log(L/self.gridL)
-                targetLos[mask][5] = torch.log(W/self.gridW)
+                
+                targetLoc[mask][0,0] = torch.cos(2*r)
+                targetLoc[mask][0,1] = torch.sin(2*r)
+                targetLoc[mask][0,2] = gridX - cx
+                targetLoc[mask][0,3] = cy - gridY
+                targetLoc[mask][0,4] = torch.log(L/self.gridL)
+                targetLoc[mask][0,5] = torch.log(W/self.gridW)
                 targetClass[mask] = 1.0
 
         return targetClass, targetLoc
         
 
-    def decodeYoloToLabel(networkOutput):
+    def decodeYoloToLabel(self, networkOutput):
         networkOutput[:,:,0] = torch.atan2(networkOutput[:,:,1],networkOutput[:,:,0])/2
         networkOutput[:,:,1] = torch.atan2(networkOutput[:,:,1],networkOutput[:,:,0])/2
         networkOutput[:,:,2] = networkOutput[:,:,2] + self.xx
