@@ -73,7 +73,7 @@ def computeDistanceBetCenters(matchedBoxes, targets):
 	return d.sum().item()
 
 
-def computeLoss7(cla, loc, targetClas, targetLocs, zoomed0_3, zoomed1_2, args):
+def computeLoss7(cla, loc, targetClas, targetLocs):
 	only_pos = False
 
 	posClaLoss = None

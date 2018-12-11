@@ -25,22 +25,20 @@ class CustomGroomer(mg.ModelTrainer):
 			print('data loader is undefined')
 			quit()
 
-		self.copyModel(device)
-
 		for epoch in range(self.epochs):
 			epochValues = []
 
 			for batchId, data in enumerate(self.loader):
 				lidar, targetClass, targetLoc, filenames = data
 
-				lidar.cuda(device, non_blocking=True)
+				lidar = lidar.cuda(device, non_blocking=True)
 				targetClass = [c.cuda(device, non_blocking=True) for c in targetClass]
 				targetLoc = [loc.cuda(device, non_blocking=True) for loc in targetLoc]
 
 				predictedClass, predictedLoc = self.model(lidar)
 
 				claLoss, locLoss, trainLoss, posClaLoss, negClaLoss, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples \
-				 = self.lossFunction(predictedClass, predictedLoc)
+				 = self.lossFunction(predictedClass, predictedLoc, targetClass, targetLoc)
 
 				if trainLoss is not None:
 					self.model.zero_grad()
@@ -118,6 +116,7 @@ def main():
 	modelTrainer.setDataloader(trainLoader)
 	modelTrainer.setEpochs(cnf.epochs)
 	modelTrainer.setModel(model)
+	modelTrainer.copyModel(cnf.device)
 	modelTrainer.setOptimizer('sgd', cnf.slr, cnf.momentum, cnf.decay)
 	modelTrainer.setLRScheduler(cnf.lrDecay, cnf.milestones)
 	

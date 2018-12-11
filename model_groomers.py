@@ -54,7 +54,7 @@ class ModelTrainer():
 		if self.model is None:
 			print('Model is None, cannot copy')
 			quit()
-		self.model.to(device)
+		self.model.cuda(device)
 
 	def setLossFunction(self, lossFunction):
 		self.lossFunction = lossFunction
