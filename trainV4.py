@@ -59,11 +59,12 @@ class CustomGroomer(mg.ModelTrainer):
 		claLoss, locLoss, trainLoss, posClaLoss, negClaLoss, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples = \
 			values
 		self.writer.add_scalar(self.logDir+'/classification_loss', claLoss, self.iter)
-		self.writer.add_scalar(self.logDir+'/pos_classification_loss', posClaLoss, self.iter)
+		if posClaLoss is not None:
+			self.writer.add_scalar(self.logDir+'/pos_classification_loss', posClaLoss, self.iter)
+			self.writer.add_scalar(self.logDir+'/localization_loss', locLoss, self.iter)
+			self.writer.add_scalar(self.logDir+'/mean_pos_sample_confidence', meanConfidence, self.iter)
 		self.writer.add_scalar(self.logDir+'/neg_classification_loss', negClaLoss, self.iter)
-		self.writer.add_scalar(self.logDir+'/localization_loss', locLoss, self.iter)
 		self.writer.add_scalar(self.logDir+'/train_loss', trainLoss, self.iter)
-		self.writer.add_scalar(self.logDir+'/mean_pos_sample_confidence', meanConfidence, self.iter)
 		self.writer.add_scalar(self.logDir+'/mean_pt', overallMeanConfidence, self.iter)
 		self.iter += 1
 
@@ -72,10 +73,11 @@ class CustomGroomer(mg.ModelTrainer):
 		for i in range(len(epochValues)):
 			claLoss, locLoss, trainLoss, posClaLoss, negClaLoss, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples = \
 				epochValues[i]
-			pC = pC + posClaLoss*numPosSamples
+			if posClaLoss is  None:
+				pC = pC + posClaLoss*numPosSamples
+				locL = locL + locLoss*numPosSamples
+				mC = mC + meanConfidence*numPosSamples
 			nC = nC + negClaLoss*numNegSamples
-			locL = locL + locLoss*numPosSamples
-			mC = mC + meanConfidence*numPosSamples
 			mPT = mPT + overallMeanConfidence*(numPosSamples+numNegSamples)
 			nP += numPosSamples
 			nN += numNegSamples
