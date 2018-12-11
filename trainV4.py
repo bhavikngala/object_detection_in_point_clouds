@@ -58,13 +58,13 @@ class CustomGroomer(mg.ModelTrainer):
 	def iterLogger(self, values):
 		claLoss, locLoss, trainLoss, posClaLoss, negClaLoss, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples = \
 			values
-		self.writer(self.logDir+'/classification_loss', claLoss, self.iter)
-		self.writer(self.logDir+'/pos_classification_loss', posClaLoss, self.iter)
-		self.writer(self.logDir+'/neg_classification_loss', negClaLoss, self.iter)
-		self.writer(self.logDir+'/localization_loss', locLoss, self.iter)
-		self.writer(self.logDir+'/train_loss', trainLoss, self.iter)
-		self.writer(self.logDir+'/mean_pos_sample_confidence', meanConfidence, self.iter)
-		self.writer(self.logDir+'/mean_pt', overallMeanConfidence, self.iter)
+		self.writer.add_scalar(self.logDir+'/classification_loss', claLoss, self.iter)
+		self.writer.add_scalar(self.logDir+'/pos_classification_loss', posClaLoss, self.iter)
+		self.writer.add_scalar(self.logDir+'/neg_classification_loss', negClaLoss, self.iter)
+		self.writer.add_scalar(self.logDir+'/localization_loss', locLoss, self.iter)
+		self.writer.add_scalar(self.logDir+'/train_loss', trainLoss, self.iter)
+		self.writer.add_scalar(self.logDir+'/mean_pos_sample_confidence', meanConfidence, self.iter)
+		self.writer.add_scalar(self.logDir+'/mean_pt', overallMeanConfidence, self.iter)
 		self.iter += 1
 
 	def epochLogger(self, epochValues, epoch):
@@ -86,13 +86,13 @@ class CustomGroomer(mg.ModelTrainer):
 		mC /= nP
 		mPT /= (nP+nN)
 
-		self.writer(self.logDir+'/epoch_classification_loss', pC+nC, epoch)
-		self.writer(self.logDir+'/epoch_pos_classification_loss', pC, epoch)
-		self.writer(self.logDir+'/epoch_neg_classification_loss', nC, epoch)
-		self.writer(self.logDir+'/epoch_localization_loss', locL, epoch)
-		self.writer(self.logDir+'/epoch_train_loss', pC+nC+locL, epoch)
-		self.writer(self.logDir+'/epoch_mean_pos_sample_confidence', mC, epoch)
-		self.writer(self.logDir+'/epoch_mean_pt', mPT, epoch)
+		self.writer.add_scalar(self.logDir+'/epoch_classification_loss', pC+nC, epoch)
+		self.writer.add_scalar(self.logDir+'/epoch_pos_classification_loss', pC, epoch)
+		self.writer.add_scalar(self.logDir+'/epoch_neg_classification_loss', nC, epoch)
+		self.writer.add_scalar(self.logDir+'/epoch_localization_loss', locL, epoch)
+		self.writer.add_scalar(self.logDir+'/epoch_train_loss', pC+nC+locL, epoch)
+		self.writer.add_scalar(self.logDir+'/epoch_mean_pos_sample_confidence', mC, epoch)
+		self.writer.add_scalar(self.logDir+'/epoch_mean_pt', mPT, epoch)
 
 
 def main():
