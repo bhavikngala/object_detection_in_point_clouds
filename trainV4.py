@@ -14,10 +14,11 @@ import lossUtils as lu
 
 class CustomGroomer(mg.ModelTrainer):
 
-	def __init__(self, logDir):
+	def __init__(self, logDir, modelFilename):
 		self.writer = SummaryWriter()
 		self.iter = 0
 		self.logDir = logDir
+		self.modelFilename = modelFilename
 
 	def train(self, device):
 		if self.loader is None:
@@ -51,6 +52,7 @@ class CustomGroomer(mg.ModelTrainer):
 				self.iterLogger((claLoss, locLoss, trainLoss, posClaLoss, negClaLoss, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples))
 
 			self.epochLogger(epochValues, epoch)
+			self.saveModel(self.modelFilename)
 
 	def val(self):
 		pass
@@ -112,14 +114,15 @@ def main():
 		cnf.up_sample_layers,
 		cnf.deconv)
 
-	modelTrainer = CustomGroomer(cnf.logDir)
+	modelTrainer = CustomGroomer(cnf.logDir, args.model_file)
 	modelTrainer.setDataloader(trainLoader)
 	modelTrainer.setEpochs(cnf.epochs)
 	modelTrainer.setModel(model)
 	modelTrainer.setOptimizer('sgd', cnf.slr, cnf.momentum, cnf.decay)
 	modelTrainer.setLRScheduler(cnf.lrDecay, cnf.milestones)
 	
-	if args.model_file is not None and os.path.isfile(args.model_file):
+
+	if os.path.isfile(args.model_file):
 		modelTrainer.loadModel(args.model_file)
 
 	modelTrainer.setLossFunction(lu.computeLoss)
