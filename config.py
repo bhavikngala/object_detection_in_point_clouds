@@ -1,8 +1,9 @@
 import torch
 import numpy as np
 
-rootDir = './../data/'
-logDir = './loss'
+rootDir = './../data/tiny_set'
+logDir = './runs'
+logJSONFilename = './loss/logs.json'
 trainSplitFile = './datautils/set_split_files/train.txt'
 valSplitFile = './datautils/set_split_files/val.txt'
 testFile = './datautils/set_split_files/test.txt'
@@ -63,10 +64,10 @@ deconv = [(1, 2, 1, 1), # upsamole block 1
 lr = 1e-4   # learning rate without step
 slr = 1e-2  # step learning rate
 lrDecay = 0.1 # learning rate decay
-milestones = [150, 175] # milestone for pixor
+milestones = [30, 45] # milestone for pixor
 momentum = 0.9
 decay = 0.0001 # weight decay parameter
-epochs = 200
+epochs = 50
 
 # balancing pos-neg samples
 alpha1 = 1.5
@@ -108,5 +109,5 @@ logString2 = 'epoch: [{:04d}/{:03d}] | cl: {:.8f} | nsl: {:.8f} | psl: -.-------
 logString3 = 'epoch: [{:04d}/{:03d}] | cl: -.-------- | nsl: -.-------- | psl: -.-------- | ll: -.--------| tl: -.-------- | PS: [{:07d}/{:07d}] | md: -.---- | mc: -.---- | oamc: -.---- | lt: {:.4f} | bt: {:.4f} \n\n'
 normLogString = 'epoch: [{:04d}/{:03d}] | grad norm: {:.8f} | weight norm: {:.8f} \n\n'
 
-batchSize = 4
+batchSize = 16
 accumulationSteps = 1.0
