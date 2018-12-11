@@ -58,22 +58,24 @@ class CustomGroomer(mg.ModelTrainer):
 	def iterLogger(self, values):
 		claLoss, locLoss, trainLoss, posClaLoss, negClaLoss, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples = \
 			values
-		self.writer.add_scalar(self.logDir+'/classification_loss', claLoss, self.iter)
+		self.writer.add_scalar('data/classification_loss', claLoss, self.iter)
 		if posClaLoss is not None:
-			self.writer.add_scalar('train/pos_classification_loss', posClaLoss, self.iter)
-			self.writer.add_scalar('train/localization_loss', locLoss, self.iter)
-			self.writer.add_scalar('train/mean_pos_sample_confidence', meanConfidence, self.iter)
-		self.writer.add_scalar('train/neg_classification_loss', negClaLoss, self.iter)
-		self.writer.add_scalar('train/train_loss', trainLoss, self.iter)
-		self.writer.add_scalar('train/mean_pt', overallMeanConfidence, self.iter)
+			self.writer.add_scalar('data/pos_classification_loss', posClaLoss, self.iter)
+			self.writer.add_scalar('data/localization_loss', locLoss, self.iter)
+			self.writer.add_scalar('data/mean_pos_sample_confidence', meanConfidence, self.iter)
+		self.writer.add_scalar('data/neg_classification_loss', negClaLoss, self.iter)
+		self.writer.add_scalar('data/train_loss', trainLoss, self.iter)
+		self.writer.add_scalar('data/mean_pt', overallMeanConfidence, self.iter)
+		self.writer.add_scalar('data/pos_samples', numPosSamples, self.iter)
 		self.iter += 1
 
 	def epochLogger(self, epochValues, epoch):
+		pass'''
 		pC, nC, locL, mC, mPT, nP, nN = 0, 0, 0, 0, 0, 0, 0
 		for i in range(len(epochValues)):
 			claLoss, locLoss, trainLoss, posClaLoss, negClaLoss, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples = \
 				epochValues[i]
-			if posClaLoss is  None:
+			if posClaLoss is not None:
 				pC = pC + posClaLoss*numPosSamples
 				locL = locL + locLoss*numPosSamples
 				mC = mC + meanConfidence*numPosSamples
@@ -94,7 +96,7 @@ class CustomGroomer(mg.ModelTrainer):
 		self.writer.add_scalar('train/epoch_localization_loss', locL, epoch)
 		self.writer.add_scalar('train/epoch_train_loss', pC+nC+locL, epoch)
 		self.writer.add_scalar('train/epoch_mean_pos_sample_confidence', mC, epoch)
-		self.writer.add_scalar('train/epoch_mean_pt', mPT, epoch)
+		self.writer.add_scalar('train/epoch_mean_pt', mPT, epoch)'''
 
 
 def main():
@@ -116,7 +118,7 @@ def main():
 
 	modelTrainer = CustomGroomer(cnf.logDir, args.model_file)
 	modelTrainer.setDataloader(trainLoader)
-	modelTrainer.setEpochs(cnf.epochs)
+	modelTrainer.setEpochs(1)
 	modelTrainer.setModel(model)
 	modelTrainer.copyModel(cnf.device)
 	modelTrainer.setOptimizer('sgd', cnf.slr, cnf.momentum, cnf.decay)
