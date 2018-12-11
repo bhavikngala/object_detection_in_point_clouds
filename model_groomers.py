@@ -8,12 +8,13 @@ class ModelTrainer():
 	model = None
 	optim = None
 	scheduler = None
+	lossFunction = None
 
-	def train(self):
-		throw NotImplementedError
+	def train(self, device=None):
+		raise NotImplementedError()
 
-	def logStatus(self):
-		pass
+	def val(self):
+		raise NotImplementedError()
 
 	def setDataloader(self, dataloader):
 		self.loader = dataloader
@@ -38,3 +39,22 @@ class ModelTrainer():
 			print('optimizer undefined')
 			quit()
 		self.scheduler = MultiStepLR(self.optim, milestones, lrDecay)
+
+	def loadModel(self, filename):
+		self.model.load_state_dict(torch.load(cnf.model_file,
+			map_location=lambda storage, loc: storage))
+
+	def saveModel(self, filename):
+		if self.model is None:
+			print('Model is None, cannot save')
+			quit()
+		torch.save(self.model.state_dict(), filename)
+
+	def copyModel(self, device):
+		if self.model is None:
+			print('Model is None, cannot copy')
+			quit()
+		self.model.to(device)
+
+	def setLossFunction(self, lossFunction):
+		self.lossFunction = lossFunction
