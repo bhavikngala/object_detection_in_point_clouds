@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 from torch.optim import Adam, SGD
 from torch.optim.lr_scheduler import MultiStepLR
 
@@ -41,7 +42,7 @@ class ModelTrainer():
 		self.scheduler = MultiStepLR(self.optim, milestones, lrDecay)
 
 	def loadModel(self, filename):
-		self.model.load_state_dict(torch.load(cnf.model_file,
+		self.model.load_state_dict(torch.load(filename,
 			map_location=lambda storage, loc: storage))
 
 	def saveModel(self, filename):
@@ -58,3 +59,7 @@ class ModelTrainer():
 
 	def setLossFunction(self, lossFunction):
 		self.lossFunction = lossFunction
+
+	def setDataParallel(self, flag):
+		if flag:
+			self.model = nn.DataParallel(self.model)

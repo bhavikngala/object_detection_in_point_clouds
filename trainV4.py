@@ -15,7 +15,7 @@ import lossUtils as lu
 class CustomGroomer(mg.ModelTrainer):
 
 	def __init__(self, logDir, modelFilename):
-		self.writer = SummaryWriter()
+		self.writer = SummaryWriter(logDir)
 		self.iter = 0
 		self.logDir = logDir
 		self.modelFilename = modelFilename
@@ -70,7 +70,6 @@ class CustomGroomer(mg.ModelTrainer):
 		self.iter += 1
 
 	def epochLogger(self, epochValues, epoch):
-		pass'''
 		pC, nC, locL, mC, mPT, nP, nN = 0, 0, 0, 0, 0, 0, 0
 		for i in range(len(epochValues)):
 			claLoss, locLoss, trainLoss, posClaLoss, negClaLoss, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples = \
@@ -96,7 +95,7 @@ class CustomGroomer(mg.ModelTrainer):
 		self.writer.add_scalar('train/epoch_localization_loss', locL, epoch)
 		self.writer.add_scalar('train/epoch_train_loss', pC+nC+locL, epoch)
 		self.writer.add_scalar('train/epoch_mean_pos_sample_confidence', mC, epoch)
-		self.writer.add_scalar('train/epoch_mean_pt', mPT, epoch)'''
+		self.writer.add_scalar('train/epoch_mean_pt', mPT, epoch)
 
 	def exportLogs(self, filename):
 		# export scalar data to JSON for external processing
@@ -123,8 +122,9 @@ def main():
 
 	modelTrainer = CustomGroomer(cnf.logDir, args.model_file)
 	modelTrainer.setDataloader(trainLoader)
-	modelTrainer.setEpochs(1)
+	modelTrainer.setEpochs(cnf.epochs)
 	modelTrainer.setModel(model)
+	ModelTrainer.setDataParallel(args.multi_gpu)
 	modelTrainer.copyModel(cnf.device)
 	modelTrainer.setOptimizer('sgd', cnf.slr, cnf.momentum, cnf.decay)
 	modelTrainer.setLRScheduler(cnf.lrDecay, cnf.milestones)
@@ -135,7 +135,7 @@ def main():
 
 	modelTrainer.setLossFunction(lu.computeLoss)
 	modelTrainer.train(cnf.device)
-	modelTrainer.exportLogs(cnf.logDir)
+	modelTrainer.exportLogs(cnf.logJSONFilename)
 
 
 if __name__ == '__main__':
