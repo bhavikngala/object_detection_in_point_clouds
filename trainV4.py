@@ -98,6 +98,11 @@ class CustomGroomer(mg.ModelTrainer):
 		self.writer.add_scalar('train/epoch_mean_pos_sample_confidence', mC, epoch)
 		self.writer.add_scalar('train/epoch_mean_pt', mPT, epoch)'''
 
+	def exportLogs(self, filename):
+		# export scalar data to JSON for external processing
+		self.writer.export_scalars_to_json(filename)
+		self.writer.close()
+
 
 def main():
 	# args
@@ -130,6 +135,7 @@ def main():
 
 	modelTrainer.setLossFunction(lu.computeLoss)
 	modelTrainer.train(cnf.device)
+	modelTrainer.exportLogs(cnf.logDir)
 
 
 if __name__ == '__main__':
