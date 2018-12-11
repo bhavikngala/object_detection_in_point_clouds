@@ -2,7 +2,7 @@ import torch
 import numpy as np
 
 rootDir = './../data/'
-logDIr = './logs/'
+logDir = './logs/'
 trainSplitFile = './datautils/set_split_files/train.txt'
 valSplitFile = './datautils/set_split_files/val.txt'
 testFile = './datautils/set_split_files/test.txt'

@@ -79,7 +79,7 @@ class KittiDataset(Dataset):
 				targetLoc = np.array([-1.],dtype=np.float32)
 		bev = utils.lidarToBEV(lidarData, self.grid)
 
-		return fnp(bev), targetClass, targetLoc, filename
+		return fnp(bev), fnp(targetClass), fnp(targetLoc), filename
 
 
 	def formatLabelsToUseCase(self, labels):
