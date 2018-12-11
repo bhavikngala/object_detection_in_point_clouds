@@ -164,7 +164,7 @@ def computeLoss7(cla, loc, targetClas, targetLocs):
 	elif numNegSamples > 0:
 		negClaLoss /= (numNegSamples*cnf.accumulationSteps)
 		claLoss = negClaLoss
-		trainLoss = claLosss
+		trainLoss = claLoss
 
 	# discard loss if there are no positive samples
 	if only_pos and numPosSamples==0:
