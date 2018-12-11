@@ -60,12 +60,12 @@ class CustomGroomer(mg.ModelTrainer):
 			values
 		self.writer.add_scalar(self.logDir+'/classification_loss', claLoss, self.iter)
 		if posClaLoss is not None:
-			self.writer.add_scalar(self.logDir+'/pos_classification_loss', posClaLoss, self.iter)
-			self.writer.add_scalar(self.logDir+'/localization_loss', locLoss, self.iter)
-			self.writer.add_scalar(self.logDir+'/mean_pos_sample_confidence', meanConfidence, self.iter)
-		self.writer.add_scalar(self.logDir+'/neg_classification_loss', negClaLoss, self.iter)
-		self.writer.add_scalar(self.logDir+'/train_loss', trainLoss, self.iter)
-		self.writer.add_scalar(self.logDir+'/mean_pt', overallMeanConfidence, self.iter)
+			self.writer.add_scalar('train/pos_classification_loss', posClaLoss, self.iter)
+			self.writer.add_scalar('train/localization_loss', locLoss, self.iter)
+			self.writer.add_scalar('train/mean_pos_sample_confidence', meanConfidence, self.iter)
+		self.writer.add_scalar('train/neg_classification_loss', negClaLoss, self.iter)
+		self.writer.add_scalar('train/train_loss', trainLoss, self.iter)
+		self.writer.add_scalar('train/mean_pt', overallMeanConfidence, self.iter)
 		self.iter += 1
 
 	def epochLogger(self, epochValues, epoch):
@@ -88,13 +88,13 @@ class CustomGroomer(mg.ModelTrainer):
 		mC /= nP
 		mPT /= (nP+nN)
 
-		self.writer.add_scalar(self.logDir+'/epoch_classification_loss', pC+nC, epoch)
-		self.writer.add_scalar(self.logDir+'/epoch_pos_classification_loss', pC, epoch)
-		self.writer.add_scalar(self.logDir+'/epoch_neg_classification_loss', nC, epoch)
-		self.writer.add_scalar(self.logDir+'/epoch_localization_loss', locL, epoch)
-		self.writer.add_scalar(self.logDir+'/epoch_train_loss', pC+nC+locL, epoch)
-		self.writer.add_scalar(self.logDir+'/epoch_mean_pos_sample_confidence', mC, epoch)
-		self.writer.add_scalar(self.logDir+'/epoch_mean_pt', mPT, epoch)
+		self.writer.add_scalar('train/epoch_classification_loss', pC+nC, epoch)
+		self.writer.add_scalar('train/epoch_pos_classification_loss', pC, epoch)
+		self.writer.add_scalar('train/epoch_neg_classification_loss', nC, epoch)
+		self.writer.add_scalar('train/epoch_localization_loss', locL, epoch)
+		self.writer.add_scalar('train/epoch_train_loss', pC+nC+locL, epoch)
+		self.writer.add_scalar('train/epoch_mean_pos_sample_confidence', mC, epoch)
+		self.writer.add_scalar('train/epoch_mean_pt', mPT, epoch)
 
 
 def main():
