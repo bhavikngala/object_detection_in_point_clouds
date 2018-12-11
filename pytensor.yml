@@ -10,10 +10,10 @@ dependencies:
   - blas=1.1=openblas
   - bzip2=1.0.6=h470a237_2
   - c-ares=1.15.0=h470a237_1
-  - ca-certificates=2018.10.15=ha4d7672_0
+  - ca-certificates=2018.11.29=ha4d7672_0
   - cairo=1.14.12=h276e583_5
-  - certifi=2018.10.15=py36_1000
-  - dbus=1.13.0=h3a4f0e9_0
+  - certifi=2018.11.29=py36_1000
+  - cycler=0.10.0=py_1
   - expat=2.2.5=hfc679d8_2
   - ffmpeg=4.0.2=ha0c5888_2
   - fontconfig=2.13.1=h65d0f4c_0
@@ -28,14 +28,12 @@ dependencies:
   - gobject-introspection=1.56.1=py36haaf12d0_1
   - graphite2=1.3.12=hfc679d8_1
   - grpcio=1.16.0=py36hd60e7a3_0
-  - gst-plugins-base=1.12.5=hde13a9d_0
-  - gstreamer=1.12.5=h5856ed1_0
   - gtk2=2.24.31=hde048ef_0
   - harfbuzz=1.9.0=h04dbb29_1
-  - hdf5=1.10.3=hc401514_2
   - icu=58.2=hfc679d8_0
   - jasper=1.900.1=hff1ad4c_5
   - jpeg=9c=h470a237_1
+  - kiwisolver=1.0.1=py36h2d50403_2
   - libgfortran=3.0.0=1
   - libgfortran-ng=7.2.0=hdf63c60_3
   - libiconv=1.15=h470a237_3
@@ -47,25 +45,28 @@ dependencies:
   - libxcb=1.13=h470a237_2
   - libxml2=2.9.8=h422b904_5
   - markdown=2.6.11=py_0
+  - matplotlib-base=3.0.2=py36h20b835b_1
   - mkl_fft=1.0.6=py36_0
   - mkl_random=1.0.2=py36_0
   - nettle=3.3=0
-  - numpy=1.15.2=py36_blas_openblashd3ea46f_1
   - openblas=0.2.20=8
-  - opencv=3.4.3=py36_blas_openblash1006a3a_201
+  - opencv=3.4.1=py36_blas_openblash829a850_201
   - openh264=1.8.0=hd28b015_0
   - openssl=1.0.2p=h470a237_1
   - pango=1.40.14=he752989_2
-  - pcre=8.41=hfc679d8_3
   - pixman=0.34.0=h470a237_3
   - protobuf=3.6.1=py36hfc679d8_1
   - pthread-stubs=0.4=h470a237_1
+  - pyparsing=2.3.0=py_0
+  - pyqt=5.6.0=py36h8210e8a_7
   - python=3.6.6=h5001a0f_3
-  - qt=5.6.2=h679f5bc_9
+  - python-dateutil=2.7.5=py_0
+  - sip=4.18.1=py36hfc679d8_0
   - six=1.11.0=py36_1001
   - tensorboard=1.10.0=py36_0
   - tensorflow=1.10.0=py36_0
   - termcolor=1.1.0=py_2
+  - tornado=5.1.1=py36h470a237_0
   - werkzeug=0.14.1=py_0
   - x264=1!152.20180717=h470a237_1
   - xorg-kbproto=1.0.7=h470a237_2
@@ -81,6 +82,10 @@ dependencies:
   - xorg-xextproto=7.3.0=h470a237_2
   - xorg-xproto=7.0.31=h470a237_7
   - cffi=1.11.5=py36he75722e_1
+  - dbus=1.13.2=h714fa37_1
+  - gst-plugins-base=1.14.0=hbbd80ab_1
+  - gstreamer=1.14.0=hb453b48_1
+  - hdf5=1.10.2=hba1933b_1
   - intel-openmp=2019.1=144
   - libedit=3.1.20170329=h6b74fdf_2
   - libffi=3.2.1=hd88cf55_4
@@ -90,11 +95,14 @@ dependencies:
   - mkl=2018.0.3=1
   - ncurses=6.1=hf484d3e_0
   - ninja=1.8.2=py36h6bb024c_1
+  - numpy=1.15.4=py36h99e49ec_0
   - numpy-base=1.15.4=py36h2f8d375_0
   - olefile=0.46=py36_0
+  - pcre=8.42=h439df22_0
   - pillow=5.3.0=py36h34e0f95_0
   - pip=18.1=py36_0
   - pycparser=2.19=py36_0
+  - qt=5.6.3=h8bf5577_3
   - readline=7.0=h7b6447c_5
   - setuptools=40.6.2=py36_0
   - sqlite=3.25.3=h7b6447c_0
@@ -105,6 +113,8 @@ dependencies:
   - pytorch=0.4.1=py36_py35_py27__9.0.176_7.1.2_2
   - torchvision=0.2.1=py36_1
   - pip:
+    - matplotlib==3.0.2
+    - tensorboardx==1.5
     - torch==0.4.1.post2
-prefix: /home/bhavik/miniconda3/envs/pytensor
+prefix: /home/ophiuchus/miniconda3/envs/pytensor
 
