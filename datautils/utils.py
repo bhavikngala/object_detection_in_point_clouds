@@ -52,7 +52,7 @@ class TargetParameterization():
         self.yy, self.xx = torch.meshgrid(
                 [torch.arange(self.yRange[0], self.yRange[1], self.outputGridRes, dtype=torch.float32, device=device),
                  torch.arange(self.xRange[1], self.xRange[0], -self.outputGridRes, dtype=torch.float32, device=device)])
-        self.yy = self.yy - self.yRange[0]
+        # self.yy = self.yy - self.yRange[0]
 
 
     def encodeLabelToYolo(self, labels):
@@ -63,7 +63,7 @@ class TargetParameterization():
         targetLoc = torch.zeros((r, c, 6), dtype=torch.float32, device=self.device)
 
         for i in range(labels.shape[0]):
-            c, cx, cy, cz, H, W, L, r = labels[i,:]
+            c, cx, cy, cz, H, W, L, ry = labels[i,:]
 
             mask = (cx <= self.xx) & (cx > (self.xx - self.outputGridRes)) & \
                    (cy >= self.yy) & (cy < (self.yy + self.outputGridRes))
@@ -71,7 +71,7 @@ class TargetParameterization():
             if mask.sum()==1:
                 gridX = self.xx[mask]
                 gridY = self.yy[mask]
-                t = torch.tensor([torch.cos(2*r), torch.sin(2*r), \
+                t = torch.tensor([torch.cos(2*ry), torch.sin(2*ry), \
                                   gridX - cx, cy - gridY, \
                                   torch.log(L/self.gridL), \
                                   torch.log(W/self.gridW)], dtype=torch.float32)
@@ -92,27 +92,28 @@ class TargetParameterization():
         targetLoc = np.zeros((r, c, 6), dtype=np.float32)
 
         for i in range(labels.shape[0]):
-            c, cx, cy, cz, H, W, L, r = labels[i,:]
+            cl, cx, cy, cz, H, W, L, ry = labels[i,:]
 
-            L03, W03 = 0.3 * L, 0.3 * W
-            L12, W12 = 1.2 * L, 1.2 * W
+            L03, W03 = 0.3 * L.item(), 0.3 * W.item()
+            L12, W12 = 1.2 * L.item(), 1.2 * W.item()
 
             gt03 = np.array([[L03/2,  L03/2, -L03/2, -L03/2],
                              [W03/2, -W03/2, -W03/2,  W03/2],
-                             [    0,      0,      0,      0]], dtype=np.float32).T
-
+                             [    0,      0,      0,      0]], dtype=np.float32)
             gt12 = np.array([[L12/2,  L12/2, -L12/2, -L12/2],
                              [W12/2, -W12/2, -W12/2,  W12/2],
-                             [    0,      0,      0,      0]], dtype=np.float32).T
-            gt03 = cart2hom(gt03)
-            gt12 = cart2hom(gt12)
+                             [    0,      0,      0,      0]], dtype=np.float32)
+            gt03 = cart2hom(gt03.T)
+            gt12 = cart2hom(gt12.T)
 
-            R = rotz(r)
-            translation = np.array([cx, cy, 0], dtype=np.float32)
+            R = rotz(ry)
+            translation = np.array([cx.item(), cy.item(), 0], dtype=np.float32)
             transformationMatrix = transform_from_rot_trans(R, translation)
 
-            gt03 = ((np.matmul(gt03, transformationMatrix)).astype(np.int32))[:,[0,1]]
-            gt12 = ((np.matmul(gt12, transformationMatrix)).astype(np.int32))[:,[0,1]]
+            gt03 = (np.matmul(transformationMatrix, gt03.T)).T[:,[0,1]]
+            gt12 = (np.matmul(transformationMatrix, gt12.T)).T[:,[0,1]]
+            gt03 = gt03.astype(np.int32)
+            gt12 = gt12.astype(np.int32)
 
             targetClass = cv2.fillConvexPoly(targetClass, gt12, -1)
             # targetClass = cv2.fillConvexPoly(targetClass, gt03, 1)
@@ -120,24 +121,24 @@ class TargetParameterization():
             # convert velo to matrix indices
             # r' = r - (x_velo - x_grid_min)/gridRes
             # c' = (y_velo - y_grid_min)/gridRes
-            gt03[:,0] = gt03[:,0]-self.xRange[0]
-            gt03[:,0] = gt03[:,0]/self.outputGridRes
-            gt03[:,0] = r - gt03[:,0]
+            veloToMat = gt03.copy()
+            veloToMat[:,0] = veloToMat[:,0]-self.xRange[0]
+            veloToMat[:,0] = veloToMat[:,0]/self.outputGridRes
+            veloToMat[:,0] = c - veloToMat[:,0]
             
-            gt03[:,1] = gt03[:,1]-self.yRange[0]
-            gt[:,1] = gt[:,1]/self.outputGridRes
-            
-            rmin, cmin = gt03.min(axis=0)
-            rmax, cmax = gt03.max(axis=0)
-
+            veloToMat[:,1] = veloToMat[:,1]-self.yRange[0]
+            veloToMat[:,1] = veloToMat[:,1]/self.outputGridRes
+            rmin, cmin = veloToMat.min(axis=0)
+            rmax, cmax = veloToMat.max(axis=0)
             for rprime in range(rmin, rmax+1, 1):
                 for cprime in range(cmin, cmax+1, 1):
-                    if cv2.pointPolygonTest(gt03, (rprime, cprime)) >= 0:
-                        t = torch.tensor([torch.cos(2*r), torch.sin(2*r), \
-                                          self.xx[rprime, cprime] - cx, \
-                                          cy - self.yy[rprime, cprime], \
+                    if cv2.pointPolygonTest(veloToMat, (rprime, cprime), False) >= 0:
+                        t = torch.tensor([torch.cos(2*ry), torch.sin(2*ry), \
+                                          self.xx[cprime,rprime] - cx, \
+                                          cy - self.yy[cprime,rprime], \
                                           torch.log(L/self.gridL), \
                                           torch.log(W/self.gridW)], dtype=torch.float32)
+                        # print('cx:',cx.item(),'xx:',self.xx[cprime,rprime].item(), 'L03',L03,'cy:',cy.item(),'yy:',self.yy[cprime,rprime].item(), 'W03',W03)
                         targetLoc[rprime, cprime] = t
                         targetClass[rprime, cprime] = 1.0
 

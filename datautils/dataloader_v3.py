@@ -74,7 +74,7 @@ class KittiDataset(Dataset):
 			if labels is not None: # if required objects are inside grid
 				# target parameterization
 				labels = fnp(labels)
-				targetClass, targetLoc = self.targetParamObject.encodeLabelToYolo(labels[:,[0,11,12,13,8,9,10,14]])
+				targetClass, targetLoc = self.targetParamObject.encodeLabelToPIXORIgnoreBoundaryPix(labels[:,[0,11,12,13,8,9,10,14]])
 			else:
 				targetClass = torch.zeros((self.r, self.c), dtype=torch.float32)
 				targetLoc = torch.tensor([-1.], dtype=torch.float32)

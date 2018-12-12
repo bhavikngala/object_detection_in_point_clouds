@@ -74,23 +74,15 @@ class ProjectKittiToDifferentCoordinateSystems():
 		self.V2C = None
 		self.C2V = None
 
-	def cart2hom(self, pts_3d):
-		''' Input: nx3 points in Cartesian
-			Oupput: nx4 points in Homogeneous by pending 1
-		'''
-		n = pts_3d.shape[0]
-		pts_3d_hom = np.hstack((pts_3d, np.ones((n,1))))
-		return pts_3d_hom
-
 	# =========================== 
 	# ------- 3d to 3d ---------- 
 	# =========================== 
 	def project_velo_to_ref(self, pts_3d_velo):
-		pts_3d_velo = self.cart2hom(pts_3d_velo) # nx4
+		pts_3d_velo = cart2hom(pts_3d_velo) # nx4
 		return np.dot(pts_3d_velo, np.transpose(self.V2C))
 
 	def project_ref_to_velo(self, pts_3d_ref):
-		pts_3d_ref = self.cart2hom(pts_3d_ref) # nx4
+		pts_3d_ref = cart2hom(pts_3d_ref) # nx4
 		return np.dot(pts_3d_ref, np.transpose(self.C2V))
 
 	def project_rect_to_ref(self, pts_3d_rect):
@@ -119,7 +111,7 @@ class ProjectKittiToDifferentCoordinateSystems():
 		''' Input: nx3 points in rect camera coord.
 			Output: nx2 points in image2 coord.
 		'''
-		pts_3d_rect = self.cart2hom(pts_3d_rect)
+		pts_3d_rect = cart2hom(pts_3d_rect)
 		pts_2d = np.dot(pts_3d_rect, np.transpose(self.P)) # nx3
 		pts_2d[:,0] /= pts_2d[:,2]
 		pts_2d[:,1] /= pts_2d[:,2]
@@ -153,39 +145,6 @@ class ProjectKittiToDifferentCoordinateSystems():
 		pts_3d_rect = self.project_image_to_rect(uv_depth)
 		return self.project_rect_to_velo(pts_3d_rect)
 
-def rotx(t):
-	''' 3D Rotation about the x-axis. '''
-	c = np.cos(t)
-	s = np.sin(t)
-	return np.array([[1,  0,  0],
-					 [0,  c, -s],
-					 [0,  s,  c]])
-
-
-def roty(t):
-	''' Rotation about the y-axis. '''
-	c = np.cos(t)
-	s = np.sin(t)
-	return np.array([[c,  0,  s],
-					 [0,  1,  0],
-					 [-s, 0,  c]])
-
-
-def rotz(t):
-	''' Rotation about the z-axis. '''
-	c = np.cos(t)
-	s = np.sin(t)
-	return np.array([[c, -s,  0],
-					 [s,  c,  0],
-					 [0,  0,  1]])
-
-
-def transform_from_rot_trans(R, t):
-	''' Transforation matrix from rotation matrix and translation vector. '''
-	R = R.reshape(3, 3)
-	t = t.reshape(3, 1)
-	return np.vstack((np.hstack([R, t]), [0, 0, 0, 1]))
-
 
 def inverse_rigid_trans(Tr):
 	''' Inverse a rigid body transform matrix (3x4 as [R|t])
@@ -195,3 +154,12 @@ def inverse_rigid_trans(Tr):
 	inv_Tr[0:3,0:3] = np.transpose(Tr[0:3,0:3])
 	inv_Tr[0:3,3] = np.dot(-np.transpose(Tr[0:3,0:3]), Tr[0:3,3])
 	return inv_Tr
+
+
+def cart2hom(pts_3d):
+	''' Input: nx3 points in Cartesian
+		Oupput: nx4 points in Homogeneous by pending 1
+	'''
+	n = pts_3d.shape[0]
+	pts_3d_hom = np.hstack((pts_3d, np.ones((n,1))))
+	return pts_3d_hom
