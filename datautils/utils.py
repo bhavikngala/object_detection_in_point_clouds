@@ -2,6 +2,7 @@ import torch
 
 import numpy as np
 import math
+import cv2
 
 def lidarToBEV(lidar, gridConfig):
     '''
@@ -37,6 +38,7 @@ def lidarToBEV(lidar, gridConfig):
 
 class TargetParameterization():
 
+
     def __init__(self, gridConfig, gridL, gridW, downSamplingFactor=4, device=None):
         self.xRange = gridConfig['x']
         self.yRange = gridConfig['y']
@@ -54,6 +56,7 @@ class TargetParameterization():
 
 
     def encodeLabelToYolo(self, labels):
+        # just yolo, only the cell containing the centre is responsible for it
         # labels -> c, cx, cy, cz, H, W, L, r
         r, c = self.xx.size()
         targetClass = torch.zeros((r, c), dtype=torch.float32, device=self.device)
@@ -68,16 +71,77 @@ class TargetParameterization():
             if mask.sum()==1:
                 gridX = self.xx[mask]
                 gridY = self.yy[mask]
-                
-                targetLoc[mask][0,0] = torch.cos(2*r)
-                targetLoc[mask][0,1] = torch.sin(2*r)
-                targetLoc[mask][0,2] = gridX - cx
-                targetLoc[mask][0,3] = cy - gridY
-                targetLoc[mask][0,4] = torch.log(L/self.gridL)
-                targetLoc[mask][0,5] = torch.log(W/self.gridW)
+                t = torch.tensor([torch.cos(2*r), torch.sin(2*r), \
+                                  gridX - cx, cy - gridY, \
+                                  torch.log(L/self.gridL), \
+                                  torch.log(W/self.gridW)], dtype=torch.float32)
+                targetLoc[mask] = t
                 targetClass[mask] = 1.0
 
         return targetClass, targetLoc
+
+
+    def encodeLabelToPIXORIgnoreBoundaryPix(self, labels):
+        # pixor style label encoding, all pixels inside ground truth
+        # box are positive samples rest are negative
+        # labels -> c, cx, cy, cz, H, W, L, r
+        r, c = self.xx.size()
+        # targetClass = torch.zeros((r, c), dtype=torch.float32, device=self.device)
+        # targetLoc = torch.zeros((r, c, 6), dtype=torch.float32, device=self.device)
+        targetClass = np.zeros((r, c), dtype=np.float32)
+        targetLoc = np.zeros((r, c, 6), dtype=np.float32)
+
+        for i in range(labels.shape[0]):
+            c, cx, cy, cz, H, W, L, r = labels[i,:]
+
+            L03, W03 = 0.3 * L, 0.3 * W
+            L12, W12 = 1.2 * L, 1.2 * W
+
+            gt03 = np.array([[L03/2,  L03/2, -L03/2, -L03/2],
+                             [W03/2, -W03/2, -W03/2,  W03/2],
+                             [    0,      0,      0,      0]], dtype=np.float32).T
+
+            gt12 = np.array([[L12/2,  L12/2, -L12/2, -L12/2],
+                             [W12/2, -W12/2, -W12/2,  W12/2],
+                             [    0,      0,      0,      0]], dtype=np.float32).T
+            gt03 = cart2hom(gt03)
+            gt12 = cart2hom(gt12)
+
+            R = rotz(r)
+            translation = np.array([cx, cy, 0], dtype=np.float32)
+            transformationMatrix = transform_from_rot_trans(R, translation)
+
+            gt03 = ((np.matmul(gt03, transformationMatrix)).astype(np.int32))[:,[0,1]]
+            gt12 = ((np.matmul(gt12, transformationMatrix)).astype(np.int32))[:,[0,1]]
+
+            targetClass = cv2.fillConvexPoly(targetClass, gt12, -1)
+            # targetClass = cv2.fillConvexPoly(targetClass, gt03, 1)
+            
+            # convert velo to matrix indices
+            # r' = r - (x_velo - x_grid_min)/gridRes
+            # c' = (y_velo - y_grid_min)/gridRes
+            gt03[:,0] = gt03[:,0]-self.xRange[0]
+            gt03[:,0] = gt03[:,0]/self.outputGridRes
+            gt03[:,0] = r - gt03[:,0]
+            
+            gt03[:,1] = gt03[:,1]-self.yRange[0]
+            gt[:,1] = gt[:,1]/self.outputGridRes
+            
+            rmin, cmin = gt03.min(axis=0)
+            rmax, cmax = gt03.max(axis=0)
+
+            for rprime in range(rmin, rmax+1, 1):
+                for cprime in range(cmin, cmax+1, 1):
+                    if cv2.pointPolygonTest(gt03, (rprime, cprime)) >= 0:
+                        t = torch.tensor([torch.cos(2*r), torch.sin(2*r), \
+                                          self.xx[rprime, cprime] - cx, \
+                                          cy - self.yy[rprime, cprime], \
+                                          torch.log(L/self.gridL), \
+                                          torch.log(W/self.gridW)], dtype=torch.float32)
+                        targetLoc[rprime, cprime] = t
+                        targetClass[rprime, cprime] = 1.0
+
+        return torch.from_numpy(targetClass), torch.from_numpy(targetLoc)
         
 
     def decodeYoloToLabel(self, networkOutput):
@@ -91,17 +155,44 @@ class TargetParameterization():
         return networkOutput
 
 
-if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-    filename = './../data/tiny_set/train/000492.bin'
-    gridConfig = {
-        'x':(0, 70.4),
-        'y':(-40, 40),
-        'z':(-2.5, 1),
-        'res':0.1
-    }
-    lidar = np.fromfile(filename, dtype=np.float32).reshape(-1, 4)
-    bev = lidar_to_top(lidar, gridConfig)
-    print(bev.shape)
-    plt.imshow(bev[-1,:,:])
-    plt.show()
+def rotx(t):
+    ''' 3D Rotation about the x-axis. '''
+    c = np.cos(t)
+    s = np.sin(t)
+    return np.array([[1,  0,  0],
+                     [0,  c, -s],
+                     [0,  s,  c]])
+
+
+def roty(t):
+    ''' Rotation about the y-axis. '''
+    c = np.cos(t)
+    s = np.sin(t)
+    return np.array([[c,  0,  s],
+                     [0,  1,  0],
+                     [-s, 0,  c]])
+
+
+def rotz(t):
+    ''' Rotation about the z-axis. '''
+    c = np.cos(t)
+    s = np.sin(t)
+    return np.array([[c, -s,  0],
+                     [s,  c,  0],
+                     [0,  0,  1]])
+
+
+def transform_from_rot_trans(R, t):
+    ''' Transforation matrix from rotation matrix and translation vector. '''
+    R = R.reshape(3, 3)
+    t = t.reshape(3, 1)
+    return np.vstack((np.hstack([R, t]), [0, 0, 0, 1]))
+
+
+def cart2hom(pts_3d):
+        ''' Input: nx3 points in Cartesian
+            Oupput: nx4 points in Homogeneous by pending 1
+        '''
+        n = pts_3d.shape[0]
+        pts_3d_hom = np.hstack((pts_3d, np.ones((n,1))))
+        return pts_3d_hom
