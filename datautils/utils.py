@@ -54,6 +54,9 @@ class TargetParameterization():
                  torch.arange(self.xRange[1], self.xRange[0], -self.outputGridRes, dtype=torch.float32, device=device)])
         # self.yy = self.yy - self.yRange[0]
 
+        self.mean = cnf.carPIXORIgnoreBoundaryMean
+        self.std = cnf.carPIXORIgnoreBoundaryMean
+
 
     def encodeLabelToYolo(self, labels):
         # just yolo, only the cell containing the centre is responsible for it
@@ -138,6 +141,7 @@ class TargetParameterization():
                                           cy - self.yy[cprime,rprime], \
                                           torch.log(L/self.gridL), \
                                           torch.log(W/self.gridW)], dtype=torch.float32)
+                        t = (t-self.mean)/self.std
                         # print('cx:',cx.item(),'xx:',self.xx[cprime,rprime].item(), 'L03',L03,'cy:',cy.item(),'yy:',self.yy[cprime,rprime].item(), 'W03',W03)
                         targetLoc[cprime, rprime] = t
                         targetClass[cprime, rprime] = 1.0
