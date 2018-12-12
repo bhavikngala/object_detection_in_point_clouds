@@ -135,8 +135,8 @@ def computeLoss7(cla, loc, targetClas, targetLocs):
 		#***************PS******************
 
 		#***************NS******************
-		
-		predC = c[~b]
+		b = (targetCla == 0).squeeze()
+		predC = c[b]
 
 		loss, oamc = focalLoss(predC, 0, reduction='sum', alpha=cnf.alpha)
 			
