@@ -130,8 +130,8 @@ class TargetParameterization():
             veloToMat[:,1] = veloToMat[:,1]/self.outputGridRes
             rmin, cmin = veloToMat.min(axis=0)
             rmax, cmax = veloToMat.max(axis=0)
-            for rprime in range(rmin, rmax+1, 1):
-                for cprime in range(cmin, cmax+1, 1):
+            for rprime in range(rmin-1, rmax, 1):
+                for cprime in range(cmin-1, cmax, 1):
                     if cv2.pointPolygonTest(veloToMat, (rprime, cprime), False) >= 0:
                         t = torch.tensor([torch.cos(2*ry), torch.sin(2*ry), \
                                           self.xx[cprime,rprime] - cx, \
@@ -139,8 +139,8 @@ class TargetParameterization():
                                           torch.log(L/self.gridL), \
                                           torch.log(W/self.gridW)], dtype=torch.float32)
                         # print('cx:',cx.item(),'xx:',self.xx[cprime,rprime].item(), 'L03',L03,'cy:',cy.item(),'yy:',self.yy[cprime,rprime].item(), 'W03',W03)
-                        targetLoc[rprime, cprime] = t
-                        targetClass[rprime, cprime] = 1.0
+                        targetLoc[cprime, rprime] = t
+                        targetClass[cprime, rprime] = 1.0
 
         return torch.from_numpy(targetClass), torch.from_numpy(targetLoc)
         
