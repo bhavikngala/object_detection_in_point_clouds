@@ -44,6 +44,8 @@ class KittiDataset(Dataset):
 			gridConfig=cnf.gridConfig,
 			gridL=cnf.lgrid,
 			gridW=cnf.wgrid,
+			mean=cnf.carPIXORIgnoreBoundaryMean,
+			std=cnf.carPIXORIgnoreBoundarySTD,
 			downSamplingFactor=cnf.downsamplingFactor,
 			device=None)
 		self.kittiReaderObject = KittiReader(self.dirList)
