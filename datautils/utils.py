@@ -39,7 +39,7 @@ def lidarToBEV(lidar, gridConfig):
 class TargetParameterization():
 
 
-    def __init__(self, gridConfig, gridL, gridW, downSamplingFactor=4, device=None):
+    def __init__(self, gridConfig, gridL, gridW, mean, std, downSamplingFactor=4, device=None):
         self.xRange = gridConfig['x']
         self.yRange = gridConfig['y']
         self.zRange = gridConfig['z']
@@ -54,8 +54,8 @@ class TargetParameterization():
                  torch.arange(self.xRange[1], self.xRange[0], -self.outputGridRes, dtype=torch.float32, device=device)])
         # self.yy = self.yy - self.yRange[0]
 
-        self.mean = cnf.carPIXORIgnoreBoundaryMean
-        self.std = cnf.carPIXORIgnoreBoundaryMean
+        self.mean = mean
+        self.std = std
 
 
     def encodeLabelToYolo(self, labels):
