@@ -124,7 +124,7 @@ def main():
 	modelTrainer.setDataloader(trainLoader)
 	modelTrainer.setEpochs(cnf.epochs)
 	modelTrainer.setModel(model)
-	ModelTrainer.setDataParallel(args.multi_gpu)
+	modelTrainer.setDataParallel(args.multi_gpu)
 	modelTrainer.copyModel(cnf.device)
 	modelTrainer.setOptimizer('sgd', cnf.slr, cnf.momentum, cnf.decay)
 	modelTrainer.setLRScheduler(cnf.lrDecay, cnf.milestones)
