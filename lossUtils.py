@@ -97,7 +97,7 @@ def computeLoss7(cla, loc, targetClas, targetLocs):
 		targetCla = targetClas[i]
 		targetLoc = targetLocs[i]
 
-		numTargetsInFrame = targetCla.sum().item()
+		numTargetsInFrame = (targetCla == 1).sum().item()
 		numPosSamples += numTargetsInFrame
 
 		if numTargetsInFrame == 0:
@@ -109,6 +109,8 @@ def computeLoss7(cla, loc, targetClas, targetLocs):
 				negClaLoss += loss
 			else:
 				negClaLoss = loss
+
+			numNegSamples += lr
 			continue
 
 		#***************PS******************
@@ -136,6 +138,7 @@ def computeLoss7(cla, loc, targetClas, targetLocs):
 
 		#***************NS******************
 		b = (targetCla == 0).squeeze()
+		numNegSamples += b.sum().item()
 		predC = c[b]
 
 		loss, oamc = focalLoss(predC, 0, reduction='sum', alpha=cnf.alpha)
@@ -149,7 +152,6 @@ def computeLoss7(cla, loc, targetClas, targetLocs):
 
 		#***************NS******************
 	
-	numNegSamples = lm*lr - numPosSamples
 	if numPosSamples>0:
 		meanConfidence /= numPosSamples
 	if numPosSamples!=0 or numNegSamples!=0:
