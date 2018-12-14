@@ -58,15 +58,16 @@ class CustomGroomer(mg.ModelTrainer):
 	def iterLogger(self, values):
 		claLoss, locLoss, trainLoss, posClaLoss, negClaLoss, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples = \
 			values
-		self.writer.add_scalar('data/classification_loss', claLoss, self.iter)
+		self.writer.add_scalar('classification_loss', claLoss, self.iter)
 		if posClaLoss is not None:
-			self.writer.add_scalar('data/pos_classification_loss', posClaLoss, self.iter)
-			self.writer.add_scalar('data/localization_loss', locLoss, self.iter)
-			self.writer.add_scalar('data/mean_pos_sample_confidence', meanConfidence, self.iter)
-		self.writer.add_scalar('data/neg_classification_loss', negClaLoss, self.iter)
-		self.writer.add_scalar('data/train_loss', trainLoss, self.iter)
-		self.writer.add_scalar('data/mean_pt', overallMeanConfidence, self.iter)
-		self.writer.add_scalar('data/pos_samples', numPosSamples, self.iter)
+			self.writer.add_scalar('pos_classification_loss', posClaLoss, self.iter)
+			self.writer.add_scalar('localization_loss', locLoss, self.iter)
+			self.writer.add_scalar('mean_pos_sample_confidence', meanConfidence, self.iter)
+		self.writer.add_scalar('neg_classification_loss', negClaLoss, self.iter)
+		self.writer.add_scalar('train_loss', trainLoss, self.iter)
+		self.writer.add_scalar('mean_pt', overallMeanConfidence, self.iter)
+		self.writer.add_scalar('pos_samples', numPosSamples, self.iter)
+		self.writer.add_scalar('neg_samples', numNegSamples, self.iter)
 		self.iter += 1
 
 	def epochLogger(self, epochValues, epoch):
