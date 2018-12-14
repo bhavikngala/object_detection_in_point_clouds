@@ -39,7 +39,7 @@ def lidarToBEV(lidar, gridConfig):
 class TargetParameterization():
 
 
-    def __init__(self, gridConfig, gridL, gridW, mean, std, downSamplingFactor=4, device=None):
+    def __init__(self, gridConfig, gridL, gridW, downSamplingFactor=4, device=None):
         self.xRange = gridConfig['x']
         self.yRange = gridConfig['y']
         self.zRange = gridConfig['z']
@@ -53,9 +53,6 @@ class TargetParameterization():
                 [torch.arange(self.yRange[0], self.yRange[1], self.outputGridRes, dtype=torch.float32, device=device),
                  torch.arange(self.xRange[1], self.xRange[0], -self.outputGridRes, dtype=torch.float32, device=device)])
         # self.yy = self.yy - self.yRange[0]
-
-        self.mean = mean
-        self.std = std
 
 
     def encodeLabelToYolo(self, labels):
@@ -84,7 +81,7 @@ class TargetParameterization():
         return targetClass, targetLoc
 
 
-    def encodeLabelToPIXORIgnoreBoundaryPix(self, labels):
+    def encodeLabelToPIXORIgnoreBoundaryPix(self, labels, mean=None, std=None):
         # pixor style label encoding, all pixels inside ground truth
         # box are positive samples rest are negative
         # labels -> c, cx, cy, cz, H, W, L, r
@@ -141,7 +138,8 @@ class TargetParameterization():
                                           cy - self.yy[cprime,rprime], \
                                           torch.log(L/self.gridL), \
                                           torch.log(W/self.gridW)], dtype=torch.float32)
-                        t = (t-self.mean)/self.std
+                        if mean is not None and std is not None:
+                            t = (t-mean)/std
                         # print('cx:',cx.item(),'xx:',self.xx[cprime,rprime].item(), 'L03',L03,'cy:',cy.item(),'yy:',self.yy[cprime,rprime].item(), 'W03',W03)
                         targetLoc[cprime, rprime] = t
                         targetClass[cprime, rprime] = 1.0

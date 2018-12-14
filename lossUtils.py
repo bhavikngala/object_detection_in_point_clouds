@@ -64,15 +64,6 @@ def computeIoU(matchedBoxes, targets):
 	return (intersectionArea/unionArea).mean().item()
 
 
-def computeDistanceBetCenters(matchedBoxes, targets):
-	'''
-	Computes mean distance between centers of matched boxes and targets
-	'''
-	d = (matchedBoxes[:,2]-targets[:,3]).pow(2) + (matchedBoxes[:,3]-targets[:,4]).pow(2)
-	d = d.pow(0.5)
-	return d.sum().item()
-
-
 def computeLoss7(cla, loc, targetClas, targetLocs):
 	only_pos = False
 
@@ -101,7 +92,10 @@ def computeLoss7(cla, loc, targetClas, targetLocs):
 		numPosSamples += numTargetsInFrame
 
 		if numTargetsInFrame == 0:
-			loss, oamc = focalLoss(c, 0, reduction='sum', alpha=cnf.alpha)
+			b = (targetCla == 0).squeeze()
+			numNegSamples += b.sum().item()
+			predC = c[b]
+			loss, oamc = focalLoss(predC, 0, reduction='sum', alpha=cnf.alpha)
 						
 			overallMeanConfidence += oamc.item()
 			
@@ -109,8 +103,6 @@ def computeLoss7(cla, loc, targetClas, targetLocs):
 				negClaLoss += loss
 			else:
 				negClaLoss = loss
-
-			numNegSamples += lr
 			continue
 
 		#***************PS******************
@@ -121,7 +113,7 @@ def computeLoss7(cla, loc, targetClas, targetLocs):
 		targetL = targetLoc[b]
 
 		loss, oamc = focalLoss(predC, 1, reduction='sum', alpha=cnf.alpha)
-		meanConfidence += predC.sum()
+		meanConfidence += oamc.item()
 		overallMeanConfidence += oamc.item()
 		
 		if posClaLoss is not None:
@@ -171,6 +163,7 @@ def computeLoss7(cla, loc, targetClas, targetLocs):
 	# discard loss if there are no positive samples
 	if only_pos and numPosSamples==0:
 		claLoss = None
+		trainLoss = None
 
 	return claLoss, locLoss, trainLoss, posClaLoss, negClaLoss, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples
 

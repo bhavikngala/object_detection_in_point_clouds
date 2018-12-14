@@ -20,8 +20,10 @@ class KittiDataset(Dataset):
 		
 		if dataSetType=='test':
 			splitFile = cnf.testFile
+		elif dataSetType=='train' and args.full_train_set:
+			splitFile = cnf.fullTrainFile
 		elif dataSetType=='train':
-			splitFile = cnf.trainSplitFile
+			splitFile  = cnf.trainSplitFile
 		else:
 			splitFile = cnf.valSplitFile
 
@@ -44,17 +46,19 @@ class KittiDataset(Dataset):
 			gridConfig=cnf.gridConfig,
 			gridL=cnf.lgrid,
 			gridW=cnf.wgrid,
-			mean=cnf.carPIXORIgnoreBoundaryMean,
-			std=cnf.carPIXORIgnoreBoundarySTD,
 			downSamplingFactor=cnf.downsamplingFactor,
 			device=None)
 		self.kittiReaderObject = KittiReader(self.dirList)
 		self.projectionObject = ProjectKittiToDifferentCoordinateSystems()
 		self.r = cnf.r
 		self.c = cnf.c
+		self.mean=cnf.carPIXORIgnoreBoundaryMean,
+		self.std=cnf.carPIXORIgnoreBoundarySTD
+
 
 	def __len__(self):
 		return len(self.filenames)
+
 
 	def __getitem__(self, index):
 		filename = self.filenames[index]
@@ -76,7 +80,7 @@ class KittiDataset(Dataset):
 			if labels is not None: # if required objects are inside grid
 				# target parameterization
 				labels = fnp(labels)
-				targetClass, targetLoc = self.targetParamObject.encodeLabelToPIXORIgnoreBoundaryPix(labels[:,[0,11,12,13,8,9,10,14]])
+				targetClass, targetLoc = self.targetParamObject.encodeLabelToPIXORIgnoreBoundaryPix(labels[:,[0,11,12,13,8,9,10,14]], self.mean, self.std)
 			else:
 				targetClass = torch.zeros((self.r, self.c), dtype=torch.float32)
 				targetLoc = torch.tensor([-1.], dtype=torch.float32)
@@ -93,6 +97,7 @@ class KittiDataset(Dataset):
 		labels = labels.astype(np.float32)
 		return labels
 
+
 	def getLabelsInsideGrid(self, labels):
 		mask = \
 			((labels[:,11]<=self.grid['x'][1]) & (labels[:,11]>=self.grid['x'][0])) & \
@@ -103,6 +108,7 @@ class KittiDataset(Dataset):
 			return labels[mask]
 		else:
 			return None
+
 
 def customCollateFunction(batch):
 	bev, targetCla, targetLoc, filenames = zip(*batch)

@@ -5,6 +5,7 @@ rootDir = './../data'
 logDir = './runs'
 logJSONFilename = './loss/logs.json'
 trainSplitFile = './datautils/set_split_files/train.txt'
+fullTrainFile = './datautils/set_split_files/trainval.txt'
 valSplitFile = './datautils/set_split_files/val.txt'
 testFile = './datautils/set_split_files/test.txt'
 
