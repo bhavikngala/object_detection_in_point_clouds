@@ -86,7 +86,6 @@ class TargetParameterization():
         # pixor style label encoding, all pixels inside ground truth
         # box are positive samples rest are negative
         # labels -> c, cx, cy, cz, H, W, L, r
-        print(self.encodeLabelToPIXORIgnoreBoundaryPix.__name__)
         c, r = self.xx.size()
         # targetClass = torch.zeros((r, c), dtype=torch.float32, device=self.device)
         # targetLoc = torch.zeros((r, c, 6), dtype=torch.float32, device=self.device)
@@ -157,6 +156,9 @@ class TargetParameterization():
         veloCord[:, 0] = r - (veloCord[:, 0] - self.xRange[0])/self.outputGridRes
         # y -> c'; y_velo = -c*0.4 + yrange(1)
         veloCord[:, 1] = (self.yRange[1] - veloCord[:, 1])/self.outputGridRes
+
+        veloCord[veloCord[:,0]>=r] = r-1
+        veloCord[veloCord[:,1]>=c] = c-1
 
         return veloCord
 
