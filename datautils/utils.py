@@ -49,16 +49,17 @@ class TargetParameterization():
         self.gridW = gridW
         self.device = device
 
-        self.yy, self.xx = torch.meshgrid(
-                [torch.arange(self.yRange[0], self.yRange[1], self.outputGridRes, dtype=torch.float32, device=device),
-                 torch.arange(self.xRange[1], self.xRange[0], -self.outputGridRes, dtype=torch.float32, device=device)])
+        self.xx, self.yy = torch.meshgrid(
+                [torch.arange(self.xRange[1], self.xRange[0], -self.outputGridRes, dtype=torch.float32, device=device),
+                 torch.arange(self.yRange[1], self.yRange[0], -self.outputGridRes, dtype=torch.float32, device=device)])
         # self.yy = self.yy - self.yRange[0]
 
 
     def encodeLabelToYolo(self, labels):
         # just yolo, only the cell containing the centre is responsible for it
         # labels -> c, cx, cy, cz, H, W, L, r
-        r, c = self.xx.size()
+        raise NotImplementedError()
+        c, r = self.xx.size()
         targetClass = torch.zeros((r, c), dtype=torch.float32, device=self.device)
         targetLoc = torch.zeros((r, c, 6), dtype=torch.float32, device=self.device)
 
@@ -85,18 +86,19 @@ class TargetParameterization():
         # pixor style label encoding, all pixels inside ground truth
         # box are positive samples rest are negative
         # labels -> c, cx, cy, cz, H, W, L, r
-        r, c = self.xx.size()
+        print(self.encodeLabelToPIXORIgnoreBoundaryPix.__name__)
+        c, r = self.xx.size()
         # targetClass = torch.zeros((r, c), dtype=torch.float32, device=self.device)
         # targetLoc = torch.zeros((r, c, 6), dtype=torch.float32, device=self.device)
         targetClass = np.zeros((r, c), dtype=np.float32)
         targetLoc = np.zeros((r, c, 6), dtype=np.float32)
-
+        
         for i in range(labels.shape[0]):
             cl, cx, cy, cz, H, W, L, ry = labels[i,:]
 
             L03, W03 = 0.3 * L.item(), 0.3 * W.item()
             L12, W12 = 1.2 * L.item(), 1.2 * W.item()
-
+            
             gt03 = np.array([[L03/2,  L03/2, -L03/2, -L03/2],
                              [W03/2, -W03/2, -W03/2,  W03/2],
                              [    0,      0,      0,      0]], dtype=np.float32)
@@ -112,27 +114,18 @@ class TargetParameterization():
 
             gt03 = (np.matmul(transformationMatrix, gt03.T)).T[:,[0,1]]
             gt12 = (np.matmul(transformationMatrix, gt12.T)).T[:,[0,1]]
-            gt03 = gt03.astype(np.int32)
-            gt12 = gt12.astype(np.int32)
-
+            
+            gt03 = self.veloCordToMatrixIndices(gt03.astype(np.int32))
+            gt12 = self.veloCordToMatrixIndices(gt12.astype(np.int32))
+            
             targetClass = cv2.fillConvexPoly(targetClass, gt12, -1)
             # targetClass = cv2.fillConvexPoly(targetClass, gt03, 1)
             
-            # convert velo to matrix indices
-            # r' = r - (x_velo - x_grid_min)/gridRes
-            # c' = (y_velo - y_grid_min)/gridRes
-            veloToMat = gt03.copy()
-            veloToMat[:,0] = veloToMat[:,0]-self.xRange[0]
-            veloToMat[:,0] = veloToMat[:,0]/self.outputGridRes
-            veloToMat[:,0] = c - veloToMat[:,0]
-            
-            veloToMat[:,1] = veloToMat[:,1]-self.yRange[0]
-            veloToMat[:,1] = veloToMat[:,1]/self.outputGridRes
-            rmin, cmin = veloToMat.min(axis=0)
-            rmax, cmax = veloToMat.max(axis=0)
-            for rprime in range(rmin-1, rmax, 1):
-                for cprime in range(cmin-1, cmax, 1):
-                    if cv2.pointPolygonTest(veloToMat, (rprime, cprime), False) >= 0:
+            rmin, cmin = gt03.min(axis=0)
+            rmax, cmax = gt03.max(axis=0)
+            for rprime in range(rmin, rmax+1, 1):
+                for cprime in range(cmin, cmax+1, 1):
+                    if cv2.pointPolygonTest(gt03, (rprime, cprime), False) >= 0:
                         t = torch.tensor([torch.cos(2*ry), torch.sin(2*ry), \
                                           self.xx[cprime,rprime] - cx, \
                                           cy - self.yy[cprime,rprime], \
@@ -140,7 +133,6 @@ class TargetParameterization():
                                           torch.log(W/self.gridW)], dtype=torch.float32)
                         if mean is not None and std is not None:
                             t = (t-mean)/std
-                        # print('cx:',cx.item(),'xx:',self.xx[cprime,rprime].item(), 'L03',L03,'cy:',cy.item(),'yy:',self.yy[cprime,rprime].item(), 'W03',W03)
                         targetLoc[cprime, rprime] = t
                         targetClass[cprime, rprime] = 1.0
 
@@ -156,6 +148,17 @@ class TargetParameterization():
         networkOutput[:,:,5] = torch.exp(networkOutput[:,:,5]) * self.gridW
 
         return networkOutput
+
+
+    def veloCordToMatrixIndices(self, veloCord):
+        c, r = self.xx.size()
+
+        # x -> r'; x_velo = (r-r')*0.4 + xrange(0)
+        veloCord[:, 0] = r - (veloCord[:, 0] - self.xRange[0])/self.outputGridRes
+        # y -> c'; y_velo = -c*0.4 + yrange(1)
+        veloCord[:, 1] = (self.yRange[1] - veloCord[:, 1])/self.outputGridRes
+
+        return veloCord
 
 
 def rotx(t):
