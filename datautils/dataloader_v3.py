@@ -52,7 +52,7 @@ class KittiDataset(Dataset):
 		self.projectionObject = ProjectKittiToDifferentCoordinateSystems()
 		self.r = cnf.r
 		self.c = cnf.c
-		self.mean=cnf.carPIXORIgnoreBoundaryMean,
+		self.mean=cnf.carPIXORIgnoreBoundaryMean
 		self.std=cnf.carPIXORIgnoreBoundarySTD
 
 
