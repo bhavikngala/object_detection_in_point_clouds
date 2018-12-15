@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-rootDir = './../data/tiny_set'
+rootDir = './../data'
 logDir = './runs'
 logJSONFilename = './loss/logs.json'
 trainSplitFile = './datautils/set_split_files/train.txt'

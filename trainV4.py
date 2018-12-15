@@ -32,8 +32,8 @@ class CustomGroomer(mg.ModelTrainer):
 				lidar, targetClass, targetLoc, filenames = data
 
 				lidar = lidar.cuda(device, non_blocking=True)
-				targetClass = [c.cuda(device, non_blocking=True) for c in targetClass]
-				targetLoc = [loc.cuda(device, non_blocking=True) for loc in targetLoc]
+				targetClass = [c.contiguous().cuda(device, non_blocking=True) for c in targetClass]
+				targetLoc = [loc.contiguous().cuda(device, non_blocking=True) for loc in targetLoc]
 
 				predictedClass, predictedLoc = self.model(lidar)
 
