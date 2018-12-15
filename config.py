@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-rootDir = './../data'
+rootDir = './../data/tiny_set'
 logDir = './runs'
 logJSONFilename = './loss/logs.json'
 trainSplitFile = './datautils/set_split_files/train.txt'
@@ -52,8 +52,8 @@ c = int((x_max-x_min)/(gridConfig['res']*downsamplingFactor))
 
 objtype = 'car'
 
-carPIXORIgnoreBoundaryMean = torch.tensor([-0.5462, -0.0517, -0.4152,  0.4035, -2.8867, -3.8917], dtype=torch.float32)
-carPIXORIgnoreBoundarySTD = torch.tensor([0.7450, 0.3796, 0.3439, 0.6275, 0.1072, 0.0631], dtype=torch.float32)
+carPIXORIgnoreBoundaryMean = torch.tensor([-0.5950, -0.0358, -0.6063,  0.0318, -2.8910, -3.8930], dtype=torch.float32)
+carPIXORIgnoreBoundarySTD = torch.tensor([0.7242, 0.3470, 0.4159, 0.6856, 0.1083, 0.0628], dtype=torch.float32)
 
 # res_block_layers = list if number of channels in the first conv layer of each res_block
 # up_sample_layers = list of tuple of number of channels input deconv and conv layers
