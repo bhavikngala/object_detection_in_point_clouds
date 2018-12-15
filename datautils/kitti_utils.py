@@ -57,19 +57,19 @@ class ProjectKittiToDifferentCoordinateSystems():
 	# reference: https://github.com/charlesq34/frustum-pointnets/blob/master/kitti/kitti_util.py
 
 	def __init__(self):
-		self.P2 = None
+		self.P = None
 		self.R0 = None
 		self.V2C = None
 		self.C2V = None
 
 	def setCalibrationMatrices(self, calibDict):
-		self.P2 = calibDict['P2'].reshape([3,4])
+		self.P = calibDict['P2'].reshape([3,4])
 		self.R0 = calibDict['R0_rect'].reshape([3,3])
 		self.V2C = calibDict['Tr_velo_to_cam'].reshape([3,4])
 		self.C2V = inverse_rigid_trans(self.V2C)
 
 	def clearCalibrationMatrices(self):
-		self.P2 = None
+		self.P = None
 		self.R0 = None
 		self.V2C = None
 		self.C2V = None
@@ -160,6 +160,7 @@ def cart2hom(pts_3d):
 	''' Input: nx3 points in Cartesian
 		Oupput: nx4 points in Homogeneous by pending 1
 	'''
+	print(pts_3d.shape)
 	n = pts_3d.shape[0]
 	pts_3d_hom = np.hstack((pts_3d, np.ones((n,1))))
 	return pts_3d_hom

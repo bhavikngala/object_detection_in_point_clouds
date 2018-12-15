@@ -49,9 +49,11 @@ class TargetParameterization():
         self.gridW = gridW
         self.device = device
 
-        self.xx, self.yy = torch.meshgrid(
-                [torch.arange(self.xRange[0], self.xRange[1], self.outputGridRes, dtype=torch.float32, device=device),
-                 torch.arange(self.yRange[1], self.yRange[0], -self.outputGridRes, dtype=torch.float32, device=device)])
+        x = torch.arange(self.xRange[0], self.xRange[1], self.outputGridRes, dtype=torch.float32, device=device)
+        if device is not None:
+            x = x[:-1]
+        y = torch.arange(self.yRange[1], self.yRange[0], -self.outputGridRes, dtype=torch.float32, device=device)
+        self.xx, self.yy = torch.meshgrid([x, y])
         # self.yy = self.yy - self.yRange[0]
 
 
@@ -138,7 +140,7 @@ class TargetParameterization():
                     if cv2.pointPolygonTest(gt03, (rprime, cprime), False) >= 0:
                         # print('cx', cx.item(), 'xx', self.xx[cprime,rprime],'cy', cy.item(),'yy', self.yy[cprime,rprime])
                         t = torch.tensor([torch.cos(2*ry), torch.sin(2*ry), \
-                                          self.xx[cprime,rprime] - cx, \
+                                          cx - self.xx[cprime,rprime], \
                                           cy - self.yy[cprime,rprime], \
                                           torch.log(L/self.gridL), \
                                           torch.log(W/self.gridW)], dtype=torch.float32)
@@ -159,6 +161,18 @@ class TargetParameterization():
         networkOutput[:,:,4] = torch.exp(networkOutput[:,:,4]) * self.gridL
         networkOutput[:,:,5] = torch.exp(networkOutput[:,:,5]) * self.gridW
 
+        return networkOutput
+
+
+    def decodePIXORToLabel(self, networkOutput, mean=None, std=None):
+        if mean is not None and std is not None:
+            networkOutput = networkOutput * std + mean
+        networkOutput[:,:,0] = torch.atan2(networkOutput[:,:,1],networkOutput[:,:,0])/2
+        networkOutput[:,:,1] = torch.atan2(networkOutput[:,:,1],networkOutput[:,:,0])/2
+        networkOutput[:,:,2] = self.xx.transpose(1, 0) - networkOutput[:,:,2]
+        networkOutput[:,:,3] = networkOutput[:,:,3] + self.yy.transpose(1, 0)
+        networkOutput[:,:,4] = torch.exp(networkOutput[:,:,4]) * self.gridL
+        networkOutput[:,:,5] = torch.exp(networkOutput[:,:,5]) * self.gridW
         return networkOutput
 
 
@@ -220,3 +234,31 @@ def cart2hom(pts_3d):
         n = pts_3d.shape[0]
         pts_3d_hom = np.hstack((pts_3d, np.ones((n,1))))
         return pts_3d_hom
+
+
+def center2BoxCorners(boxCenter):
+    # center -> Nx7; [x, y, z, h, w, l, r]
+    # output -> Nx8x3
+    boxCorners = np.zeros((boxCenter.shape[0], 8, 3))
+    for i in range(boxCenter.shape[0]):
+        cx, cy, cz, H, W, L, ry = boxCenter[i]
+
+        bc = np.array([[ L/2,  W/2,  H/2],
+                       [ L/2, -W/2,  H/2],
+                       [-L/2, -W/2,  H/2],
+                       [-L/2,  W/2,  H/2],
+                       [ L/2,  W/2, -H/2],
+                       [ L/2, -W/2, -H/2],
+                       [-L/2, -W/2, -H/2],
+                       [-L/2,  W/2, -H/2]], dtype=np.float32)
+        bc = cart2hom(bc)
+
+        R = rotz(ry)
+        translation = np.array([cx.item(), cy.item(), cz.item()], dtype=np.float32)
+        transformationMatrix = transform_from_rot_trans(R, translation)
+
+        bc = (np.matmul(transformationMatrix, bc.T)).T
+
+        boxCorners[i,:,:] = bc[0,:3]
+
+    return boxCorners
