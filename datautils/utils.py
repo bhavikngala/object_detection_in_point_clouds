@@ -136,7 +136,7 @@ class TargetParameterization():
             for rprime in range(rmin, rmax+1, 1):
                 for cprime in range(cmin, cmax+1, 1):
                     if cv2.pointPolygonTest(gt03, (rprime, cprime), False) >= 0:
-                        print('cx', cx.item(), 'xx', self.xx[cprime,rprime],'cy', cy.item(),'yy', self.yy[cprime,rprime])
+                        # print('cx', cx.item(), 'xx', self.xx[cprime,rprime],'cy', cy.item(),'yy', self.yy[cprime,rprime])
                         t = torch.tensor([torch.cos(2*ry), torch.sin(2*ry), \
                                           self.xx[cprime,rprime] - cx, \
                                           cy - self.yy[cprime,rprime], \
