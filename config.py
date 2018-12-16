@@ -52,7 +52,7 @@ c = int((x_max-x_min)/(gridConfig['res']*downsamplingFactor))
 
 objtype = 'car'
 
-carPIXORIgnoreBoundaryMean = torch.tensor([-0.5950, -0.0358, -0.6063,  0.0318, -2.8910, -3.8930], dtype=torch.float32)
+carPIXORIgnoreBoundaryMean = torch.tensor([-0.5950, -0.0358,  0.6063,  0.0318, -2.8910, -3.8930], dtype=torch.float32)
 carPIXORIgnoreBoundarySTD = torch.tensor([0.7242, 0.3470, 0.4159, 0.6856, 0.1083, 0.0628], dtype=torch.float32)
 
 # res_block_layers = list if number of channels in the first conv layer of each res_block
@@ -106,6 +106,10 @@ gradNormlog = './loss/gnorm.txt'
 # calibration dir
 calTrain = './../data_object_calib/training/calib'
 calTest = './../data_object_calib/testing/calib'
+
+# left color images dir
+leftColorTrain = './../data/left_color_images/data_object_image_2/training'
+leftColorTest = './../data/left_color_images/data_object_image_2/testing'
 
 # string for log
 logString1 = 'epoch: [{:04d}/{:03d}] | cl: {:.8f} | nsl: {:.8f} | psl: {:.8f} | ll: {:.8f} | tl: {:.8f} | PS: [{:07d}/{:07d}] | md: {:.4f} | mc: {:.4f} | oamc: {:.4f} | lt: {:.4f} | bt: {:.4f} \n\n'
