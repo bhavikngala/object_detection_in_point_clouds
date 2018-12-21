@@ -3,6 +3,7 @@ import torch
 import numpy as np
 import math
 import cv2
+from shapely.geometry import Polygon
 
 def lidarToBEV(lidar, gridConfig):
     '''
@@ -74,7 +75,7 @@ class TargetParameterization():
             if mask.sum()==1:
                 gridX = self.xx[mask]
                 gridY = self.yy[mask]
-                t = torch.tensor([torch.cos(2*ry), torch.sin(2*ry), \
+                t = torch.tensor([torch.cos(ry), torch.sin(ry), \
                                   gridX - cx, cy - gridY, \
                                   torch.log(L/self.gridL), \
                                   torch.log(W/self.gridW)], dtype=torch.float32)
@@ -169,7 +170,7 @@ class TargetParameterization():
             networkOutput = networkOutput * std + mean
         networkOutput[:,:,0] = torch.atan2(networkOutput[:,:,1],networkOutput[:,:,0])/2
         networkOutput[:,:,1] = torch.atan2(networkOutput[:,:,1],networkOutput[:,:,0])/2
-        networkOutput[:,:,2] = self.xx.transpose(1, 0) - networkOutput[:,:,2]
+        networkOutput[:,:,2] = networkOutput[:,:,2] + self.xx.transpose(1, 0)
         networkOutput[:,:,3] = networkOutput[:,:,3] + self.yy.transpose(1, 0)
         networkOutput[:,:,4] = torch.exp(networkOutput[:,:,4]) * self.gridL
         networkOutput[:,:,5] = torch.exp(networkOutput[:,:,5]) * self.gridW
@@ -258,7 +259,61 @@ def center2BoxCorners(boxCenter):
         transformationMatrix = transform_from_rot_trans(R, translation)
 
         bc = (np.matmul(transformationMatrix, bc.T)).T
-
-        boxCorners[i,:,:] = bc[0,:3]
+        
+        boxCorners[i,:,:] = bc[:,:3]
 
     return boxCorners
+
+
+def nmsPredictions(predL, predC, iouThreshold):
+    # predL and predC are already thresholded with confidence > some value
+    # return predL, predC
+
+    sortIndices = np.argsort(predC)
+    predC = predC[sortIndices]
+    predL = predL[sortIndices]
+
+    nmsPredL = []
+    nmsPredC = []
+
+    deletedIndices = set()
+
+    for i in range(predL.shape[0]-1):
+        if i in deletedIndices:
+            continue
+
+        theta, _, cx, cy, L, W = predL[i]
+
+        boxCorners = center2BoxCorners(np.array([[cx, cy, 0, 0, W, L, theta]]))
+
+        boxCorners = boxCorners[:,:4,:2].squeeze()
+
+        polygon1 = Polygon([(boxCorners[0,0], boxCorners[0,1]),
+                            (boxCorners[1,0], boxCorners[1,1]),
+                            (boxCorners[2,0], boxCorners[2,1]),
+                            (boxCorners[3,0], boxCorners[3,1])])
+
+        for j in range(i+1, predL.shape[0]):
+            if j in deletedIndices:
+                continue
+
+            theta, _, cx, cy, L, W = predL[j]
+
+            boxCorners = center2BoxCorners(np.array([[cx, cy, 0, 0, W, L, theta]]))
+
+            boxCorners = boxCorners[:,:4,:2].squeeze()
+
+            polygon2 = Polygon([(boxCorners[0,0], boxCorners[0,1]),
+                                (boxCorners[1,0], boxCorners[1,1]),
+                                (boxCorners[2,0], boxCorners[2,1]),
+                                (boxCorners[3,0], boxCorners[3,1])])
+
+            iou = polygon1.intersection(polygon2).area/polygon1.union(polygon2).area
+
+            if iou >= iouThreshold:
+                deletedIndices.add(j)
+
+        nmsPredL.append(predL[i])
+        nmsPredC.append(predC[i])
+
+    return np.array(nmsPredL), np.array(nmsPredC)
