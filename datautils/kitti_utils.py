@@ -160,7 +160,6 @@ def cart2hom(pts_3d):
 	''' Input: nx3 points in Cartesian
 		Oupput: nx4 points in Homogeneous by pending 1
 	'''
-	print(pts_3d.shape)
 	n = pts_3d.shape[0]
 	pts_3d_hom = np.hstack((pts_3d, np.ones((n,1))))
 	return pts_3d_hom
