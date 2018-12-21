@@ -10,11 +10,17 @@ class ModelTrainer():
 	optim = None
 	scheduler = None
 	lossFunction = None
+	trainLoader = None
+	valLoader = None
+	testLoader = None
 
 	def train(self, device=None):
 		raise NotImplementedError()
 
 	def val(self):
+		raise NotImplementedError()
+
+	def setLoaders(self):
 		raise NotImplementedError()
 
 	def setDataloader(self, dataloader):

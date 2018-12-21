@@ -103,6 +103,9 @@ class CustomGroomer(mg.ModelTrainer):
 		self.writer.export_scalars_to_json(filename)
 		self.writer.close()
 
+	def setLoaders(self):
+		pass
+
 
 def main():
 	# args
