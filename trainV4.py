@@ -27,6 +27,7 @@ class CustomGroomer(mg.ModelTrainer):
 
 		for epoch in range(self.epochs):
 			epochValues = []
+			self.scheduler.step()
 
 			for batchId, data in enumerate(self.loader):
 				lidar, targetClass, targetLoc, filenames = data

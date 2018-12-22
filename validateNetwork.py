@@ -8,6 +8,7 @@ import cv2
 from networks.networks import PointCloudDetector2
 from datautils.dataloader_v3 import *
 from datautils.kitti_utils import KittiReader, ProjectKittiToDifferentCoordinateSystems
+from datautils.kitti_utils import *
 import datautils.utils as utils
 import config as cnf
 from lossUtils import *
@@ -16,7 +17,7 @@ import misc
 import config as cnf
 
 
-def saveOutput(predL, predC, projectionObject, filename):
+def saveOutput(predL, predC, projectionObject, filename, img=None, plot_img=False):
 	with open('./output/v2001/labels/'+filename+'.txt', 'w') as f:
 		for i in range(predL.shape[0]):
 			theta = predL[i,0]
@@ -32,18 +33,22 @@ def saveOutput(predL, predC, projectionObject, filename):
 			l.append(-10)   # alpha
 
 			# convert velo center to box corners
-			temp = np.array([[cx, cy, 0, 0, W, L, theta]], dtype=np.float32)
+			temp = np.array([[cx, cy, 0, 1.5, W, L, theta]], dtype=np.float32)
 			boxCorners = utils.center2BoxCorners(
 				temp)
 			# 2D bounding box
-			image = projectionObject.project_velo_to_image(boxCorners[0])
-			xmin, ymin = image.min(axis=0) # left, top
-			xmax, ymax = image.max(axis=0) # right, bottom
+			imagePoints = projectionObject.project_velo_to_image(boxCorners[0])
+			xmin, ymin = imagePoints.min(axis=0) # left, top
+			xmax, ymax = imagePoints.max(axis=0) # right, bottom
 
 			if (xmin < 0) or (xmax > cnf.imgWidth) or (ymin < 0) or (ymax > cnf.imgHeight):
 				continue
 			if (ymax-ymin)>25:
 				continue
+
+			if img is not None and plot_img:
+				img = draw_projected_box3d(img, imagePoints, color=(255,0,0), thickness=2)
+				cv2.imwrite('./output/v2001/img_plot/'+filename+'.png', img)
 
 			l.append(xmin) # left
 			l.append(ymin) # top
@@ -84,6 +89,7 @@ def main():
 	)
 
 	dirList = [None, None, cnf.calTrain, cnf.leftColorTrain]
+	print(dirList)
 	kittiReaderObject = KittiReader(dirList)
 
 	projectionObject = ProjectKittiToDifferentCoordinateSystems()
@@ -146,11 +152,14 @@ def main():
 
 				# read calib dict
 				calibDict = kittiReaderObject.readCalibrationDict(filenames[i])
+				img = kittiReaderObject.readLeftColorImage(filenames[i])
 				projectionObject.clearCalibrationMatrices()
 				projectionObject.setCalibrationMatrices(calibDict)
 
+				print('img', img is None)
+				print(args.plot_img)
 				# save output
-				saveOutput(predL, predC, projectionObject, filenames[i])
+				saveOutput(predL, predC, projectionObject, filenames[i], img, args.plot_img)
 
 if __name__ == '__main__':
 	main()

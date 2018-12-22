@@ -244,14 +244,14 @@ def center2BoxCorners(boxCenter):
     for i in range(boxCenter.shape[0]):
         cx, cy, cz, H, W, L, ry = boxCenter[i]
 
-        bc = np.array([[ L/2,  W/2,  H/2],
-                       [ L/2, -W/2,  H/2],
-                       [-L/2, -W/2,  H/2],
+        bc = np.array([[ L/2, -W/2,  H/2],
+                       [ L/2,  W/2,  H/2],
                        [-L/2,  W/2,  H/2],
-                       [ L/2,  W/2, -H/2],
+                       [-L/2, -W/2,  H/2],
                        [ L/2, -W/2, -H/2],
-                       [-L/2, -W/2, -H/2],
-                       [-L/2,  W/2, -H/2]], dtype=np.float32)
+                       [ L/2,  W/2, -H/2],
+                       [-L/2,  W/2, -H/2],
+                       [-L/2, -W/2, -H/2]], dtype=np.float32)
         bc = cart2hom(bc)
 
         R = rotz(ry)

@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-rootDir = './../data'
+rootDir = './../data/tiny_set'
 logDir = './runs'
 logJSONFilename = './loss/logs.json'
 trainSplitFile = './datautils/set_split_files/train.txt'
@@ -110,8 +110,8 @@ calTrain = './../data_object_calib/training/calib'
 calTest = './../data_object_calib/testing/calib'
 
 # left color images dir
-leftColorTrain = './../data/left_color_images/data_object_image_2/training'
-leftColorTest = './../data/left_color_images/data_object_image_2/testing'
+leftColorTrain = './../data/left_color_images/data_object_image_2/training/image_2'
+leftColorTest = './../data/left_color_images/data_object_image_2/testing/image_2'
 
 # string for log
 logString1 = 'epoch: [{:04d}/{:03d}] | cl: {:.8f} | nsl: {:.8f} | psl: {:.8f} | ll: {:.8f} | tl: {:.8f} | PS: [{:07d}/{:07d}] | md: {:.4f} | mc: {:.4f} | oamc: {:.4f} | lt: {:.4f} | bt: {:.4f} \n\n'
