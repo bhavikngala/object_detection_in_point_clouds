@@ -3,6 +3,9 @@ This project aims at detecting and localizing objects in point clouds captured f
 This project uses the network in the following paper as a base model:</br>
 Bin Yang, Wenjie Luo, Raquel Urtasun. <b>PIXOR: Real-time 3D Object Detection from Point Clouds.</b><i> In proceedings in CVPR 2018, pages 7652-7660.</i>
 
+# This is old branch. Please refer branch doogal.
+
+
 ### Requirements
 Pre-requisites:
 1. Conda
