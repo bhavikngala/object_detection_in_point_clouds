@@ -140,7 +140,7 @@ class TargetParameterization():
                 for cprime in range(cmin, cmax+1, 1):
                     if cv2.pointPolygonTest(gt03, (rprime, cprime), False) >= 0:
                         # print('cx', cx.item(), 'xx', self.xx[cprime,rprime],'cy', cy.item(),'yy', self.yy[cprime,rprime])
-                        t = torch.tensor([torch.cos(2*ry), torch.sin(2*ry), \
+                        t = torch.tensor([torch.cos(ry), torch.sin(ry), \
                                           cx - self.xx[cprime,rprime], \
                                           cy - self.yy[cprime,rprime], \
                                           torch.log(L/self.gridL), \
@@ -168,8 +168,8 @@ class TargetParameterization():
     def decodePIXORToLabel(self, networkOutput, mean=None, std=None):
         if mean is not None and std is not None:
             networkOutput = networkOutput * std + mean
-        networkOutput[:,:,0] = torch.atan2(networkOutput[:,:,1],networkOutput[:,:,0])/2
-        networkOutput[:,:,1] = torch.atan2(networkOutput[:,:,1],networkOutput[:,:,0])/2
+        networkOutput[:,:,0] = torch.atan2(networkOutput[:,:,1],networkOutput[:,:,0])
+        networkOutput[:,:,1] = torch.atan2(networkOutput[:,:,1],networkOutput[:,:,0])
         networkOutput[:,:,2] = networkOutput[:,:,2] + self.xx.transpose(1, 0)
         networkOutput[:,:,3] = networkOutput[:,:,3] + self.yy.transpose(1, 0)
         networkOutput[:,:,4] = torch.exp(networkOutput[:,:,4]) * self.gridL
