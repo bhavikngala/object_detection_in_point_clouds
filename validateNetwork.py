@@ -18,7 +18,7 @@ import config as cnf
 
 
 def saveOutput(predL, predC, projectionObject, filename, img=None, plot_img=False):
-	with open('./output/v2001/labels/'+filename+'.txt', 'w') as f:
+	with open('./output/v2002/labels/'+filename+'.txt', 'w') as f:
 		for i in range(predL.shape[0]):
 			theta = predL[i,0]
 			cx = predL[i,2]
@@ -48,7 +48,7 @@ def saveOutput(predL, predC, projectionObject, filename, img=None, plot_img=Fals
 
 			if img is not None and plot_img:
 				img = draw_projected_box3d(img, imagePoints, color=(255,0,0), thickness=2)
-				cv2.imwrite('./output/v2001/img_plot/'+filename+'.png', img)
+				cv2.imwrite('./output/v2002/img_plot/'+filename+'.png', img)
 
 			l.append(xmin) # left
 			l.append(ymin) # top
