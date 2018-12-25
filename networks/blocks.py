@@ -4,7 +4,6 @@ import torch.nn.functional as F
 
 # resnet reference: https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
 
-
 class Bottleneck_3_1(nn.Module):
 	expansion = 4
 
@@ -26,12 +25,6 @@ class Bottleneck_3_1(nn.Module):
 
 		self.relu = nn.ReLU(inplace=True)
 
-		for m in self.modules():
-			if isinstance(m, nn.Conv2d):
-				nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
-			elif isinstance(m, nn.BatchNorm2d):
-				nn.init.constant_(m.weight, 1)
-				nn.init.constant_(m.bias, 0)
 
 	def forward(self, x):
 
@@ -47,6 +40,47 @@ class Bottleneck_3_1(nn.Module):
 
 		out = x+res
 		out = self.relu(out)
+
+		return out
+
+
+class Bottleneck3FullPreActivation(nn.Module):
+	expansion = 4
+
+	# input dim : c x 800 x 700
+	# output dim: c x 400 x 350
+	def __init__(self, in_channels, out_channels):
+		super(Bottleneck3FullPreActivation, self).__init__()
+
+		# using pre-normalization and pre-activation
+		# TODO: switch stride=2 between conv1 and conv2 and check results
+		self.bn1 = nn.BatchNorm2d(in_channels)
+		self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=2, bias=False)
+
+		self.bn2 = nn.BatchNorm2d(out_channels)
+		self.conv2 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=3, padding=1, bias=False)
+
+		self.bn1_skip = nn.BatchNorm2d(in_channels)
+		self.conv1_skip = nn.Conv2d(in_channels, out_channels*self.expansion, kernel_size=1, stride=2, bias=False)
+
+		self.relu = nn.ReLU(inplace=True)
+
+
+	def forward(self, x):
+
+		res = self.bn1_skip(x)
+		res = self.relu(res)
+		res = self.conv1_skip(res)
+
+		x = self.bn1(x)
+		x = self.relu(x)
+		x = self.conv1(x)
+
+		x = self.bn2(x)
+		x = self.relu(x)
+		x = self.conv2(x)
+
+		out = x+res
 
 		return out
 
@@ -80,12 +114,6 @@ class Bottleneck_6_1_1(nn.Module):
 
 		self.relu = nn.ReLU(inplace=True)
 
-		for m in self.modules():
-			if isinstance(m, nn.Conv2d):
-				nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
-			elif isinstance(m, nn.BatchNorm2d):
-				nn.init.constant_(m.weight, 1)
-				nn.init.constant_(m.bias, 0)
 
 	def forward(self, x):
 		res = self.conv1_skip(x)
@@ -112,6 +140,66 @@ class Bottleneck_6_1_1(nn.Module):
 
 		out = x+res
 		out = self.relu(out)
+
+		return out
+
+
+class Bottleneck6FullPreActivation(nn.Module):
+	expansion = 4
+
+	def __init__(self, in_channels, out_channels):
+		super(Bottleneck6FullPreActivation, self).__init__()
+
+		# using pre-normalization and pre-activation
+		# TODO: switch stride=2 between conv1 and conv2 and check results
+		# self.bn1 = nn.BatchNorm2d(in_channels)
+		self.bn1 = nn.BatchNorm2d(in_channels)
+		self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False)
+
+		self.bn2 = nn.BatchNorm2d(out_channels)
+		self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=2, padding=1, bias=False)
+
+		self.bn3 = nn.BatchNorm2d(out_channels)
+		self.conv3 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=1, bias=False)
+
+		self.bn1_skip = nn.BatchNorm2d(in_channels)
+		self.conv1_skip = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=2, bias=False)
+
+		self.bn4 = nn.BatchNorm2d(out_channels)
+		self.conv4 = nn.Conv2d(out_channels, out_channels, kernel_size=1, bias=False)
+
+		self.bn5 = nn.BatchNorm2d(out_channels)
+		self.conv5 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=1, bias=False)
+
+		self.relu = nn.ReLU(inplace=True)
+
+
+	def forward(self, x):
+		res = self.bn1_skip(x)
+		res = self.relu(res)
+		res = self.conv1_skip(res)
+
+		x = self.bn1(x)
+		x = self.relu(x)
+		x = self.conv1(x)
+
+		x = self.bn2(x)
+		x = self.relu(x)
+		x = self.conv2(x)
+
+		x = self.bn3(x)
+		x = self.relu(x)
+		x = self.conv3(x)
+		
+		res = self.bn4(res)
+		res = self.relu(res)
+		res = self.conv4(res)
+		
+		res = self.bn5(res)
+		res = self.relu(res)
+		res = self.conv5(res)
+
+		out = x+res
 
 		return out
 
