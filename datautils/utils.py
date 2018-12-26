@@ -63,7 +63,7 @@ class TargetParameterization():
         # just yolo, only the cell containing the centre is responsible for it
         # labels -> c, cx, cy, cz, H, W, L, r
         raise NotImplementedError()
-        c, r = self.xx.size()
+        r, c = self.xx.size()
         targetClass = torch.zeros((r, c), dtype=torch.float32, device=self.device)
         targetLoc = torch.zeros((r, c, 6), dtype=torch.float32, device=self.device)
 
