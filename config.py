@@ -54,8 +54,8 @@ c = int((x_max-x_min)/(gridConfig['res']*downsamplingFactor))
 
 objtype = 'car'
 
-carPIXORIgnoreBoundaryMean = torch.tensor([-0.0107, -0.0392,  0.6063,  0.0318, -2.8910, -3.8929], dtype=torch.float32)
-carPIXORIgnoreBoundarySTD = torch.tensor([0.4500, 0.8921, 0.4159, 0.6856, 0.1083, 0.0628], dtype=torch.float32)
+carPIXORIgnoreBoundaryMean = torch.tensor([-0.0133, -0.0709,  0.2003, -0.2002, -2.8943, -3.8924], dtype=torch.float32)
+carPIXORIgnoreBoundarySTD = torch.tensor([0.4550, 0.8876, 0.4253, 0.3094, 0.1097, 0.0623], dtype=torch.float32)
 
 # res_block_layers = list if number of channels in the first conv layer of each res_block
 # up_sample_layers = list of tuple of number of channels input deconv and conv layers
