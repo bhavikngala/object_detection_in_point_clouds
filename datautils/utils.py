@@ -179,6 +179,7 @@ class TargetParameterization():
 
     def veloCordToMatrixIndices(self, velo):
         r, c = self.xx.size()
+        print(r,c)
         cord = velo.copy()
 
         # x -> c'; velo_x = -outputGridRes * r' + xRange[0]
@@ -186,10 +187,10 @@ class TargetParameterization():
         # y -> r'; velo_y = -outputGridRes * r' + yRange[1]
         cord[:,1] = (self.yRange[1]-velo[:,1])/self.outputGridRes
 
-        cord[cord[:,0]>=c] = c-1
-        cord[cord[:,0]<0] = 0
-        cord[cord[:,1]>=r] = r-1
-        cord[cord[:,1]<0] = 0
+        cord[cord[:,0]>=c,0] = c-1
+        cord[cord[:,0]<0,0] = 0
+        cord[cord[:,1]>=r,1] = r-1
+        cord[cord[:,1]<0,1] = 0
         cord = np.floor(cord)
         cord = cord.astype(np.int)
         return cord
