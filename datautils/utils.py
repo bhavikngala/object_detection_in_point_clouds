@@ -93,8 +93,8 @@ class TargetParameterization():
         r, c = self.xx.size()
         # targetClass = torch.zeros((r, c), dtype=torch.float32, device=self.device)
         # targetLoc = torch.zeros((r, c, 6), dtype=torch.float32, device=self.device)
-        targetClass = torch.zeros((r, c), dtype=torch.float32)
-        targetLoc = torch.zeros((r, c, 6), dtype=torch.float32)
+        targetClass = np.zeros((r, c), dtype=np.float32)
+        targetLoc = np.zeros((r, c, 6), dtype=np.float32)
         
         for i in range(labels.shape[0]):
             cl, cx, cy, cz, H, W, L, ry = labels[i,:]
@@ -151,7 +151,7 @@ class TargetParameterization():
                         targetLoc[rprime, cprime] = t
                         targetClass[rprime, cprime] = 1.0
             
-        return targetClass, targetLoc
+        return torch.from_numpy(targetClass), torch.from_numpy(targetLoc)
         
 
     def decodeYoloToLabel(self, networkOutput):
