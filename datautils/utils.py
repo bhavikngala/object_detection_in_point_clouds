@@ -179,7 +179,6 @@ class TargetParameterization():
 
     def veloCordToMatrixIndices(self, velo):
         r, c = self.xx.size()
-        print(r,c)
         cord = velo.copy()
 
         # x -> c'; velo_x = -outputGridRes * r' + xRange[0]
