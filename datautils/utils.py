@@ -102,22 +102,22 @@ class TargetParameterization():
             L03, W03, H03 = 0.3 * L.item(), 0.3 * W.item(), 0.3 * H.item()
             L12, W12, H12 = 1.2 * L.item(), 1.2 * W.item(), 1.2 * H.item()
             
-            gt03 = np.array([[ L03/2,  W03/2,  H03/2],
-                             [ L03/2, -W03/2,  H03/2],
-                             [-L03/2, -W03/2,  H03/2],
-                             [-L03/2,  W03/2,  H03/2],
-                             [ L03/2,  W03/2, -H03/2],
-                             [ L03/2, -W03/2, -H03/2],
-                             [-L03/2, -W03/2, -H03/2],
-                             [-L03/2,  W03/2, -H03/2]], dtype=np.float32)
-            gt12 = np.array([[ L12/2,  W12/2,  H12/2],
-                             [ L12/2, -W12/2,  H12/2],
-                             [-L12/2, -W12/2,  H12/2],
-                             [-L12/2,  W12/2,  H12/2],
-                             [ L12/2,  W12/2, -H12/2],
-                             [ L12/2, -W12/2, -H12/2],
-                             [-L12/2, -W12/2, -H12/2],
-                             [-L12/2,  W12/2, -H12/2]], dtype=np.float32)
+            gt03 = np.array([[ W03/2,  L03/2,  H03/2],
+                             [-W03/2,  L03/2,  H03/2],
+                             [-W03/2, -L03/2,  H03/2],
+                             [ W03/2, -L03/2,  H03/2],
+                             [ W03/2,  L03/2, -H03/2],
+                             [-W03/2,  L03/2, -H03/2],
+                             [-W03/2, -L03/2, -H03/2],
+                             [ W03/2, -L03/2, -H03/2]], dtype=np.float32)
+            gt12 = np.array([[ W12/2,  L12/2,  H12/2],
+                             [-W12/2,  L12/2,  H12/2],
+                             [-W12/2, -L12/2,  H12/2],
+                             [ W12/2, -L12/2,  H12/2],
+                             [ W12/2,  L12/2, -H12/2],
+                             [-W12/2,  L12/2, -H12/2],
+                             [-W12/2, -L12/2, -H12/2],
+                             [ W12/2, -L12/2, -H12/2]], dtype=np.float32)
             gt03 = cart2hom(gt03)
             gt12 = cart2hom(gt12)
 
@@ -135,11 +135,11 @@ class TargetParameterization():
             targetClass = cv2.fillConvexPoly(targetClass, gt12, -1)
             # targetClass = cv2.fillConvexPoly(targetClass, gt03, 1)
             
-            rmin, cmin = gt03.min(axis=0)
-            rmax, cmax = gt03.max(axis=0)
+            cmin, rmin = gt03.min(axis=0)
+            cmax, rmax = gt03.max(axis=0)
             for rprime in range(rmin, rmax+1, 1):
                 for cprime in range(cmin, cmax+1, 1):
-                    if cv2.pointPolygonTest(gt03, (rprime, cprime), False) >= 0:
+                    if cv2.pointPolygonTest(gt03, (cprime, rprime), False) >= 0:
                         # print('cx', cx.item(), 'xx', self.xx[cprime,rprime],'cy', cy.item(),'yy', self.yy[cprime,rprime])
                         t = torch.tensor([torch.cos(ry), torch.sin(ry), \
                                           cx - self.xx[rprime,cprime], \
@@ -181,16 +181,17 @@ class TargetParameterization():
         r, c = self.xx.size()
         cord = velo.copy()
 
-        # y -> r'; velo_y = -outputGridRes * r' + yRange[1]
-        cord[:,0] = (self.yRange[1]-velo[:,1])/self.outputGridRes
         # x -> c'; velo_x = -outputGridRes * r' + xRange[0]
-        cord[:,1] = (velo[:,0]-self.xRange[0])/self.outputGridRes
+        cord[:,0] = (velo[:,0]-self.xRange[0])/self.outputGridRes
+        # y -> r'; velo_y = -outputGridRes * r' + yRange[1]
+        cord[:,1] = (self.yRange[1]-velo[:,1])/self.outputGridRes
 
-        cord[cord[:,0]>=r] = r-1
+        cord[cord[:,0]>=c] = c-1
         cord[cord[:,0]<0] = 0
-        cord[cord[:,1]>=c] = c-1
+        cord[cord[:,1]>=r] = r-1
         cord[cord[:,1]<0] = 0
         cord = np.floor(cord)
+        cord = cord.astype(np.int)
         return cord
 
 
