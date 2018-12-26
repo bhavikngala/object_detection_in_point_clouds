@@ -55,6 +55,7 @@ class TargetParameterization():
             x = x[:-1]
         y = torch.arange(self.yRange[1], self.yRange[0], -self.outputGridRes, dtype=torch.float32, device=device)
         self.xx, self.yy = torch.meshgrid([x, y])
+        self.xx, self.yy = torch.transpose(self.xx, 1, 0), torch.transpose(self.yy, 1, 0)
         # self.yy = self.yy - self.yRange[0]
 
 
@@ -89,11 +90,11 @@ class TargetParameterization():
         # pixor style label encoding, all pixels inside ground truth
         # box are positive samples rest are negative
         # labels -> c, cx, cy, cz, H, W, L, r
-        c, r = self.xx.size()
+        r, c = self.xx.size()
         # targetClass = torch.zeros((r, c), dtype=torch.float32, device=self.device)
         # targetLoc = torch.zeros((r, c, 6), dtype=torch.float32, device=self.device)
-        targetClass = np.zeros((c, r), dtype=np.float32)
-        targetLoc = np.zeros((c, r, 6), dtype=np.float32)
+        targetClass = torch.zeros((r, c), dtype=torch.float32)
+        targetLoc = torch.zeros((r, c, 6), dtype=torch.float32)
         
         for i in range(labels.shape[0]):
             cl, cx, cy, cz, H, W, L, ry = labels[i,:]
@@ -128,8 +129,8 @@ class TargetParameterization():
             gt12 = (np.matmul(transformationMatrix, gt12.T)).T[:4,[0,1]]
             # print('cx',cx.item(),'cy',cy.item(),'L',L.item(),'L12',L12,'W12','W',W.item(),W12)
             # print(gt12)
-            gt03 = self.veloCordToMatrixIndices(gt03.astype(np.int32))
-            gt12 = self.veloCordToMatrixIndices(gt12.astype(np.int32))
+            gt03 = self.veloCordToMatrixIndices(gt03)
+            gt12 = self.veloCordToMatrixIndices(gt12)
             # print('\nind\n',gt12)
             targetClass = cv2.fillConvexPoly(targetClass, gt12, -1)
             # targetClass = cv2.fillConvexPoly(targetClass, gt03, 1)
@@ -141,17 +142,16 @@ class TargetParameterization():
                     if cv2.pointPolygonTest(gt03, (rprime, cprime), False) >= 0:
                         # print('cx', cx.item(), 'xx', self.xx[cprime,rprime],'cy', cy.item(),'yy', self.yy[cprime,rprime])
                         t = torch.tensor([torch.cos(ry), torch.sin(ry), \
-                                          cx - self.xx[cprime,rprime], \
-                                          cy - self.yy[cprime,rprime], \
+                                          cx - self.xx[rprime,cprime], \
+                                          cy - self.yy[rprime,cprime], \
                                           torch.log(L/self.gridL), \
                                           torch.log(W/self.gridW)], dtype=torch.float32)
                         if mean is not None and std is not None:
                             t = (t-mean)/std
-                        targetLoc[cprime, rprime] = t
-                        targetClass[cprime, rprime] = 1.0
+                        targetLoc[rprime, cprime] = t
+                        targetClass[rprime, cprime] = 1.0
             
-
-        return torch.from_numpy(targetClass.T), torch.from_numpy(np.transpose(targetLoc, (1,0,2)))
+        return targetClass, targetLoc
         
 
     def decodeYoloToLabel(self, networkOutput):
@@ -169,28 +169,28 @@ class TargetParameterization():
         if mean is not None and std is not None:
             networkOutput = networkOutput * std + mean
         networkOutput[:,:,0] = torch.atan2(networkOutput[:,:,1],networkOutput[:,:,0])
-        networkOutput[:,:,1] = torch.atan2(networkOutput[:,:,1],networkOutput[:,:,0])
-        networkOutput[:,:,2] = networkOutput[:,:,2] + self.xx.transpose(1, 0)
-        networkOutput[:,:,3] = networkOutput[:,:,3] + self.yy.transpose(1, 0)
+        # networkOutput[:,:,1] = torch.atan2(networkOutput[:,:,1],networkOutput[:,:,0])
+        networkOutput[:,:,2] = networkOutput[:,:,2] + self.xx
+        networkOutput[:,:,3] = networkOutput[:,:,3] + self.yy
         networkOutput[:,:,4] = torch.exp(networkOutput[:,:,4]) * self.gridL
         networkOutput[:,:,5] = torch.exp(networkOutput[:,:,5]) * self.gridW
         return networkOutput
 
 
     def veloCordToMatrixIndices(self, velo):
-        c, r = self.xx.size()
+        r, c = self.xx.size()
         cord = velo.copy()
 
         # y -> r'; velo_y = -outputGridRes * r' + yRange[1]
-        cord[:,0] = r - (velo[:,1]-self.yRange[0])/self.outputGridRes
-        # x -> c';
+        cord[:,0] = (self.yRange[1]-velo[:,1])/self.outputGridRes
+        # x -> c'; velo_x = -outputGridRes * r' + xRange[0]
         cord[:,1] = (velo[:,0]-self.xRange[0])/self.outputGridRes
 
         cord[cord[:,0]>=r] = r-1
         cord[cord[:,0]<0] = 0
         cord[cord[:,1]>=c] = c-1
         cord[cord[:,1]<0] = 0
-
+        cord = np.floor(cord)
         return cord
 
 
