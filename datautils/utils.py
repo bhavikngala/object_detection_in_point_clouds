@@ -140,7 +140,7 @@ class TargetParameterization():
             for rprime in range(rmin, rmax+1, 1):
                 for cprime in range(cmin, cmax+1, 1):
                     if cv2.pointPolygonTest(gt03, (cprime, rprime), False) >= 0:
-                        print('cx', cx.item(), 'xx', self.xx[rprime,cprime].item(),'cy', cy.item(),'yy', self.yy[rprime,cprime].item())
+                        # print('cx', cx.item(), 'xx', self.xx[rprime,cprime].item(),'cy', cy.item(),'yy', self.yy[rprime,cprime].item())
                         t = torch.tensor([torch.cos(ry), torch.sin(ry), \
                                           cx - self.xx[rprime,cprime], \
                                           cy - self.yy[rprime,cprime], \
@@ -184,9 +184,9 @@ class TargetParameterization():
         
         for i in range(labels.shape[0]):
             cl, cx, cy, cz, H, W, L, ry = labels[i,:]
-            print('------------')
-            print(cl.item(), cx.item(), cy.item(), cz.item(), H.item(), W.item(), L.item(), ry.item())
-            print('------------')
+            # print('------------')
+            # print(cl.item(), cx.item(), cy.item(), cz.item(), H.item(), W.item(), L.item(), ry.item())
+            # print('------------')
 
             L03, W03, H03 = 0.3 * L.item(), 0.3 * W.item(), 0.3 * H.item()
             L12, W12, H12 = 1.2 * L.item(), 1.2 * W.item(), 1.2 * H.item()
@@ -226,11 +226,11 @@ class TargetParameterization():
             
             cmin, rmin = gt03.min(axis=0)
             cmax, rmax = gt03.max(axis=0)
-            print('-----')
+            # print('-----')
             for rprime in range(rmin, rmax+1, 1):
                 for cprime in range(cmin, cmax+1, 1):
                     if cv2.pointPolygonTest(gt03, (cprime, rprime), False) >= 0:
-                        print('cx', cx.item(), 'xx', self.xx[rprime,cprime].item(),'cy', cy.item(),'yy', self.yy[rprime,cprime].item())
+                        # print('cx', cx.item(), 'xx', self.xx[rprime,cprime].item(),'cy', cy.item(),'yy', self.yy[rprime,cprime].item())
                         t = torch.tensor([torch.cos(ry), torch.sin(ry), \
                                           cx - self.xx[rprime,cprime], \
                                           cy - self.yy[rprime,cprime], \
