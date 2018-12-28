@@ -40,7 +40,15 @@ def lidarToBEV(lidar, gridConfig):
 class TargetParameterization():
 
 
-    def __init__(self, gridConfig, gridL, gridW, downSamplingFactor=4, device=None):
+    def __init__(self, cordinate, gridConfig, gridL, gridW, downSamplingFactor=4, device=None):
+        self.cordinate = cordinate
+        if cordinate == 'velo':
+            self.veloCordInit(gridConfig, gridL, gridW, downSamplingFactor=4, device=None)
+        elif cordinate == 'cam':
+            self.camCordInit(gridConfig, gridL, gridW, downSamplingFactor=4, device=None)
+        
+
+    def veloCordInit(self, gridConfig, gridL, gridW, downSamplingFactor=4, device=None):
         self.xRange = gridConfig['x']
         self.yRange = gridConfig['y']
         self.zRange = gridConfig['z']
@@ -54,45 +62,37 @@ class TargetParameterization():
         if device is not None:
             x = x[:-1]
         y = torch.arange(self.yRange[1], self.yRange[0], -self.outputGridRes, dtype=torch.float32, device=device)
-        self.xx, self.yy = torch.meshgrid([x, y])
-        self.xx, self.yy = torch.transpose(self.xx, 1, 0), torch.transpose(self.yy, 1, 0)
-        # self.yy = self.yy - self.yRange[0]
+        self.yy, self.xx = torch.meshgrid([y, x])
 
 
-    def encodeLabelToYolo(self, labels):
-        # just yolo, only the cell containing the centre is responsible for it
-        # labels -> c, cx, cy, cz, H, W, L, r
-        raise NotImplementedError()
-        r, c = self.xx.size()
-        targetClass = torch.zeros((r, c), dtype=torch.float32, device=self.device)
-        targetLoc = torch.zeros((r, c, 6), dtype=torch.float32, device=self.device)
+    def camCordInit(self, gridConfig, gridL, gridW, downSamplingFactor=4, device=None):
+        self.xRange = gridConfig['y']
+        self.yRange = gridConfig['z']
+        self.zRange = gridConfig['x']
+        self.res = gridConfig['res']
+        self.outputGridRes = self.res*downSamplingFactor
+        self.gridL = gridL
+        self.gridW = gridW
+        self.device = device
 
-        for i in range(labels.shape[0]):
-            c, cx, cy, cz, H, W, L, ry = labels[i,:]
-
-            mask = (cx <= self.xx) & (cx > (self.xx - self.outputGridRes)) & \
-                   (cy >= self.yy) & (cy < (self.yy + self.outputGridRes))
-
-            if mask.sum()==1:
-                gridX = self.xx[mask]
-                gridY = self.yy[mask]
-                t = torch.tensor([torch.cos(ry), torch.sin(ry), \
-                                  gridX - cx, cy - gridY, \
-                                  torch.log(L/self.gridL), \
-                                  torch.log(W/self.gridW)], dtype=torch.float32)
-                targetLoc[mask] = t
-                targetClass[mask] = 1.0
-
-        return targetClass, targetLoc
+        x = torch.arange(self.xRange[0], self.xRange[1], self.outputGridRes, dtype=torch.float32, device=device)
+        if device is not None:
+            x = x[:-1]
+        z = torch.arange(self.yRange[0], self.yRange[1], self.outputGridRes, dtype=torch.float32, device=device)
+        self.xx, self.yy = torch.meshgrid([x, z])
 
 
-    def encodeLabelToPIXORIgnoreBoundaryPix(self, labels, mean=None, std=None):
-        # pixor style label encoding, all pixels inside ground truth
-        # box are positive samples rest are negative
+    def encodeLabel(self, labels, mean=None, std=None):
+        if self.cordinate == 'velo':
+            return self.encodeLabelToPIXORIgnoreBoundaryPixVeloCord(labels, mean, std)
+        elif self.cordinate == 'cam':
+            return self.encodeLabelToPIXORIgnoreBoundaryPixCamCord(labels, mean, std)
+
+
+    def encodeLabelToPIXORIgnoreBoundaryPixCamCord(self, labels, mean=None, std=None):
+        print('inside encodeLabelToPIXORIgnoreBoundaryPixCamCord')
         # labels -> c, cx, cy, cz, H, W, L, r
         r, c = self.xx.size()
-        # targetClass = torch.zeros((r, c), dtype=torch.float32, device=self.device)
-        # targetLoc = torch.zeros((r, c, 6), dtype=torch.float32, device=self.device)
         targetClass = np.zeros((r, c), dtype=np.float32)
         targetLoc = np.zeros((r, c, 6), dtype=np.float32)
         
@@ -140,7 +140,7 @@ class TargetParameterization():
             for rprime in range(rmin, rmax+1, 1):
                 for cprime in range(cmin, cmax+1, 1):
                     if cv2.pointPolygonTest(gt03, (cprime, rprime), False) >= 0:
-                        # print('cx', cx.item(), 'xx', self.xx[cprime,rprime],'cy', cy.item(),'yy', self.yy[cprime,rprime])
+                        print('cx', cx.item(), 'xx', self.xx[rprime,cprime].item(),'cy', cy.item(),'yy', self.yy[rprime,cprime].item())
                         t = torch.tensor([torch.cos(ry), torch.sin(ry), \
                                           cx - self.xx[rprime,cprime], \
                                           cy - self.yy[rprime,cprime], \
@@ -152,22 +152,104 @@ class TargetParameterization():
                         targetClass[rprime, cprime] = 1.0
             
         return torch.from_numpy(targetClass), torch.from_numpy(targetLoc)
+
+
+    def camCordToMatrixIndices(self, cam):
+        r, c = self.xx.size()
+        cord = cam.copy()
+
+        # x -> c'; cam_x = outputGridRes * r' + xRange[0]
+        cord[:,0] = (cam[:,0]-self.xRange[0])/self.outputGridRes
+        # y -> r'; velo_y = -outputGridRes * r' + yRange[1]
+        cord[:,1] = (cam[:,1]-self.zRange[0])/self.outputGridRes
+
+        cord[cord[:,0]>=c,0] = c-1
+        cord[cord[:,0]<0,0] = 0
+        cord[cord[:,1]>=r,1] = r-1
+        cord[cord[:,1]<0,1] = 0
+        cord = np.floor(cord)
+        cord = cord.astype(np.int)
+        return cord
+
+
+    def encodeLabelToPIXORIgnoreBoundaryPixVeloCord(self, labels, mean=None, std=None):
+        # pixor style label encoding, all pixels inside ground truth
+        # box are positive samples rest are negative
+        # labels -> c, cx, cy, cz, H, W, L, r
+        r, c = self.xx.size()
+        # targetClass = torch.zeros((r, c), dtype=torch.float32, device=self.device)
+        # targetLoc = torch.zeros((r, c, 6), dtype=torch.float32, device=self.device)
+        targetClass = np.zeros((r, c), dtype=np.float32)
+        targetLoc = np.zeros((r, c, 6), dtype=np.float32)
         
+        for i in range(labels.shape[0]):
+            cl, cx, cy, cz, H, W, L, ry = labels[i,:]
+            print('------------')
+            print(cl.item(), cx.item(), cy.item(), cz.item(), H.item(), W.item(), L.item(), ry.item())
+            print('------------')
 
-    def decodeYoloToLabel(self, networkOutput):
-        networkOutput[:,:,0] = torch.atan2(networkOutput[:,:,1],networkOutput[:,:,0])/2
-        networkOutput[:,:,1] = torch.atan2(networkOutput[:,:,1],networkOutput[:,:,0])/2
-        networkOutput[:,:,2] = networkOutput[:,:,2] + self.xx
-        networkOutput[:,:,3] = networkOutput[:,:,3] + self.yy + self.yRange[0]
-        networkOutput[:,:,4] = torch.exp(networkOutput[:,:,4]) * self.gridL
-        networkOutput[:,:,5] = torch.exp(networkOutput[:,:,5]) * self.gridW
+            L03, W03, H03 = 0.3 * L.item(), 0.3 * W.item(), 0.3 * H.item()
+            L12, W12, H12 = 1.2 * L.item(), 1.2 * W.item(), 1.2 * H.item()
+            
+            gt03 = np.array([[ W03/2,  L03/2,  H03/2],
+                             [-W03/2,  L03/2,  H03/2],
+                             [-W03/2, -L03/2,  H03/2],
+                             [ W03/2, -L03/2,  H03/2],
+                             [ W03/2,  L03/2, -H03/2],
+                             [-W03/2,  L03/2, -H03/2],
+                             [-W03/2, -L03/2, -H03/2],
+                             [ W03/2, -L03/2, -H03/2]], dtype=np.float32)
+            gt12 = np.array([[ W12/2,  L12/2,  H12/2],
+                             [-W12/2,  L12/2,  H12/2],
+                             [-W12/2, -L12/2,  H12/2],
+                             [ W12/2, -L12/2,  H12/2],
+                             [ W12/2,  L12/2, -H12/2],
+                             [-W12/2,  L12/2, -H12/2],
+                             [-W12/2, -L12/2, -H12/2],
+                             [ W12/2, -L12/2, -H12/2]], dtype=np.float32)
+            gt03 = cart2hom(gt03)
+            gt12 = cart2hom(gt12)
 
-        return networkOutput
+            R = rotz(ry)
+            translation = np.array([cx.item(), cy.item(), cz.item()], dtype=np.float32)
+            transformationMatrix = transform_from_rot_trans(R, translation)
+
+            gt03 = (np.matmul(transformationMatrix, gt03.T)).T[:4,[0,1]]
+            gt12 = (np.matmul(transformationMatrix, gt12.T)).T[:4,[0,1]]
+            # print('cx',cx.item(),'cy',cy.item(),'L',L.item(),'L12',L12,'W12','W',W.item(),W12)
+            # print(gt12)
+            gt03 = self.veloCordToMatrixIndices(gt03)
+            gt12 = self.veloCordToMatrixIndices(gt12)
+            # print('\nind\n',gt12)
+            targetClass = cv2.fillConvexPoly(targetClass, gt12, -1)
+            # targetClass = cv2.fillConvexPoly(targetClass, gt03, 1)
+            
+            cmin, rmin = gt03.min(axis=0)
+            cmax, rmax = gt03.max(axis=0)
+            print('-----')
+            for rprime in range(rmin, rmax+1, 1):
+                for cprime in range(cmin, cmax+1, 1):
+                    if cv2.pointPolygonTest(gt03, (cprime, rprime), False) >= 0:
+                        print('cx', cx.item(), 'xx', self.xx[rprime,cprime].item(),'cy', cy.item(),'yy', self.yy[rprime,cprime].item())
+                        t = torch.tensor([torch.cos(ry), torch.sin(ry), \
+                                          cx - self.xx[rprime,cprime], \
+                                          cy - self.yy[rprime,cprime], \
+                                          torch.log(L/self.gridL), \
+                                          torch.log(W/self.gridW)], dtype=torch.float32)
+                        # print(t.size(), mean.size(), std.size())
+                        if mean is not None and std is not None:
+                            t = (t-mean)/std
+                        targetLoc[rprime, cprime] = t
+                        targetClass[rprime, cprime] = 1.0
+            break
+            
+        return torch.from_numpy(targetClass), torch.from_numpy(targetLoc)
 
 
     def decodePIXORToLabel(self, networkOutput, mean=None, std=None):
+        # print(networkOutput.size(), mean.size(), std.size())
         if mean is not None and std is not None:
-            networkOutput = networkOutput * std + mean
+            networkOutput = (networkOutput * std) + mean
         networkOutput[:,:,0] = torch.atan2(networkOutput[:,:,1],networkOutput[:,:,0])
         # networkOutput[:,:,1] = torch.atan2(networkOutput[:,:,1],networkOutput[:,:,0])
         networkOutput[:,:,2] = networkOutput[:,:,2] + self.xx
@@ -256,7 +338,7 @@ def center2BoxCorners(boxCenter):
         bc = cart2hom(bc)
 
         R = rotz(ry)
-        translation = np.array([cx.item(), cy.item(), cz.item()], dtype=np.float32)
+        translation = np.array([cx, cy, cz], dtype=np.float32)
         transformationMatrix = transform_from_rot_trans(R, translation)
 
         bc = (np.matmul(transformationMatrix, bc.T)).T

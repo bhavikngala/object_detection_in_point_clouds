@@ -41,8 +41,10 @@ class KittiDataset(Dataset):
 		self.objectType = cnf.objtype
 		self.loadLabels = False if dataSetType=='test' else True
 		self.grid = cnf.gridConfig
+		self.cordinate = cnf.targetCord
 
 		self.targetParamObject = utils.TargetParameterization(
+			cordinate=cnf.targetCord,
 			gridConfig=cnf.gridConfig,
 			gridL=cnf.lgrid,
 			gridW=cnf.wgrid,
@@ -75,12 +77,13 @@ class KittiDataset(Dataset):
 			labels = self.formatLabelsToUseCase(labels)
 			if labels is not None: # if labels with required objects are present
 				# project cam to velodyne
-				labels[:,[11, 12, 13]] = self.projectionObject.project_rect_to_velo(labels[:,[11, 12, 13]])
+				if self.cordinate == 'velo':
+					labels[:,[11, 12, 13]] = self.projectionObject.project_rect_to_velo(labels[:,[11, 12, 13]])
 				labels = self.getLabelsInsideGrid(labels)
 			if labels is not None: # if required objects are inside grid
 				# target parameterization
 				labels = fnp(labels)
-				targetClass, targetLoc = self.targetParamObject.encodeLabelToPIXORIgnoreBoundaryPix(labels[:,[0,11,12,13,8,9,10,14]], self.mean, self.std)
+				targetClass, targetLoc = self.targetParamObject.encodeLabel(labels[:,[0,11,12,13,8,9,10,14]], self.mean, self.std)
 			else:
 				targetClass = torch.zeros((self.r, self.c), dtype=torch.float32)
 				targetLoc = torch.tensor([-1.], dtype=torch.float32)
@@ -99,11 +102,15 @@ class KittiDataset(Dataset):
 
 
 	def getLabelsInsideGrid(self, labels):
-		mask = \
-			((labels[:,11]<=self.grid['x'][1]) & (labels[:,11]>=self.grid['x'][0])) & \
-			((labels[:,12]<=self.grid['y'][1]) & (labels[:,12]>=self.grid['y'][0])) & \
-			((labels[:,13]<=self.grid['z'][1]) & (labels[:,13]>=self.grid['z'][0]))
-
+		if self.cordinate == 'velo':
+			mask = \
+				((labels[:,11]<=self.grid['x'][1]) & (labels[:,11]>=self.grid['x'][0])) & \
+				((labels[:,12]<=self.grid['y'][1]) & (labels[:,12]>=self.grid['y'][0])) & \
+				((labels[:,13]<=self.grid['z'][1]) & (labels[:,13]>=self.grid['z'][0]))
+		elif self.cordinate == 'cam':
+			mask = \
+				((labels[:,11]<=self.grid['y'][1]) & (labels[:,11]>=self.grid['y'][0])) & \
+				((labels[:,13]<=self.grid['x'][1]) & (labels[:,13]>=self.grid['x'][0]))
 		if mask.sum() > 0:
 			return labels[mask]
 		else:
