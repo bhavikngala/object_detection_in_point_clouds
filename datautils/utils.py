@@ -43,9 +43,9 @@ class TargetParameterization():
     def __init__(self, cordinate, gridConfig, gridL, gridW, downSamplingFactor=4, device=None):
         self.cordinate = cordinate
         if cordinate == 'velo':
-            self.veloCordInit(gridConfig, gridL, gridW, downSamplingFactor=4, device=None)
+            self.veloCordInit(gridConfig, gridL, gridW, downSamplingFactor, device)
         elif cordinate == 'cam':
-            self.camCordInit(gridConfig, gridL, gridW, downSamplingFactor=4, device=None)
+            self.camCordInit(gridConfig, gridL, gridW, downSamplingFactor, device)
         
 
     def veloCordInit(self, gridConfig, gridL, gridW, downSamplingFactor=4, device=None):
@@ -241,7 +241,6 @@ class TargetParameterization():
                             t = (t-mean)/std
                         targetLoc[rprime, cprime] = t
                         targetClass[rprime, cprime] = 1.0
-            break
             
         return torch.from_numpy(targetClass), torch.from_numpy(targetLoc)
 
