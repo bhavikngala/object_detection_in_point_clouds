@@ -31,8 +31,8 @@ def lidarToBEV(lidar, gridConfig):
     # y = x
     # z = -z + int(z_r[1]/res)
 
-    bev[-indices[:,2]+int(z_r[1]/res), -indices[:, 1]-int(y_r[0]/res), indices[:, 0]] = 1
-    bev[-1, -indices[:, 1]-int(y_r[0]/res), indices[:, 0]] = ref
+    bev[-indices[:,2]+int(z_r[1]/res)+1, -indices[:, 1]-int(y_r[0]/res), indices[:, 0]] = 1
+    bev[0, -indices[:, 1]-int(y_r[0]/res), indices[:, 0]] = ref
 
     return bev
 
@@ -144,8 +144,8 @@ class TargetParameterization():
                         t = torch.tensor([torch.cos(ry), torch.sin(ry), \
                                           cx - self.xx[rprime,cprime], \
                                           cy - self.yy[rprime,cprime], \
-                                          torch.log(L/self.gridL), \
-                                          torch.log(W/self.gridW)], dtype=torch.float32)
+                                          torch.log(L), \
+                                          torch.log(W)], dtype=torch.float32)
                         if mean is not None and std is not None:
                             t = (t-mean)/std
                         targetLoc[rprime, cprime] = t
@@ -234,8 +234,8 @@ class TargetParameterization():
                         t = torch.tensor([torch.cos(ry), torch.sin(ry), \
                                           cx - self.xx[rprime,cprime], \
                                           cy - self.yy[rprime,cprime], \
-                                          torch.log(L/self.gridL), \
-                                          torch.log(W/self.gridW)], dtype=torch.float32)
+                                          torch.log(L), \
+                                          torch.log(W)], dtype=torch.float32)
                         # print(t.size(), mean.size(), std.size())
                         if mean is not None and std is not None:
                             t = (t-mean)/std
@@ -253,8 +253,8 @@ class TargetParameterization():
         # networkOutput[:,:,1] = torch.atan2(networkOutput[:,:,1],networkOutput[:,:,0])
         networkOutput[:,:,2] = networkOutput[:,:,2] + self.xx
         networkOutput[:,:,3] = networkOutput[:,:,3] + self.yy
-        networkOutput[:,:,4] = torch.exp(networkOutput[:,:,4]) * self.gridL
-        networkOutput[:,:,5] = torch.exp(networkOutput[:,:,5]) * self.gridW
+        networkOutput[:,:,4] = torch.exp(networkOutput[:,:,4])
+        networkOutput[:,:,5] = torch.exp(networkOutput[:,:,5])
         return networkOutput
 
 
