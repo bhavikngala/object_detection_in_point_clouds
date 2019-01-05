@@ -23,6 +23,7 @@ python train.py [options] [-f] [-m]
 ```
 
 ### directory structure
+```
 --Root dir
 ----code 				[contains all the code]
 ------models			[contains saved model files]
@@ -33,6 +34,7 @@ python train.py [options] [-f] [-m]
 ------training 			[training (train+val) data]
 --------velodyne 		[velodyne point cloud data files]
 ----------label_2 		[labels.txt]
+```
 
 ### Steps to train
 1. Install pre-requisites
