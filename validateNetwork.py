@@ -43,8 +43,8 @@ def saveOutput(predL, predC, projectionObject, filename, img=None, plot_img=Fals
 
 			if (xmin < 0) or (xmax > cnf.imgWidth) or (ymin < 0) or (ymax > cnf.imgHeight):
 				continue
-			if (ymax-ymin)>25:
-				continue
+			# if (ymax-ymin)>25:
+			# 	continue
 
 			if img is not None and plot_img:
 				img = draw_projected_box3d(img, imagePoints, color=(255,0,0), thickness=2)
