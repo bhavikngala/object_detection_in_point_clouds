@@ -24,13 +24,9 @@ class PointCloudDetector2(nn.Module):
 		self.conv2 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1, bias=False)
 		# self.bn2 = nn.BatchNorm2d(32)
 
-		# self.res_block1 = Bottleneck_3_1(in_channels = 32, out_channels=res_block_layers[0])
 		self.res_block1 = Bottleneck3FullPreActivation(in_channels = 32, out_channels=res_block_layers[0])
-		# self.res_block2 = Bottleneck_6_1_1(in_channels = 4 * res_block_layers[0], out_channels=res_block_layers[1])
 		self.res_block2 = Bottleneck6FullPreActivation(in_channels = 4 * res_block_layers[0], out_channels=res_block_layers[1])
-		# self.res_block3 = Bottleneck_6_1_1(in_channels = 4 * res_block_layers[1], out_channels=res_block_layers[2])
 		self.res_block3 = Bottleneck6FullPreActivation(in_channels = 4 * res_block_layers[1], out_channels=res_block_layers[2])
-		# self.res_block4 = Bottleneck_3_1(in_channels = 4 * res_block_layers[2], out_channels=res_block_layers[3])
 		self.res_block4 = Bottleneck3FullPreActivation(in_channels = 4 * res_block_layers[2], out_channels=res_block_layers[3])
 
 		self.conv4 = nn.Conv2d(in_channels=4*res_block_layers[3], out_channels=196, kernel_size=1, bias=True)
