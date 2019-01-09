@@ -67,7 +67,7 @@ class Bottleneck6FullPreActivation(nn.Module):
 		self.conv3 = nn.Conv2d(out_channels*self.expansion, out_channels, kernel_size=1, bias=False)
 
 		self.bn4 = nn.BatchNorm2d(out_channels)
-		self.conv4 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=2, padding=1, bias=False)
+		self.conv4 = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1, bias=False)
 
 		self.bn5 = nn.BatchNorm2d(out_channels)
 		self.conv5 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=1, bias=False)
