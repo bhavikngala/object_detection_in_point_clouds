@@ -30,7 +30,7 @@ class Bottleneck3FullPreActivation(nn.Module):
 
 		# res = self.bn1_skip(x)
 		# res = self.relu(res)
-		res = self.conv1_skip(res)
+		res = self.conv1_skip(x)
 
 		x = self.bn1(x)
 		x = self.relu(x)
@@ -79,7 +79,7 @@ class Bottleneck6FullPreActivation(nn.Module):
 	def forward(self, x):
 		# res = self.bn1_skip(x)
 		# res = self.relu(res)
-		res = self.conv1_skip(res)
+		res = self.conv1_skip(x)
 
 		x = self.bn1(x)
 		x = self.relu(x)
