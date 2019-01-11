@@ -31,9 +31,9 @@ def lidarToBEV(lidar, gridConfig):
     # y = x
     # z = -z + int(z_r[1]/res)
 
-    bev[-indices[:,2]+int(z_r[1]/res)+1, -indices[:, 1]-int(y_r[0]/res), indices[:, 0]] = 1
-    bev[0, -indices[:, 1]-int(y_r[0]/res), indices[:, 0]] = ref
-
+    bev[-indices[:,2]+int(z_r[1]/res), -indices[:, 1]-int(y_r[0]/res), indices[:, 0]] = 1
+    bev[-1, -indices[:, 1]-int(y_r[0]/res), indices[:, 0]] = ref
+    
     return bev
 
 
