@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-rootDir = './../data/tiny_set'
+rootDir = './../data'
 logDir = './runs'
 logJSONFilename = './loss/logs.json'
 trainSplitFile = './datautils/set_split_files/train.txt'
@@ -56,8 +56,8 @@ c = int((x_max-x_min)/(gridConfig['res']*downsamplingFactor))
 
 objtype = 'car'
 
-carPIXORIgnoreBoundaryMean = torch.tensor([-0.0133, -0.0709,  0.2003, -0.2002, -2.8943, -3.8924], dtype=torch.float32)
-carPIXORIgnoreBoundarySTD = torch.tensor([0.4550, 0.8876, 0.4253, 0.3094, 0.1097, 0.0623], dtype=torch.float32)
+carPIXORIgnoreBoundaryMean = torch.tensor([-0.0143, -0.0680,  0.2048, -0.2010,  1.3604,  0.4899], dtype=torch.float32)
+carPIXORIgnoreBoundarySTD = torch.tensor([0.4391, 0.8958, 0.3055, 0.4277, 0.1091, 0.0626], dtype=torch.float32)
 
 # res_block_layers = list if number of channels in the first conv layer of each res_block
 # up_sample_layers = list of tuple of number of channels input deconv and conv layers
@@ -121,7 +121,7 @@ logString2 = 'epoch: [{:04d}/{:03d}] | cl: {:.8f} | nsl: {:.8f} | psl: -.-------
 logString3 = 'epoch: [{:04d}/{:03d}] | cl: -.-------- | nsl: -.-------- | psl: -.-------- | ll: -.--------| tl: -.-------- | PS: [{:07d}/{:07d}] | md: -.---- | mc: -.---- | oamc: -.---- | lt: {:.4f} | bt: {:.4f} \n\n'
 normLogString = 'epoch: [{:04d}/{:03d}] | grad norm: {:.8f} | weight norm: {:.8f} \n\n'
 
-batchSize = 1
+batchSize = 16
 accumulationSteps = 1.0
 
 
