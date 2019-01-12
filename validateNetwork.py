@@ -83,18 +83,19 @@ def main():
 
 	# data loaders
 	valLoader = DataLoader(
-		KittiDataset(cnf, args, 'train'),
+		KittiDataset(cnf, args, 'val'),
 		batch_size = cnf.batchSize, shuffle=True, num_workers=3,
 		collate_fn=customCollateFunction, pin_memory=True
 	)
 
 	dirList = [None, None, cnf.calTrain, cnf.leftColorTrain]
-	print(dirList)
+	# print(dirList)
 	kittiReaderObject = KittiReader(dirList)
 
 	projectionObject = ProjectKittiToDifferentCoordinateSystems()
 
 	targetParamObject = utils.TargetParameterization(
+			cordinate=cnf.targetCord,
 			gridConfig=cnf.gridConfig,
 			gridL=cnf.lgrid,
 			gridW=cnf.wgrid,
@@ -156,8 +157,8 @@ def main():
 				projectionObject.clearCalibrationMatrices()
 				projectionObject.setCalibrationMatrices(calibDict)
 
-				print('img', img is None)
-				print(args.plot_img)
+				# print('img', img is None)
+				# print(args.plot_img)
 				# save output
 				saveOutput(predL, predC, projectionObject, filenames[i], img, args.plot_img)
 
