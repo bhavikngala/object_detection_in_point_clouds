@@ -2,7 +2,20 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-# resnet reference: https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
+
+def bottleneck(in_channels, out_channels, stride):
+	return nn.Sequential(
+		nn.BatchNorm2d(in_channels[0]),
+		nn.ReLU(),
+		nn.Conv2d(in_channels[0], out_channels[0], kernel_size=1, bias=False),
+		nn.BatchNorm2d(in_channels[1]),
+		nn.ReLU(),
+		nn.Conv2d(in_channels[1], out_channels[1], kernel_size=3, stride=stride, padding=1, bias=False),
+		nn.BatchNorm2d(in_channels[2]),
+		nn.ReLU(),
+		nn.Conv2d(in_channels[2], out_channels[2], kernel_size=1, bias=False)
+	)
+
 
 class Bottleneck3FullPreActivation(nn.Module):
 	expansion = 4
@@ -13,36 +26,16 @@ class Bottleneck3FullPreActivation(nn.Module):
 		super(Bottleneck3FullPreActivation, self).__init__()
 
 		# using pre-normalization and pre-activation
-		# TODO: switch stride=2 between conv1 and conv2 and check results
-		self.bn1 = nn.BatchNorm2d(in_channels)
-		self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False)
+		in_channels_ = [in_channels, out_channels, out_channels]
+		out_channels_ = [out_channels, out_channels, self.expansion*out_channels]
 
-		self.bn2 = nn.BatchNorm2d(out_channels)
-		self.conv2 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=3, stride=2, padding=1, bias=False)
-
-		# self.bn1_skip = nn.BatchNorm2d(in_channels)
-		self.conv1_skip = nn.Conv2d(in_channels, out_channels*self.expansion, kernel_size=1, stride=2, bias=False)
-
-		self.relu = nn.ReLU(inplace=True)
-
+		self.conv1_skip = nn.Conv2d(in_channels, self.expansion*out_channels, kernel_size=1, stride=2, bias=False)
+		self.bottleneck1 = bottleneck(in_channels_, out_channels_, stride=2)
+		
 
 	def forward(self, x):
-
-		# res = self.bn1_skip(x)
-		# res = self.relu(res)
 		res = self.conv1_skip(x)
-
-		x = self.bn1(x)
-		x = self.relu(x)
-		x = self.conv1(x)
-
-		x = self.bn2(x)
-		x = self.relu(x)
-		x = self.conv2(x)
-
-		out = x+res
-
-		return out
+		return res + self.bottleneck1(x)
 
 
 class Bottleneck6FullPreActivation(nn.Module):
@@ -51,61 +44,19 @@ class Bottleneck6FullPreActivation(nn.Module):
 	def __init__(self, in_channels, out_channels):
 		super(Bottleneck6FullPreActivation, self).__init__()
 
-		# using pre-normalization and pre-activation
-		# TODO: switch stride=2 between conv1 and conv2 and check results
-		# self.bn1 = nn.BatchNorm2d(in_channels)
-		# self.bn1_skip = nn.BatchNorm2d(in_channels)
-		self.conv1_skip = nn.Conv2d(in_channels, out_channels*self.expansion, kernel_size=1, stride=2, bias=False)
+		in_channels1_ = [in_channels, out_channels, out_channels]
+		in_channels2_ = [self.expansion*out_channels, out_channels, out_channels]
+		out_channels_ = [out_channels, out_channels, self.expansion*out_channels]
 
-		self.bn1 = nn.BatchNorm2d(in_channels)
-		self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False)
-
-		self.bn2 = nn.BatchNorm2d(out_channels)
-		self.conv2 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=3, stride=2, padding=1, bias=False)
-		
-		self.bn3 = nn.BatchNorm2d(out_channels*self.expansion)
-		self.conv3 = nn.Conv2d(out_channels*self.expansion, out_channels, kernel_size=1, bias=False)
-
-		self.bn4 = nn.BatchNorm2d(out_channels)
-		self.conv4 = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1, bias=False)
-
-		self.bn5 = nn.BatchNorm2d(out_channels)
-		self.conv5 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=1, bias=False)
-
-
-		self.relu = nn.ReLU(inplace=True)
+		self.conv1_skip = nn.Conv2d(in_channels, self.expansion*out_channels, kernel_size=1, stride=2, bias=False)
+		self.bottleneck1 = bottleneck(in_channels1_, out_channels_, stride=2)
+		self.bottleneck2 = bottleneck(in_channels2_, out_channels_, stride=1)
 
 
 	def forward(self, x):
-		# res = self.bn1_skip(x)
-		# res = self.relu(res)
 		res = self.conv1_skip(x)
-
-		x = self.bn1(x)
-		x = self.relu(x)
-		x = self.conv1(x)
-
-		x = self.bn2(x)
-		x = self.relu(x)
-		x = self.conv2(x)
-
-		res = x + res
-
-		x = self.bn3(res)
-		x = self.relu(x)
-		x = self.conv3(x)
-		
-		x = self.bn4(x)
-		x = self.relu(x)
-		x = self.conv4(x)
-		
-		x = self.bn5(x)
-		x = self.relu(x)
-		x = self.conv5(x)
-
-		res = x+res
-
-		return res
+		res = res + self.bottleneck1(x) 
+		return res + self.bottleneck2(res)
 
 
 class Upsample_2(nn.Module):
@@ -149,6 +100,4 @@ class Upsample_2(nn.Module):
 		# res = self.bn1(res)
 
 		# out = self.relu(d+res)
-		out = d+res
-
-		return out
+		return res.add_(d)
