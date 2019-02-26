@@ -72,10 +72,10 @@ deconv = [(1, 2, 1, 1), # upsamole block 1
 lr = 1e-4   # learning rate without step
 slr = 1e-2  # step learning rate
 lrDecay = 0.1 # learning rate decay
-milestones = [30, 45] # milestone for pixor
+milestones = [20, 30] # milestone for pixor
 momentum = 0.9
 decay = 0.0001 # weight decay parameter
-epochs = 50
+epochs = 35
 
 # balancing pos-neg samples
 alpha1 = 1.5
