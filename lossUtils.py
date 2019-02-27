@@ -91,41 +91,27 @@ def computeLoss7(cla, loc, targetClas, targetLocs):
 		numTargetsInFrame = (targetCla == 1).sum().item()
 		numPosSamples += numTargetsInFrame
 
-		if numTargetsInFrame == 0:
-			b = (targetCla == 0).squeeze()
-			numNegSamples += b.sum().item()
+		#***************PS******************
+		if numTargetsInFrame:
+			b = (targetCla == 1).squeeze()
+			predL = l[b]
 			predC = c[b]
-			loss, oamc = focalLoss(predC, 0, reduction='sum', alpha=cnf.alpha)
-						
+			targetL = targetLoc[b]
+
+			loss, oamc = focalLoss(predC, 1, reduction='sum', alpha=cnf.alpha)
+			meanConfidence += oamc.item()
 			overallMeanConfidence += oamc.item()
 			
-			if negClaLoss is not None:
-				negClaLoss += loss
+			if posClaLoss:
+				posClaLoss += loss
 			else:
-				negClaLoss = loss
-			continue
+				posClaLoss = loss
 
-		#***************PS******************
-		
-		b = (targetCla == 1).squeeze()
-		predL = l[b]
-		predC = c[b]
-		targetL = targetLoc[b]
-
-		loss, oamc = focalLoss(predC, 1, reduction='sum', alpha=cnf.alpha)
-		meanConfidence += oamc.item()
-		overallMeanConfidence += oamc.item()
-		
-		if posClaLoss is not None:
-			posClaLoss += loss
-		else:
-			posClaLoss = loss
-
-		if locLoss is not None:
-			locLoss += F.smooth_l1_loss(predL, targetL, reduction='sum')
-		else:
-			locLoss = F.smooth_l1_loss(predL, targetL, reduction='sum')
-						
+			if locLoss:
+				locLoss += F.smooth_l1_loss(predL, targetL, reduction='sum')
+			else:
+				locLoss = F.smooth_l1_loss(predL, targetL, reduction='sum')
+							
 		#***************PS******************
 
 		#***************NS******************
@@ -137,7 +123,7 @@ def computeLoss7(cla, loc, targetClas, targetLocs):
 			
 		overallMeanConfidence += oamc.item()
 	
-		if negClaLoss is not None:
+		if negClaLoss:
 			negClaLoss += loss
 		else:
 			negClaLoss = loss
@@ -150,13 +136,13 @@ def computeLoss7(cla, loc, targetClas, targetLocs):
 		overallMeanConfidence /=(numPosSamples+numNegSamples)
 
 	if numPosSamples > 0 and numNegSamples > 0:
-		posClaLoss /= (numPosSamples*cnf.accumulationSteps)
-		negClaLoss /= (numNegSamples*cnf.accumulationSteps)
+		# posClaLoss /= (numPosSamples*cnf.accumulationSteps)
+		# negClaLoss /= (numNegSamples*cnf.accumulationSteps)
 		claLoss = posClaLoss + negClaLoss
-		locLoss /= (numPosSamples*cnf.accumulationSteps)
+		# locLoss /= (numPosSamples*cnf.accumulationSteps)
 		trainLoss = claLoss + locLoss
 	elif numNegSamples > 0:
-		negClaLoss /= (numNegSamples*cnf.accumulationSteps)
+		# negClaLoss /= (numNegSamples*cnf.accumulationSteps)
 		claLoss = negClaLoss
 		trainLoss = claLoss
 
