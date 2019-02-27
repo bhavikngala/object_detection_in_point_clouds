@@ -56,12 +56,8 @@ c = int((x_max-x_min)/(gridConfig['res']*downsamplingFactor))
 
 objtype = 'car'
 
-carPIXORIgnoreBoundaryMean = torch.tensor([-0.0143, -0.0680,  0.2048, -0.2010,  1.3604,  0.4899], dtype=torch.float32)
-carPIXORIgnoreBoundarySTD = torch.tensor([0.4391, 0.8958, 0.3055, 0.4277, 0.1091, 0.0626], dtype=torch.float32)
-
-# res_block_layers = list if number of channels in the first conv layer of each res_block
-# up_sample_layers = list of tuple of number of channels input deconv and conv layers
-# deconv = tuple of (dilation, stride, padding, output_padding) for deconvolution in upsampling
+carPIXORIgnoreBoundaryMean = torch.tensor([-0.0016,  0.0143,  0.2018, -0.2031,  1.3621,  0.4837], dtype=torch.float32)
+carPIXORIgnoreBoundarySTD = torch.tensor([0.4476, 0.8941, 0.3069, 0.4271, 0.1130, 0.0652], dtype=torch.float32)
 
 res_block_layers = [24, 48, 64, 96]
 up_sample_layers = [(196, 256), (128, 192)]
@@ -88,8 +84,6 @@ epsilon = 1e-5
 
 # select gpu device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# posLabel = torch.Tensor([1.0]).to(device)
-# negLabel = torch.Tensor([0.0]).to(device)
 
 # filename of saved model
 model_file = './models/hawkEye.pth'
@@ -123,7 +117,7 @@ normLogString = 'epoch: [{:04d}/{:03d}] | grad norm: {:.8f} | weight norm: {:.8f
 
 batchSize = 16
 accumulationSteps = 1.0
-
+clip_value = 5
 
 # threshold for NMS
 iouThreshold = 0.4

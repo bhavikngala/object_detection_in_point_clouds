@@ -14,11 +14,12 @@ import lossUtils as lu
 
 class CustomGroomer(mg.ModelTrainer):
 
-	def __init__(self, logDir, modelFilename):
+	def __init__(self, logDir, modelFilename, clip_value=None):
 		self.writer = SummaryWriter(logDir)
 		self.iter = 0
 		self.logDir = logDir
 		self.modelFilename = modelFilename
+		self.clip_value = clip_value
 
 	def train(self, device):
 		if self.loader is None:
@@ -44,6 +45,8 @@ class CustomGroomer(mg.ModelTrainer):
 				if trainLoss is not None:
 					self.model.zero_grad()
 					trainLoss.backward()
+					if self.clip_value:
+						torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_value)
 					self.optim.step()
 
 
@@ -125,7 +128,7 @@ def main():
 		cnf.up_sample_layers,
 		cnf.deconv)
 
-	modelTrainer = CustomGroomer(cnf.logDir, args.model_file)
+	modelTrainer = CustomGroomer(cnf.logDir, args.model_file, cnf.clip_value)
 	modelTrainer.setDataloader(trainLoader)
 	modelTrainer.setEpochs(cnf.epochs)
 	modelTrainer.setModel(model)
