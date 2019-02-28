@@ -14,18 +14,21 @@ import lossUtils as lu
 
 class CustomGroomer(mg.ModelTrainer):
 
-	def __init__(self, logDir, modelFilename, clip_value=None):
+	def __init__(self, logDir, modelFilename, **kwargs):
 		self.writer = SummaryWriter(logDir)
 		self.iter = 0
 		self.logDir = logDir
 		self.modelFilename = modelFilename
-		self.clip_value = clip_value
+		self.clip_value = kwargs['clip_value']
+		self.accumulationSteps = kwargs['accumulationSteps']
 
 	def train(self, device):
 		if self.loader is None:
 			print('data loader is undefined')
 			quit()
+		self.model.zero_grad()
 
+		subBatchCounter = 1
 		for epoch in range(self.epochs):
 			epochValues = []
 			self.scheduler.step()
@@ -43,11 +46,15 @@ class CustomGroomer(mg.ModelTrainer):
 				 = self.lossFunction(predictedClass, predictedLoc, targetClass, targetLoc)
 
 				if trainLoss is not None:
-					self.model.zero_grad()
 					trainLoss.backward()
+					subBatchCounter += 1
+
+				if subBatchCounter==self.accumulationSteps:
 					if self.clip_value:
 						torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_value)
 					self.optim.step()
+					self.model.zero_grad()
+					subBatchCounter = 1
 
 
 				epochValues.append((claLoss, locLoss, trainLoss, posClaLoss, negClaLoss, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples))
@@ -128,7 +135,8 @@ def main():
 		cnf.up_sample_layers,
 		cnf.deconv)
 
-	modelTrainer = CustomGroomer(cnf.logDir, args.model_file, cnf.clip_value)
+	modelTrainer = CustomGroomer(cnf.logDir, args.model_file,
+		cnf.clip_value, cnf.accumulationSteps)
 	modelTrainer.setDataloader(trainLoader)
 	modelTrainer.setEpochs(cnf.epochs)
 	modelTrainer.setModel(model)

@@ -116,8 +116,8 @@ logString3 = 'epoch: [{:04d}/{:03d}] | cl: -.-------- | nsl: -.-------- | psl: -
 normLogString = 'epoch: [{:04d}/{:03d}] | grad norm: {:.8f} | weight norm: {:.8f} \n\n'
 
 batchSize = 16
-accumulationSteps = 1.0
-clip_value = 5
+accumulationSteps = 4.0
+clip_value = 1
 
 # threshold for NMS
 iouThreshold = 0.4
