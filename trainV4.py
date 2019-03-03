@@ -158,7 +158,6 @@ def main():
 
 if __name__ == '__main__':
 	try:
-		raise ValueError
 		main()
 	except Exception as e:
 		with open('./error.txt', 'w') as f:
