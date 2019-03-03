@@ -2,6 +2,7 @@ import torch
 from torch.utils.data import DataLoader
 
 import os
+import traceback
 from tensorboardX import SummaryWriter
 
 import datautils.dataloader_v3 as dataloader
@@ -136,7 +137,8 @@ def main():
 		cnf.deconv)
 
 	modelTrainer = CustomGroomer(cnf.logDir, args.model_file,
-		cnf.clip_value, cnf.accumulationSteps)
+		clip_value=cnf.clip_value,
+		accumulationSteps=cnf.accumulationSteps)
 	modelTrainer.setDataloader(trainLoader)
 	modelTrainer.setEpochs(cnf.epochs)
 	modelTrainer.setModel(model)
@@ -155,4 +157,9 @@ def main():
 
 
 if __name__ == '__main__':
-	main()
+	try:
+		raise ValueError
+		main()
+	except Exception as e:
+		with open('./error.txt', 'w') as f:
+			f.write(traceback.format_exc())
