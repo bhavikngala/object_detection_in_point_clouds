@@ -23,6 +23,7 @@ class CustomGroomer(mg.ModelTrainer):
 		self.clip_value = kwargs['clip_value']
 		self.accumulationSteps = kwargs['accumulationSteps']
 		self.lrRange2 = kwargs['lrRange2']
+		self.momentumRange2 = kwargs['momentumRange2']
 
 	def train(self, device):
 		if self.loader is None:
@@ -35,7 +36,7 @@ class CustomGroomer(mg.ModelTrainer):
 			epochValues = []
 
 			if epoch > self.stepSize*2:
-				self.setLrRangeStepSize(self.lrRange2, self.stepSize)
+				self.setLrRangeStepSize(self.lrRange2, self.momentumRange2, self.stepSize)
 
 			if self.oneCycleLearning:
 				self.oneCycleStep(epoch)
@@ -147,7 +148,8 @@ def main():
 	modelTrainer = CustomGroomer(cnf.logDir, args.model_file,
 		clip_value=cnf.clip_value,
 		accumulationSteps=cnf.accumulationSteps,
-		lrRange2 = cnf.lrRange2)
+		lrRange2 = cnf.lrRange2,
+		momentumRange2 = cnf.momentumRange2)
 	modelTrainer.setDataloader(trainLoader)
 	modelTrainer.setEpochs(cnf.epochs)
 	modelTrainer.setModel(model)
@@ -155,7 +157,7 @@ def main():
 	modelTrainer.copyModel(cnf.device)
 	modelTrainer.setOptimizer('sgd', cnf.slr, cnf.momentum, cnf.decay)
 	# modelTrainer.setLRScheduler(cnf.lrDecay, cnf.milestones)
-	modelTrainer.setLrRangeStepSize(cnf.lrRange, cnf.stepSize)
+	modelTrainer.setLrRangeStepSize(cnf.lrRange, cnf.momentumRange, cnf.stepSize)
 
 	if os.path.isfile(args.model_file):
 		modelTrainer.loadModel(args.model_file)

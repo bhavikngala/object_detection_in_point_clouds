@@ -73,8 +73,10 @@ momentum = 0.9
 decay = 0.0001 # weight decay parameter
 epochs = 35
 stepSize = epochs//2
-lrRange = [1e-2, 1e-4]
-lrRange2 = [1e-4, 1e-5]
+lrRange = [1e-4, 1e-2]
+momentumRange = [0.85, 0.9]
+lrRange2 = [1e-5, 1e-4]
+momentumRange2 = [0.9, 0.9]
 
 # balancing pos-neg samples
 alpha1 = 1.5
