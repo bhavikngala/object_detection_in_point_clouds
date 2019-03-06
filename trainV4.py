@@ -22,6 +22,7 @@ class CustomGroomer(mg.ModelTrainer):
 		self.modelFilename = modelFilename
 		self.clip_value = kwargs['clip_value']
 		self.accumulationSteps = kwargs['accumulationSteps']
+		self.lrRange2 = kwargs['lrRange2']
 
 	def train(self, device):
 		if self.loader is None:
@@ -30,9 +31,16 @@ class CustomGroomer(mg.ModelTrainer):
 		self.model.zero_grad()
 
 		subBatchCounter = 1
-		for epoch in range(self.epochs):
+		for epoch in range(1, self.epochs+1):
 			epochValues = []
-			self.scheduler.step()
+
+			if epoch > self.stepSize*2:
+				self.setLrRangeStepSize(self.lrRange2, self.stepSize)
+
+			if self.oneCycleLearning:
+				self.oneCycleStep(epoch)
+			else:
+				self.scheduler.step()
 
 			for batchId, data in enumerate(self.loader):
 				lidar, targetClass, targetLoc, filenames = data
@@ -138,15 +146,16 @@ def main():
 
 	modelTrainer = CustomGroomer(cnf.logDir, args.model_file,
 		clip_value=cnf.clip_value,
-		accumulationSteps=cnf.accumulationSteps)
+		accumulationSteps=cnf.accumulationSteps,
+		lrRange2 = cnf.lrRange2)
 	modelTrainer.setDataloader(trainLoader)
 	modelTrainer.setEpochs(cnf.epochs)
 	modelTrainer.setModel(model)
 	modelTrainer.setDataParallel(args.multi_gpu)
 	modelTrainer.copyModel(cnf.device)
 	modelTrainer.setOptimizer('sgd', cnf.slr, cnf.momentum, cnf.decay)
-	modelTrainer.setLRScheduler(cnf.lrDecay, cnf.milestones)
-	
+	# modelTrainer.setLRScheduler(cnf.lrDecay, cnf.milestones)
+	modelTrainer.setLrRangeStepSize(cnf.lrRange, cnf.stepSize)
 
 	if os.path.isfile(args.model_file):
 		modelTrainer.loadModel(args.model_file)

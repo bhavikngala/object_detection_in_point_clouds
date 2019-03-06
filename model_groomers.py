@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch.optim import Adam, SGD
 from torch.optim.lr_scheduler import MultiStepLR
+import math
 
 class ModelTrainer():
 	loader = None
@@ -13,24 +14,34 @@ class ModelTrainer():
 	trainLoader = None
 	valLoader = None
 	testLoader = None
+	lrRange = None
+	stepSize = None
+	oneCycleLearning = False
+
 
 	def train(self, device=None):
 		raise NotImplementedError()
 
+
 	def val(self):
 		raise NotImplementedError()
+
 
 	def setLoaders(self):
 		raise NotImplementedError()
 
+
 	def setDataloader(self, dataloader):
 		self.loader = dataloader
+
 
 	def setEpochs(self, epochs):
 		self.epochs = epochs
 
+
 	def setModel(self, model):
 		self.model = model
+
 
 	def setOptimizer(self, optimName, lr, momentum=0, decay=0, nesterov=False, betas=(0.9, 0.999)):
 		if self.model is None:
@@ -41,15 +52,37 @@ class ModelTrainer():
 		elif optimName == 'adam':
 			self.optim = Adam(self.model.parameters(), lr, betas=betas, weight_decay=decay)
 
+
 	def setLRScheduler(self, lrDecay, milestones):
 		if self.optim is None:
 			print('optimizer undefined')
 			quit()
 		self.scheduler = MultiStepLR(self.optim, milestones, lrDecay)
 
+
+	def oneCycleStep(self, epoch):
+		cycle = math.floor(1 + epoch/(2*self.stepSize))
+		x = math.fabs(epoch/self.stepSize - 2*cycle + 1)
+		locallr = self.lrRange[0] + (self.lrRange[1]-self.lrRange[0])*max(0, 1-x)
+
+		for param_group in self.optim.param_groups:
+			param_group['lr'] = locallr
+
+
+	def setLrRangeStepSize(self, lrRange, stepSize):
+		self.lrRange = lrRange
+		self.stepSize = stepSize
+		self.oneCycleLearning = True
+
+
+	def getLrRangeStepSize(self):
+		return self.lrRange, self.stepSize
+
+
 	def loadModel(self, filename):
 		self.model.load_state_dict(torch.load(filename,
 			map_location=lambda storage, loc: storage))
+
 
 	def saveModel(self, filename):
 		if self.model is None:
@@ -57,14 +90,17 @@ class ModelTrainer():
 			quit()
 		torch.save(self.model.state_dict(), filename)
 
+
 	def copyModel(self, device):
 		if self.model is None:
 			print('Model is None, cannot copy')
 			quit()
 		self.model.cuda(device)
 
+
 	def setLossFunction(self, lossFunction):
 		self.lossFunction = lossFunction
+
 
 	def setDataParallel(self, flag):
 		if flag:

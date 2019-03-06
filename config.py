@@ -56,8 +56,8 @@ c = int((x_max-x_min)/(gridConfig['res']*downsamplingFactor))
 
 objtype = 'car'
 
-carPIXORIgnoreBoundaryMean = torch.tensor([-0.0016,  0.0143,  0.2018, -0.2031,  1.3621,  0.4837], dtype=torch.float32)
-carPIXORIgnoreBoundarySTD = torch.tensor([0.4476, 0.8941, 0.3069, 0.4271, 0.1130, 0.0652], dtype=torch.float32)
+carPIXORIgnoreBoundaryMean = torch.tensor([-0.0004,  0.0089,  0.2001, -0.2015,  1.3619,  0.4839], dtype=torch.float32)
+carPIXORIgnoreBoundarySTD = torch.tensor([0.4530, 0.8915, 0.4263, 0.3093, 0.1131, 0.0650], dtype=torch.float32)
 
 res_block_layers = [24, 48, 64, 96]
 up_sample_layers = [(196, 256), (128, 192)]
@@ -72,6 +72,9 @@ milestones = [20, 30] # milestone for pixor
 momentum = 0.9
 decay = 0.0001 # weight decay parameter
 epochs = 35
+stepSize = epochs//2
+lrRange = [1e-2, 1e-4]
+lrRange2 = [1e-4, 1e-5]
 
 # balancing pos-neg samples
 alpha1 = 1.5
@@ -115,7 +118,7 @@ logString2 = 'epoch: [{:04d}/{:03d}] | cl: {:.8f} | nsl: {:.8f} | psl: -.-------
 logString3 = 'epoch: [{:04d}/{:03d}] | cl: -.-------- | nsl: -.-------- | psl: -.-------- | ll: -.--------| tl: -.-------- | PS: [{:07d}/{:07d}] | md: -.---- | mc: -.---- | oamc: -.---- | lt: {:.4f} | bt: {:.4f} \n\n'
 normLogString = 'epoch: [{:04d}/{:03d}] | grad norm: {:.8f} | weight norm: {:.8f} \n\n'
 
-batchSize = 16
+batchSize = 4
 accumulationSteps = 4.0
 clip_value = 1
 
