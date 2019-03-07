@@ -69,7 +69,7 @@ class ModelTrainer():
 		cycle = math.floor(1 + epoch/(2*self.stepSize))
 		x = math.fabs(epoch/self.stepSize - 2*cycle + 1)
 		locallr = self.lrRange[0] + (self.lrRange[1]-self.lrRange[0])*max(0, 1-x)
-		localMomentum = self.momentumRange[0] - (self.momentumRange[1]-self.momentumRange[0])*max(0, 1-x)
+		localMomentum = self.momentumRange[1] - (self.momentumRange[1]-self.momentumRange[0])*max(0, 1-x)
 		for param_group in self.optim.param_groups:
 			param_group['lr'] = locallr
 			param_group['momentumRange'] = localMomentum
