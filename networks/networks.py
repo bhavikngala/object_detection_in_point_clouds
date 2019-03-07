@@ -118,20 +118,26 @@ class PointCloudDetector2(nn.Module):
 		self.upsample1.apply(upsampleInit)
 		self.upsample2.apply(upsampleInit)
 
-		self.conv5.weight.data.normal_(0.0, 0.01)
-		self.conv5.bias.data.fill_(0)
-		self.conv6.weight.data.normal_(0.0, 0.01)
-		self.conv6.bias.data.fill_(0)
-		self.conv7.weight.data.normal_(0.0, 0.01)
-		self.conv7.bias.data.fill_(0)
-		self.conv8.weight.data.normal_(0.0, 0.01)
-		self.conv8.bias.data.fill_(0)
+		# self.conv5.weight.data.normal_(0.0, 0.01)
+		# self.conv6.weight.data.normal_(0.0, 0.01)
+		# self.conv7.weight.data.normal_(0.0, 0.01)
+		# self.conv8.weight.data.normal_(0.0, 0.01)
+		# self.conv_cla.weight.data.normal_(0.0, 0.01)
+		# self.conv_loc.weight.data.normal_(0.0, 0.01)
+		nn.init.xavier_normal_(self.conv5.weight, gain=1)
+		nn.init.xavier_normal_(self.conv7.weight, gain=1)
+		nn.init.xavier_normal_(self.conv6.weight, gain=1)
+		nn.init.xavier_normal_(self.conv8.weight, gain=1)
+		nn.init.xavier_normal_(self.conv_cla.weight, gain=1)
+		nn.init.xavier_normal_(self.conv_loc.weight, gain=1)
 
-		self.conv_cla.weight.data.normal_(0.0, 0.01)
 		t = torch.tensor((1-0.01)/0.01, dtype=torch.float32)
+		
+		self.conv5.bias.data.fill_(0)
+		self.conv6.bias.data.fill_(0)
+		self.conv7.bias.data.fill_(0)
+		self.conv8.bias.data.fill_(0)
 		self.conv_cla.bias.data.fill_(t.log())
-
-		self.conv_loc.weight.data.normal_(0.0, 0.01)
 		self.conv_loc.bias.data.fill_(0)
 
 
@@ -145,8 +151,10 @@ def resnetInit(m):
 
 def upsampleInit(m):
 	if isinstance(m, nn.Conv2d):
-		m.weight.data.normal_(0.0, 0.01)
+		# m.weight.data.normal_(0.0, 0.01)
+		nn.init.xavier_normal_(m.weight, gain=1)
 		m.bias.data.fill_(0)		
 	elif isinstance(m, nn.ConvTranspose2d):
-		m.weight.data.normal_(0.0, 0.01)
+		# m.weight.data.normal_(0.0, 0.01)
+		nn.init.xavier_normal_(m.weight, gain=1)
 		m.bias.data.fill_(0)
