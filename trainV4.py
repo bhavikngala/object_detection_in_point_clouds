@@ -35,10 +35,9 @@ class CustomGroomer(mg.ModelTrainer):
 		for epoch in range(1, self.epochs+1):
 			epochValues = []
 
-			if epoch > self.stepSize*2:
-				self.setLrRangeStepSize(self.lrRange2, self.momentumRange2, self.stepSize)
-
 			if self.oneCycleLearning:
+				if epoch > self.stepSize*2:
+					self.setLrRangeStepSize(self.lrRange2, self.momentumRange2, self.stepSize)
 				self.oneCycleStep(epoch)
 			else:
 				self.scheduler.step()
