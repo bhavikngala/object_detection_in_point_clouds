@@ -64,14 +64,16 @@ up_sample_layers = [(196, 256), (128, 192)]
 deconv = [(1, 2, 1, 1), # upsamole block 1
 		  (1, 2, 1, 1)] # upsample block 2
 
+pretrainCla = True
+cycleLearn  = False
 # training parameters
 lr = 1e-4   # learning rate without step
-slr = 1e-2  # step learning rate
+slr = 1e-1  # step learning rate
 lrDecay = 0.1 # learning rate decay
-milestones = [20, 30] # milestone for pixor
+milestones = [3, 3, 3] # milestone for pixor
 momentum = 0.9
 decay = 0.0001 # weight decay parameter
-epochs = 35
+epochs = 10
 stepSize = epochs//2
 lrRange = [1e-4, 1e-2]
 momentumRange = [0.85, 0.9]

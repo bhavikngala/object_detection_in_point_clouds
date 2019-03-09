@@ -25,7 +25,7 @@ class CustomGroomer(mg.ModelTrainer):
 		self.lrRange2 = kwargs['lrRange2']
 		self.momentumRange2 = kwargs['momentumRange2']
 
-	def train(self, device):
+	def train(self, device, pretrainCla=False):
 		if self.loader is None:
 			print('data loader is undefined')
 			quit()
@@ -52,7 +52,7 @@ class CustomGroomer(mg.ModelTrainer):
 				predictedClass, predictedLoc = self.model(lidar)
 
 				claLoss, locLoss, trainLoss, posClaLoss, negClaLoss, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples \
-				 = self.lossFunction(predictedClass, predictedLoc, targetClass, targetLoc)
+				 = self.lossFunction(predictedClass, predictedLoc, targetClass, targetLoc, pretrainCla)
 
 				if trainLoss is not None:
 					trainLoss.backward()
@@ -155,14 +155,16 @@ def main():
 	modelTrainer.setDataParallel(args.multi_gpu)
 	modelTrainer.copyModel(cnf.device)
 	modelTrainer.setOptimizer('sgd', cnf.slr, cnf.momentum, cnf.decay)
-	# modelTrainer.setLRScheduler(cnf.lrDecay, cnf.milestones)
-	modelTrainer.setLrRangeStepSize(cnf.lrRange, cnf.momentumRange, cnf.stepSize)
+	if cnf.cycleLearn:
+		modelTrainer.setLrRangeStepSize(cnf.lrRange, cnf.momentumRange, cnf.stepSize)
+	else:
+		modelTrainer.setLRScheduler(cnf.lrDecay, cnf.milestones)
 
 	if os.path.isfile(args.model_file):
 		modelTrainer.loadModel(args.model_file)
 
 	modelTrainer.setLossFunction(lu.computeLoss)
-	modelTrainer.train(cnf.device)
+	modelTrainer.train(cnf.device, cnf.pretrainCla)
 	modelTrainer.exportLogs(cnf.logJSONFilename)
 
 

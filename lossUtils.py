@@ -64,7 +64,7 @@ def computeIoU(matchedBoxes, targets):
 	return (intersectionArea/unionArea).mean().item()
 
 
-def computeLoss7(cla, loc, targetClas, targetLocs):
+def computeLoss7(cla, loc, targetClas, targetLocs, claLossOnly=False):
 	only_pos = False
 
 	posClaLoss = None
@@ -83,34 +83,26 @@ def computeLoss7(cla, loc, targetClas, targetLocs):
 	cla = cla.permute(0, 2, 3, 1).contiguous()
 
 	for i in range(lm):
-		l = loc[i]
-		c = cla[i]
-		targetCla = targetClas[i]
-		targetLoc = targetLocs[i]
+		l, c = loc[i], cla[i]
+		targetCla, targetLoc = targetClas[i], targetLocs[i]
 
-		numTargetsInFrame = (targetCla == 1).sum().item()
+		b = (targetCla == 1).squeeze()
+		numTargetsInFrame = b.sum().item()
 		numPosSamples += numTargetsInFrame
 
 		#***************PS******************
 		if numTargetsInFrame:
-			b = (targetCla == 1).squeeze()
-			predL = l[b]
-			predC = c[b]
-			targetL = targetLoc[b]
+			predL, predC, targetL = l[b], c[b], targetLoc[b]
 
 			loss, oamc = focalLoss(predC, 1, reduction='sum', alpha=cnf.alpha)
 			meanConfidence += oamc.item()
 			overallMeanConfidence += oamc.item()
-			
-			if posClaLoss:
-				posClaLoss += loss
-			else:
-				posClaLoss = loss
+		
+			posClaLoss = loss if posClaLoss is None else posClaLoss + loss
 
-			if locLoss:
-				locLoss += F.smooth_l1_loss(predL, targetL, reduction='sum')
-			else:
-				locLoss = F.smooth_l1_loss(predL, targetL, reduction='sum')
+			if not claLossOnly:
+				loss = F.smooth_l1_loss(predL, targetL, reduction='sum')
+				locLoss = loss if locLoss is None else locLoss + loss
 							
 		#***************PS******************
 
@@ -121,12 +113,8 @@ def computeLoss7(cla, loc, targetClas, targetLocs):
 
 		loss, oamc = focalLoss(predC, 0, reduction='sum', alpha=cnf.alpha)
 			
-		overallMeanConfidence += oamc.item()
-	
-		if negClaLoss:
-			negClaLoss += loss
-		else:
-			negClaLoss = loss
+		overallMeanConfidence += oamc.item()	
+		negClaLoss = loss if negClaLoss is None else negClaLoss + loss
 
 		#***************NS******************
 	
@@ -140,7 +128,7 @@ def computeLoss7(cla, loc, targetClas, targetLocs):
 		# negClaLoss /= (numNegSamples*cnf.accumulationSteps)
 		claLoss = posClaLoss + negClaLoss
 		# locLoss /= (numPosSamples*cnf.accumulationSteps)
-		trainLoss = claLoss + locLoss
+		trainLoss = claLoss if claLossOnly else claLoss + locLoss
 	elif numNegSamples > 0:
 		# negClaLoss /= (numNegSamples*cnf.accumulationSteps)
 		claLoss = negClaLoss
