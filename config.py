@@ -80,9 +80,9 @@ momentumRange = [0.85, 0.9]
 lrRange2 = [1e-5, 1e-4]
 momentumRange2 = [0.9, 0.9]
 
-# balancing pos-neg samples
-alpha1 = 1.5
-beta1 = 1.0
+# balancing classification and regression losses
+alpha1 = 1.0
+beta1 = 0.1
 
 # gamma, alpha, epsilon for focal loss
 gamma = 2

@@ -25,7 +25,7 @@ class CustomGroomer(mg.ModelTrainer):
 		self.lrRange2 = kwargs['lrRange2']
 		self.momentumRange2 = kwargs['momentumRange2']
 
-	def train(self, device, pretrainCla=False):
+	def train(self, device):
 		if self.loader is None:
 			print('data loader is undefined')
 			quit()
@@ -52,7 +52,7 @@ class CustomGroomer(mg.ModelTrainer):
 				predictedClass, predictedLoc = self.model(lidar)
 
 				claLoss, locLoss, trainLoss, posClaLoss, negClaLoss, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples \
-				 = self.lossFunction(predictedClass, predictedLoc, targetClass, targetLoc, pretrainCla)
+				 = self.lossFunction(predictedClass, predictedLoc, targetClass, targetLoc, self.alpa1, self.beta1)
 
 				if trainLoss is not None:
 					trainLoss.backward()
@@ -163,7 +163,7 @@ def main():
 	if os.path.isfile(args.model_file):
 		modelTrainer.loadModel(args.model_file)
 
-	modelTrainer.setLossFunction(lu.computeLoss)
+	modelTrainer.setLossFunction(lu.computeLoss, cnf.alpha1, cnf.beta1)
 	modelTrainer.train(cnf.device, cnf.pretrainCla)
 	modelTrainer.exportLogs(cnf.logJSONFilename)
 

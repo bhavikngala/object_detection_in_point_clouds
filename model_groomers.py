@@ -18,6 +18,8 @@ class ModelTrainer():
 	momentumRange = None
 	stepSize = None
 	oneCycleLearning = False
+	alpha1 = 1.0
+	beta1 = 0.1
 
 
 	def train(self, device=None):
@@ -105,8 +107,10 @@ class ModelTrainer():
 		self.model.cuda(device)
 
 
-	def setLossFunction(self, lossFunction):
+	def setLossFunction(self, lossFunction, alpha1, beta1):
 		self.lossFunction = lossFunction
+		self.alpha1 = alpha1
+		self.beta1 = beta1
 
 
 	def setDataParallel(self, flag):
