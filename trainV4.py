@@ -29,9 +29,8 @@ class CustomGroomer(mg.ModelTrainer):
 		if self.loader is None:
 			print('data loader is undefined')
 			quit()
-		self.model.zero_grad()
 
-		subBatchCounter = 1
+		subBatchCounter = 0
 		for epoch in range(1, self.epochs+1):
 			epochValues = []
 
@@ -42,8 +41,14 @@ class CustomGroomer(mg.ModelTrainer):
 			else:
 				self.scheduler.step()
 
+			batch_size = self.loader.batch_size
+			self.model.zero_grad()
 			for batchId, data in enumerate(self.loader):
 				lidar, targetClass, targetLoc, filenames = data
+
+				# ignore last batch
+				if lidar.size(0) != batch_size:
+					continue
 
 				lidar = lidar.cuda(device, non_blocking=True)
 				targetClass = [c.contiguous().cuda(device, non_blocking=True) for c in targetClass]
@@ -55,6 +60,7 @@ class CustomGroomer(mg.ModelTrainer):
 				 = self.lossFunction(predictedClass, predictedLoc, targetClass, targetLoc, self.alpa1, self.beta1)
 
 				if trainLoss is not None:
+					trainLoss = trainLoss/self.accumulationSteps
 					trainLoss.backward()
 					subBatchCounter += 1
 
@@ -63,7 +69,7 @@ class CustomGroomer(mg.ModelTrainer):
 						torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_value)
 					self.optim.step()
 					self.model.zero_grad()
-					subBatchCounter = 1
+					subBatchCounter = 0
 
 
 				epochValues.append((claLoss, locLoss, trainLoss, posClaLoss, negClaLoss, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples))
