@@ -3,60 +3,55 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-def bottleneck(in_channels, out_channels, stride):
-	return nn.Sequential(
-		nn.BatchNorm2d(in_channels[0]),
-		nn.ReLU(),
-		nn.Conv2d(in_channels[0], out_channels[0], kernel_size=1, bias=False),
-		nn.BatchNorm2d(in_channels[1]),
-		nn.ReLU(),
-		nn.Conv2d(in_channels[1], out_channels[1], kernel_size=3, stride=stride, padding=1, bias=False),
-		nn.BatchNorm2d(in_channels[2]),
-		nn.ReLU(),
-		nn.Conv2d(in_channels[2], out_channels[2], kernel_size=1, bias=False)
-	)
+def conv3x3(in_planes, out_planes, stride=1):
+	"""3x3 convolution with padding"""
+	return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
+					 padding=1, bias=False)
 
 
-class Bottleneck3FullPreActivation(nn.Module):
+def conv1x1(in_planes, out_planes, stride=1):
+	"""1x1 convolution"""
+	return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
+
+
+class Bottleneck(nn.Module):
 	expansion = 4
 
-	# input dim : c x 800 x 700
-	# output dim: c x 400 x 350
-	def __init__(self, in_channels, out_channels):
-		super(Bottleneck3FullPreActivation, self).__init__()
+	def __init__(self, inplanes, planes, stride=1, downsample=None):
+		super(Bottleneck, self).__init__()
+		# Both self.conv2 and self.downsample layers downsample the input when stride != 1
+		self.conv1 = conv1x1(inplanes, planes)
+		self.bn1 = nn.BatchNorm2d(planes)
+		self.conv2 = conv3x3(planes, planes, stride)
+		self.bn2 = nn.BatchNorm2d(planes)
+		self.conv3 = conv1x1(planes, planes * self.expansion)
+		self.bn3 = nn.BatchNorm2d(planes * self.expansion)
+		self.relu = nn.ReLU(inplace=True)
+		self.downsample = downsample
+		self.stride = stride
 
-		# using pre-normalization and pre-activation
-		in_channels_ = [in_channels, out_channels, out_channels]
-		out_channels_ = [out_channels, out_channels, self.expansion*out_channels]
+	def forward(self, x):
+		identity = x
 
-		self.conv1_skip = nn.Conv2d(in_channels, self.expansion*out_channels, kernel_size=1, stride=2, bias=False)
-		self.bottleneck1 = bottleneck(in_channels_, out_channels_, stride=2)
+		out = self.conv1(x)
+		out = self.relu(out)
+		out = self.bn1(out)
+
+		out = self.conv2(out)
+		out = self.relu(out)
+		out = self.bn2(out)
+
+		out = self.conv3(out)
+
+		if self.downsample is not None:
+			identity = self.downsample(x)
 		
+		out += identity
 
-	def forward(self, x):
-		res = self.conv1_skip(x)
-		return res + self.bottleneck1(x)
+		out = self.relu(out)
+		out = self.bn3(out)
 
-
-class Bottleneck6FullPreActivation(nn.Module):
-	expansion = 4
-
-	def __init__(self, in_channels, out_channels):
-		super(Bottleneck6FullPreActivation, self).__init__()
-
-		in_channels1_ = [in_channels, out_channels, out_channels]
-		in_channels2_ = [self.expansion*out_channels, out_channels, out_channels]
-		out_channels_ = [out_channels, out_channels, self.expansion*out_channels]
-
-		self.conv1_skip = nn.Conv2d(in_channels, self.expansion*out_channels, kernel_size=1, stride=2, bias=False)
-		self.bottleneck1 = bottleneck(in_channels1_, out_channels_, stride=2)
-		self.bottleneck2 = bottleneck(in_channels2_, out_channels_, stride=1)
-
-
-	def forward(self, x):
-		res = self.conv1_skip(x)
-		res = res + self.bottleneck1(x) 
-		return res + self.bottleneck2(res)
+		return out
 
 
 class Upsample_2(nn.Module):
