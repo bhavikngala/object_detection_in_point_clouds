@@ -399,3 +399,58 @@ def nmsPredictions(predL, predC, iouThreshold):
         nmsPredC.append(predC[i])
 
     return np.array(nmsPredL), np.array(nmsPredC)
+
+
+class AugmentLidar():
+    '''
+    # lidar data format : x, y, z, r
+    # labels format     :
+    '''
+
+    def __init__(self, thetaRange):
+        self.thetaRangeXAxis = thetaRange[0]
+        self.thetaRangeYAxis = thetaRange[1]
+        self.thetaRangeZAxis = thetaRange[2]
+
+
+    def rotateLidarFrame(self, lidar, axis='z'):
+        if axis=='z':
+            theta = np.random.uniform(low = self.thetaRangeZAxis[0], high=self.thetaRangeZAxis[1])
+
+        return 
+
+    def rotateLabels(self, labels, axis='z'):
+        raise NotImplementedError()
+
+
+    def flipLidarFrame(self, lidar, axis='x'):
+        raise NotImplementedError()
+
+
+    def flipLabels(self, labels, axis='x'):
+        raise NotImplementedError()
+
+
+    def getAugmentationMethodsList(self):
+        lidarAugmentationMethodsList = [self.rotateLidarFrame, self.flipLidarFrame]
+        labelsAugmentationMethodsList = [self.rotateLabels, self.flipLabels]
+        return (lidarAugmentationMethodsList, labelsAugmentationMethodsList)
+
+
+class Augmentor(AugmentLidar):
+    def __init__(self, thetaRange):
+        super().__init__(thetaRange)
+
+        self.lidarAugmentationMethodsList, self.labelsAugmentationMethodsList = \
+            self.getAugmentationMethodsList()
+        self.numAugmentationMethods = len(self.lidarAugmentationMethodsList)
+
+
+    def augment(self, lidar, labels=None):
+        augmentMethodNumber = np.random.randint(low=0, high=self.numAugmentationMethods)
+
+        lidar = self.lidarAugmentationMethodsList[augmentMethodNumber](lidar)
+        if labels:
+            labels = self.labelsAugmentationMethodsList[augmentMethodNumber](labels)
+
+        return lidar, labels
