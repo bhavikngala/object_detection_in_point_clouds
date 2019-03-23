@@ -23,10 +23,10 @@ class PointCloudDetector2(nn.Module):
 		self.bn2 = nn.BatchNorm2d(32)
 
 		self.inplanes = 32
-		self.res_block1 = self._make_layer(Bottleneck, 24, 1, stride=1)
+		self.res_block1 = self._make_layer(Bottleneck, 24, 1, stride=2)
 		self.res_block2 = self._make_layer(Bottleneck, 48, 2, stride=2)
 		self.res_block3 = self._make_layer(Bottleneck, 64, 2, stride=2)
-		self.res_block4 = self._make_layer(Bottleneck, 96, 1, stride=1)
+		self.res_block4 = self._make_layer(Bottleneck, 96, 1, stride=2)
 
 		self.conv4 = nn.Conv2d(in_channels=self.inplanes, out_channels=196, kernel_size=1, bias=True)
 		
@@ -89,9 +89,6 @@ class PointCloudDetector2(nn.Module):
 		cla = self.cla_act(cla)
 
 		loc = self.conv_loc(x)
-
-		if self.unstandarize is not None:
-			loc = self.unstandarize(loc)
 
 		return cla, loc
 

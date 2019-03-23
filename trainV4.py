@@ -57,10 +57,10 @@ class CustomGroomer(mg.ModelTrainer):
 				predictedClass, predictedLoc = self.model(lidar)
 
 				claLoss, locLoss, trainLoss, posClaLoss, negClaLoss, meanConfidence, overallMeanConfidence, numPosSamples, numNegSamples \
-				 = self.lossFunction(predictedClass, predictedLoc, targetClass, targetLoc, self.alpa1, self.beta1)
+				 = self.lossFunction(predictedClass, predictedLoc, targetClass, targetLoc, self.alpha1, self.beta1)
 
 				if trainLoss is not None:
-					trainLoss = trainLoss/self.accumulationSteps
+					trainLoss = trainLoss/float(self.accumulationSteps)
 					trainLoss.backward()
 					subBatchCounter += 1
 
@@ -150,6 +150,7 @@ def main():
 		cnf.up_sample_layers,
 		cnf.deconv)
 
+	
 	modelTrainer = CustomGroomer(cnf.logDir, args.model_file,
 		clip_value=cnf.clip_value,
 		accumulationSteps=cnf.accumulationSteps,
@@ -170,7 +171,7 @@ def main():
 		modelTrainer.loadModel(args.model_file)
 
 	modelTrainer.setLossFunction(lu.computeLoss, cnf.alpha1, cnf.beta1)
-	modelTrainer.train(cnf.device, cnf.pretrainCla)
+	modelTrainer.train(cnf.device)
 	modelTrainer.exportLogs(cnf.logJSONFilename)
 
 
@@ -178,5 +179,6 @@ if __name__ == '__main__':
 	try:
 		main()
 	except Exception as e:
+		print(traceback.format_exc())
 		with open('./error.txt', 'w') as f:
 			f.write(traceback.format_exc())
