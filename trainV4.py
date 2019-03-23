@@ -26,9 +26,7 @@ class CustomGroomer(mg.ModelTrainer):
 		self.momentumRange2 = kwargs['momentumRange2']
 
 	def train(self, device):
-		if self.loader is None:
-			print('data loader is undefined')
-			quit()
+		self.model.train()
 
 		subBatchCounter = 0
 		for epoch in range(1, self.epochs+1):
