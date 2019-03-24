@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-rootDir = './../data'
+rootDir = './../data/tiny_set'
 logDir = './runs'
 logJSONFilename = './loss/logs.json'
 trainSplitFile = './datautils/set_split_files/train.txt'
@@ -68,12 +68,12 @@ pretrainCla = True
 cycleLearn  = False
 # training parameters
 lr = 1e-4   # learning rate without step
-slr = 1e-1  # step learning rate
+slr = 1e-2  # step learning rate
 lrDecay = 0.1 # learning rate decay
-milestones = [3, 3, 3] # milestone for pixor
+milestones = [20, 30] # milestone for pixor
 momentum = 0.9
 decay = 0.0001 # weight decay parameter
-epochs = 10
+epochs = 40
 stepSize = epochs//2
 lrRange = [1e-4, 1e-2]
 momentumRange = [0.85, 0.9]
@@ -92,21 +92,12 @@ epsilon = 1e-5
 # select gpu device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# filename of saved model
-model_file = './models/hawkEye.pth'
 
 # output directories for train, validation, and test outputs
 trainOutputDir = './output/train'
 valiOutputDir = './output/val'
 testOutputDir = './output/test'
 
-# train, validation, test loss log file
-trainlog = './loss/train.txt'
-trainlog2 = './loss/etime.txt'
-vallog = './loss/vali.txt'
-testlog = './loss/test.txt'
-errorlog = './loss/error.txt'
-gradNormlog = './loss/gnorm.txt'
 
 # calibration dir
 calTrain = './../data_object_calib/training/calib'
@@ -116,15 +107,9 @@ calTest = './../data_object_calib/testing/calib'
 leftColorTrain = './../data/left_color_images/data_object_image_2/training/image_2'
 leftColorTest = './../data/left_color_images/data_object_image_2/testing/image_2'
 
-# string for log
-logString1 = 'epoch: [{:04d}/{:03d}] | cl: {:.8f} | nsl: {:.8f} | psl: {:.8f} | ll: {:.8f} | tl: {:.8f} | PS: [{:07d}/{:07d}] | md: {:.4f} | mc: {:.4f} | oamc: {:.4f} | lt: {:.4f} | bt: {:.4f} \n\n'
-logString2 = 'epoch: [{:04d}/{:03d}] | cl: {:.8f} | nsl: {:.8f} | psl: -.-------- | ll: -.-------- | tl: {:.8f} | PS: [{:07d}/{:07d}] | md: -.---- | mc: -.---- | oamc: {:.4f} | lt: {:.4f} | bt: {:.4f} \n\n'
-logString3 = 'epoch: [{:04d}/{:03d}] | cl: -.-------- | nsl: -.-------- | psl: -.-------- | ll: -.--------| tl: -.-------- | PS: [{:07d}/{:07d}] | md: -.---- | mc: -.---- | oamc: -.---- | lt: {:.4f} | bt: {:.4f} \n\n'
-normLogString = 'epoch: [{:04d}/{:03d}] | grad norm: {:.8f} | weight norm: {:.8f} \n\n'
-
 batchSize = 4
 accumulationSteps = 4.0
 clip_value = 1
 
 # threshold for NMS
-iouThreshold = 0.4
+iouThreshold = 0.1

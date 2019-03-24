@@ -120,7 +120,4 @@ class PointCloudDetector2(nn.Module):
 				m.bias.data.zero_()
 
 		prior = 0.01
-		self.conv_cla.weight.data.fill_(-math.log((1.0-prior)/prior))
-		self.conv_cla.bias.data.fill_(0)
-		self.conv_loc.weight.data.fill_(0)
-		self.conv_loc.bias.data.fill_(0)
+		self.conv_cla.bias.data.fill_(-math.log((1.0-prior)/prior))
