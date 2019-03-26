@@ -43,7 +43,7 @@ def computeLoss7(cla, loc, targetClas, targetLocs, alpha=1.0, beta=0.1, claLossO
 			posClaLoss = loss if posClaLoss is None else posClaLoss + loss
 
 			if not claLossOnly:
-				loss = F.smooth_l1_loss(predC * predL, targetL, reduction='sum')
+				loss = F.smooth_l1_loss(predL, targetL, reduction='sum')
 				locLoss = loss if locLoss is None else locLoss + loss
 							
 		#***************PS******************
