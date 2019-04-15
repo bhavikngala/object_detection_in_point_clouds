@@ -121,7 +121,7 @@ class TargetParameterization():
             gt03 = cart2hom(gt03)
             gt12 = cart2hom(gt12)
 
-            R = rotz(ry)
+            R = rotz(-ry)
             translation = np.array([cx.item(), cy.item(), cz.item()], dtype=np.float32)
             transformationMatrix = transform_from_rot_trans(R, translation)
 
@@ -210,7 +210,7 @@ class TargetParameterization():
             gt03 = cart2hom(gt03)
             gt12 = cart2hom(gt12)
 
-            R = rotz(ry)
+            R = rotz(-ry)
             translation = np.array([cx.item(), cy.item(), cz.item()], dtype=np.float32)
             transformationMatrix = transform_from_rot_trans(R, translation)
 
